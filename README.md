@@ -1,36 +1,156 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js & Aptos Boilerplate
 
-## Getting Started
+Un boilerplate moderno y listo para producción que combina un stack de frontend de alto rendimiento con todo lo necesario para empezar a desarrollar en la blockchain de Aptos.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+## ✨ Características
+
+* **Framework**: [Next.js 15](https://nextjs.org/) con App Router y Turbopack.
+* **Estilos**: [Tailwind CSS 4](https://tailwindcss.com/) con una configuración optimizada.
+* **Componentes**: Librería de componentes personalizables con [Shadcn/ui](https://ui.shadcn.com/).
+* **Animaciones**: Animaciones fluidas y performantes con [Framer Motion](https://www.framer.com/motion/).
+* **Calidad de Código**: Formateo y linting unificados y ultrarrápidos con [Biome](https://biomejs.dev/).
+* **Blockchain**: Integración completa para desarrollo en [Aptos](https://aptos.dev/) con el Wallet Adapter y scripts para compilar y publicar contratos en Move.
+* **Data Fetching**: Gestión de estado del servidor con [TanStack Query (React Query)](https://tanstack.com/query/latest).
+* **Gestor de Paquetes**: Eficiencia y rapidez con [pnpm](https://pnpm.io/).
+
+---
+
+## 🚀 Cómo Empezar
+
+Sigue estos pasos para levantar el entorno de desarrollo local.
+
+### **1. Prerrequisitos**
+
+* [Node.js](https://nodejs.org/en) (versión 20.x o superior)
+* [pnpm](https://pnpm.io/installation)
+* [Aptos CLI](https://aptos.dev/cli-tools/aptos-cli/install-aptos-cli)
+
+### **2. Instalación**
+
+1.  **Clona el repositorio:**
+    ```bash
+    git clone [https://github.com/tu-usuario/tu-repo.git](https://github.com/tu-usuario/tu-repo.git)
+    cd tu-repo
+    ```
+
+2.  **Instala las dependencias:**
+    ```bash
+    pnpm install
+    ```
+
+### **3. Configuración del Entorno**
+
+1.  **Crea tu archivo de entorno:**
+    Copia el archivo `.env.example` y renómbralo a `.env.local`.
+    ```bash
+    cp .env.example .env.local
+    ```
+
+2.  **Configura las variables de entorno:**
+    Abre `.env.local` y añade las claves y direcciones necesarias. Para desarrollo, se recomienda usar `devnet`.
+
+    ```env
+    # .env.local
+    NEXT_PUBLIC_APTOS_NETWORK="devnet"
+    NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS="0x..."
+    # Opcional, si tienes una API key de Aptos
+    NEXT_PUBLIC_APTOS_API_KEY=""
+    ```
+
+---
+
+## 🛠️ Scripts Disponibles
+
+Este boilerplate viene con varios scripts para facilitar el desarrollo.
+
+* **Iniciar el servidor de desarrollo:**
+    ```bash
+    pnpm dev
+    ```
+    Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+* **Crear una build de producción:**
+    ```bash
+    pnpm build
+    ```
+
+* **Ejecutar la build de producción:**
+    ```bash
+    pnpm start
+    ```
+
+* **Revisar y formatear el código:**
+    ```bash
+    # Revisar problemas de linting
+    pnpm lint
+
+    # Formatear todos los archivos
+    pnpm format
+    ```
+
+### **Scripts para Contratos Move**
+
+* **Compilar tus contratos Move:**
+    ```bash
+    pnpm move:compile
+    ```
+
+* **Publicar tus contratos en la red configurada en `.env.local`:**
+    Este comando también genera los ABIs de TypeScript automáticamente.
+    ```bash
+    pnpm move:publish
+    ```
+
+---
+
+## 📂 Estructura del Proyecto
+
+```
+.
+├── app/                  # Rutas del App Router de Next.js
+│   ├── layout.tsx        # Layout principal de la aplicación
+│   └── page.tsx          # Página de inicio
+├── components/           # Componentes de React reutilizables
+│   ├── ui/               # Componentes base de Shadcn/ui (Button, Card, etc.)
+│   ├── Header.tsx        # Cabecera de la aplicación
+│   ├── MessageBoard.tsx  # Componente para interactuar con el contrato
+│   ├── TransferAPT.tsx   # Componente para transferir APT
+│   ├── WalletSelector.tsx# Componente para seleccionar y conectar wallets
+│   └── *Provider.tsx     # Proveedores de contexto (Tema, Wallet, React Query)
+├── contract/             # Código fuente de tus contratos Move
+│   ├── sources/          # Archivos .move de tu contrato
+│   ├── build/            # Artefactos de compilación del contrato (bytecode, etc.)
+│   └── Move.toml         # Manifiesto del paquete de Move
+├── lib/                  # Funciones de utilidad y lógica de cliente
+│   ├── aptos/            # Lógica específica para la integración con Aptos
+│   │   ├── abis/         # ABIs generados para interactuar con los contratos
+│   │   ├── client.ts     # Instancia del cliente de Aptos SDK
+│   │   ├── constants.ts  # Constantes de la red y direcciones
+│   │   ├── queries/      # Funciones para leer datos de la blockchain
+│   │   └── transactions/ # Lógica para construir transacciones
+│   └── utils.ts          # Utilidades generales (ej. cn para Tailwind)
+├── public/               # Archivos estáticos (imágenes, SVGs, etc.)
+├── scripts/              # Scripts para automatizar tareas
+│   └── move/             # Scripts para compilar, publicar y generar ABIs de Move
+├── .env.local            # (No en el repo) Variables de entorno locales
+├── biome.json            # Configuración de Biome (linter y formateador)
+├── next.config.ts        # Configuración de Next.js
+├── package.json          # Dependencias y scripts del proyecto
+├── pnpm-lock.yaml        # Lockfile de PNPM para dependencias exactas
+└── tsconfig.json         # Configuración de TypeScript para la aplicación
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Personalización
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **Tema y Estilos**: Modifica los colores y estilos base en `app/globals.css` y `tailwind.config.js`.
+* **Componentes Shadcn**: Añade nuevos componentes fácilmente con el comando:
+    ```bash
+    pnpm dlx shadcn@latest add [nombre-del-componente]
+    ```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+***
+*Este boilerplate fue creado para acelerar el desarrollo de dApps en Aptos con un stack de frontend moderno y robusto.*
