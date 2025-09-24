@@ -1,22 +1,21 @@
 #[test_only]
-module message_board_addr::test_end_to_end {
-    use std::string;
+module VeriFiPublisher::test_end_to_end;
 
-    use message_board_addr::message_board;
+use VeriFiPublisher::message_board;
+use std::string;
 
-    #[test(sender = @message_board_addr)]
-    fun test_end_to_end(sender: &signer) {
-        message_board::init_module_for_test(sender);
+#[test(sender = @VeriFiPublisher)]
+fun test_end_to_end(sender: &signer) {
+    message_board::init_module_for_test(sender);
 
-        message_board::post_message(sender, string::utf8(b"hello world"));
+    message_board::post_message(sender, string::utf8(b"hello world"));
 
-        let string_content = message_board::get_message_content();
-        assert!(string_content == string::utf8(b"hello world"), 3);
+    let string_content = message_board::get_message_content();
+    assert!(string_content == string::utf8(b"hello world"), 3);
 
-        // Post again, should overwrite the old message
-        message_board::post_message(sender, string::utf8(b"hello aptos"));
+    // Post again, should overwrite the old message
+    message_board::post_message(sender, string::utf8(b"hello aptos"));
 
-        let string_content = message_board::get_message_content();
-        assert!(string_content == string::utf8(b"hello aptos"), 16);
-    }
+    let string_content = message_board::get_message_content();
+    assert!(string_content == string::utf8(b"hello aptos"), 16);
 }

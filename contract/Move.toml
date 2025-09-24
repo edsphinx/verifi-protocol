@@ -1,12 +1,13 @@
 [package]
-name = "MessageBoard"
+name = "VeriFiProtocol"
 version = "1.0.0"
-authors = []
+authors = ["edsphinx"]
 
 [addresses]
-message_board_addr = "_"
+VeriFiPublisher = "_"
 
 [dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "devnet", subdir = "aptos-framework" }
 
 [dev-dependencies]
+# For running tests in the future

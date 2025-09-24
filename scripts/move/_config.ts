@@ -69,7 +69,7 @@ if (!address) {
   process.exit(1);
 }
 
-export const namedAddress: string = `message_board_addr=${address}`;
+export const namedAddress: string = `VeriFiPublisher=${address}`;
 export const packageDir: string = "./contract";
 export const stdio: { stdio: StdioOptions } = { stdio: "inherit" };
 // Export the dynamically selected node URL

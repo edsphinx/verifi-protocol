@@ -1,1 +1,1 @@
-export { MESSAGE_BOARD_ABI } from "./message_board.abi";
+export { VERIFI_PROTOCOL_ABI } from "./verifi_protocol.abi";
