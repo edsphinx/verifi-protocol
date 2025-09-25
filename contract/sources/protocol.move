@@ -14,6 +14,9 @@ module VeriFiPublisher::verifi_protocol {
     use aptos_framework::object::{Self, Object, ExtendRef};
     use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::fungible_asset::{Self, Metadata};
+    use aptos_framework::coin::{Self};
+    use aptos_framework::aptos_coin::{AptosCoin};
+    use aptos_framework::primary_fungible_store;
 
     // === Errors ===
     const E_MARKET_ALREADY_RESOLVED: u64 = 1;
@@ -48,6 +51,15 @@ module VeriFiPublisher::verifi_protocol {
         pool_no_tokens: u64,
         yes_token_metadata: Object<Metadata>,
         no_token_metadata: Object<Metadata>,
+
+        /// @dev Capability to mint new YES tokens.
+        yes_token_mint_ref: fungible_asset::MintRef,
+        /// @dev Capability to burn YES tokens.
+        yes_token_burn_ref: fungible_asset::BurnRef,
+        /// @dev Capability to mint new NO tokens.
+        no_token_mint_ref: fungible_asset::MintRef,
+        /// @dev Capability to burn NO tokens.
+        no_token_burn_ref: fungible_asset::BurnRef,
     }
 
     /// @dev Controller resource to hold the factory's capability to create new objects.
@@ -120,6 +132,11 @@ module VeriFiPublisher::verifi_protocol {
         let yes_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
         let no_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
 
+        let yes_token_mint_ref = fungible_asset::generate_mint_ref(&yes_meta_constructor_ref);
+        let yes_token_burn_ref = fungible_asset::generate_burn_ref(&yes_meta_constructor_ref);
+        let no_token_mint_ref = fungible_asset::generate_mint_ref(&no_meta_constructor_ref);
+        let no_token_burn_ref = fungible_asset::generate_burn_ref(&no_meta_constructor_ref);
+
         let yes_token_metadata_obj = fungible_asset::add_fungibility(
             &yes_meta_constructor_ref,
             option::none<u128>(), // Unlimited supply for now
@@ -155,6 +172,10 @@ module VeriFiPublisher::verifi_protocol {
             pool_no_tokens: 0,
             yes_token_metadata: yes_token_metadata_obj,
             no_token_metadata: no_token_metadata_obj,
+            yes_token_mint_ref,
+            yes_token_burn_ref,
+            no_token_mint_ref,
+            no_token_burn_ref,
         };
 
         let market_object = object::object_from_constructor_ref<Market>(&market_constructor_ref);
@@ -175,5 +196,64 @@ module VeriFiPublisher::verifi_protocol {
 
         let new_market_signer = object::generate_signer(&market_constructor_ref);
         move_to(&new_market_signer, new_market);
+    }
+
+    /**
+    * @notice Allows a user to buy outcome shares by paying with APT.
+    * @dev For the MVP, 1 APT mints one pair of shares (1 YES + 1 NO).
+    * The chosen outcome share is sent to the buyer, and the other is sent to the AMM pool.
+    * @param buyer The signer of the account buying the shares.
+    * @param market_object The specific market object to buy shares from.
+    * @param amount_apt The amount of APT coin to be paid.
+    * @param buys_yes_shares A boolean indicating the desired outcome (true for YES, false for NO).
+    */
+    public entry fun buy_shares(
+        buyer: &signer,
+        market_object: Object<Market>,
+        amount_octas: u64,
+        buys_yes_shares: bool,
+    ) acquires Market {
+        let market_address = object::object_address(&market_object);
+        let market = borrow_global_mut<Market>(market_address);
+
+        // Manually withdraw the APT from the buyer's account.
+        let paid_apt = coin::withdraw<AptosCoin>(buyer, amount_octas);
+        
+        // Deposit the user's APT into the market object's account.
+        coin::deposit(market_address, paid_apt);
+
+        // The amount to mint is now directly the amount paid.
+        let amount_to_mint = amount_octas;
+
+        // Mint a pair of shares (1 YES and 1 NO for each APT octas).
+        let yes_shares = fungible_asset::mint(&market.yes_token_mint_ref, amount_to_mint);
+        let no_shares = fungible_asset::mint(&market.no_token_mint_ref, amount_to_mint);
+
+        let buyer_address = signer::address_of(buyer);
+
+        if (buys_yes_shares) {
+            // Send YES shares to the buyer, deposit NO shares into the AMM pool.
+            let yes_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.yes_token_metadata);
+            let yes_store_obj = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
+            fungible_asset::deposit(yes_store_obj, yes_shares);
+
+            market.pool_no_tokens = market.pool_no_tokens + amount_to_mint;
+            // For simplicity, we "deposit" the NO shares by just adding to the pool count.
+            // We'll burn the object `no_shares` to remove it from scope.
+            fungible_asset::destroy_zero(no_shares);
+        } else {
+            // Send NO shares to the buyer, deposit YES shares into the AMM pool.
+            let no_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.no_token_metadata);
+            let no_store_obj = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
+            fungible_asset::deposit(no_store_obj, no_shares);
+
+            // Deposit YES shares into the AMM pool.
+            market.pool_yes_tokens = market.pool_yes_tokens + amount_to_mint;
+            fungible_asset::destroy_zero(yes_shares);
+        };
+//         💡 Important Note for Your Frontend
+// This change means your frontend application now has a new responsibility. Before a user can buy shares in a market for the first time, you must give them a button to execute a one-time transaction that calls primary_fungible_store::create_store for both the YES and NO tokens of that market. This initializes their "bank accounts" so they can receive the tokens.
+
+// After updating the function, compile the contract again.
     }
 }
