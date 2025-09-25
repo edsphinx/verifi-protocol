@@ -11,6 +11,7 @@ module VeriFiPublisher::verifi_protocol {
     use std::vector;
     use std::string::{Self, String};
     use std::option::{Self};
+    use aptos_framework::account;
     use aptos_framework::object::{Self, Object, ExtendRef};
     use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::fungible_asset::{Self, Metadata};
@@ -60,6 +61,9 @@ module VeriFiPublisher::verifi_protocol {
         no_token_mint_ref: fungible_asset::MintRef,
         /// @dev Capability to burn NO tokens.
         no_token_burn_ref: fungible_asset::BurnRef,
+
+        /// @dev The signing capability for the market's treasury (a resource account).
+        treasury_cap: account::SignerCapability,
     }
 
     /// @dev Controller resource to hold the factory's capability to create new objects.
@@ -129,6 +133,16 @@ module VeriFiPublisher::verifi_protocol {
         let factory = borrow_global_mut<MarketFactory>(get_factory_address());
         let factory_signer = get_factory_signer();
 
+        // We create the account first, then we will fund it.
+        let (resource_signer, treasury_cap) = account::create_resource_account(
+            &factory_signer,
+            b"verifi_market_treasury", // seed
+        );
+
+        // Fund the new resource account with a minimal amount to exist on-chain and register it for AptosCoin.
+        // NOTE: The `factory_signer` needs to have APT to pay for this.
+        coin::register<AptosCoin>(&resource_signer);
+
         let yes_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
         let no_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
 
@@ -176,6 +190,7 @@ module VeriFiPublisher::verifi_protocol {
             yes_token_burn_ref,
             no_token_mint_ref,
             no_token_burn_ref,
+            treasury_cap,
         };
 
         let market_object = object::object_from_constructor_ref<Market>(&market_constructor_ref);
@@ -216,11 +231,14 @@ module VeriFiPublisher::verifi_protocol {
         let market_address = object::object_address(&market_object);
         let market = borrow_global_mut<Market>(market_address);
 
+        // Get the resource account address from its stored capability
+        let treasury_address = account::get_signer_capability_address(&market.treasury_cap);
+
         // Manually withdraw the APT from the buyer's account.
         let paid_apt = coin::withdraw<AptosCoin>(buyer, amount_octas);
         
-        // Deposit the user's APT into the market object's account.
-        coin::deposit(market_address, paid_apt);
+        // Deposit the user's APT into the market's treasury account
+        coin::deposit(treasury_address, paid_apt);
 
         // The amount to mint is now directly the amount paid.
         let amount_to_mint = amount_octas;
