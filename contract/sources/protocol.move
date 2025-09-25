@@ -26,6 +26,7 @@ module VeriFiPublisher::verifi_protocol {
     const E_MARKET_CLOSED_FOR_TRADING: u64 = 3;
     const E_NOT_AUTHORIZED: u64 = 4;
     const E_FACTORY_NOT_FOUND: u64 = 5;
+    const E_MARKET_NOT_RESOLVED: u64 = 6;
 
     // === Constants ===
     /// @dev Seed used to create the deterministic address for the MarketFactory object.
@@ -39,7 +40,7 @@ module VeriFiPublisher::verifi_protocol {
         resolution_timestamp: u64,
     }
 
-    // === Data Structures ===
+    // === Data Structures ===   
     struct Market has key {
         description: String,
         resolver: address,
@@ -79,6 +80,7 @@ module VeriFiPublisher::verifi_protocol {
     }
 
     // === Initialization Function ===
+
     /**
      * @notice Initializes the module by creating a named, singleton MarketFactory object.
      * @dev This is called once upon publish. It creates an object with a predictable address
@@ -103,6 +105,7 @@ module VeriFiPublisher::verifi_protocol {
     }
 
     // === Helper Functions ===
+
     /// @dev Gets the deterministic address of the singleton MarketFactory object.
     fun get_factory_address(): address {
         object::create_object_address(&@VeriFiPublisher, MARKET_FACTORY_SEED)
@@ -116,6 +119,7 @@ module VeriFiPublisher::verifi_protocol {
 
 
     // === Public Functions ===
+
     /**
      * @notice Creates a new prediction market object.
      * @dev The new Market object is owned by the MarketFactory itself.
@@ -273,8 +277,7 @@ module VeriFiPublisher::verifi_protocol {
     //         💡 Important Note for Your Frontend
     // This change means your frontend application now has a new responsibility. Before a user can buy shares in a market for the first time, you must give them a button to execute a one-time transaction that calls primary_fungible_store::create_store for both the YES and NO tokens of that market. This initializes their "bank accounts" so they can receive the tokens.
     }
-    // In contract/sources/protocol.move
-
+    
     /**
     * @notice Allows a user to sell their outcome shares back to the market for APT.
     * @dev The user provides a FungibleAsset object containing their shares. The contract
@@ -347,13 +350,13 @@ module VeriFiPublisher::verifi_protocol {
         let market = borrow_global_mut<Market>(market_address);
 
         // --- SECURITY CHECKS ---
-        // 1. Check if the caller is the authorized resolver for this market.
+        // Check if the caller is the authorized resolver for this market.
         assert!(signer::address_of(resolver) == market.resolver, E_NOT_AUTHORIZED);
 
-        // 2. Check if the market's resolution time has passed.
+        // Check if the market's resolution time has passed.
         assert!(timestamp::now_seconds() >= market.resolution_timestamp, E_MARKET_NOT_READY_FOR_RESOLUTION);
 
-        // 3. Check if the market is still open and has not been resolved yet.
+        // Check if the market is still open and has not been resolved yet.
         assert!(market.status == 0, E_MARKET_ALREADY_RESOLVED); // 0 = Open
 
         // --- SET FINAL OUTCOME ---
@@ -362,5 +365,47 @@ module VeriFiPublisher::verifi_protocol {
         } else {
             market.status = 3; // 3 = Resolved-No
         };
+    }
+
+    /**
+    * @notice Allows a holder of winning tokens to redeem them for their share of the prize pool (APT).
+    * @dev This function can only be called after a market has been resolved. It withdraws the
+    * specified amount of winning tokens from the user's store, burns them, and pays out APT.
+    * @param redeemer The signer of the account redeeming the tokens.
+    * @param market_object The market object to redeem from.
+    * @param amount_to_redeem The amount of winning tokens to redeem.
+    */
+    public entry fun redeem_winnings(
+        redeemer: &signer,
+        market_object: Object<Market>,
+        amount_to_redeem: u64,
+    ) acquires Market {
+        let market_address = object::object_address(&market_object);
+        let market = borrow_global_mut<Market>(market_address);
+        let redeemer_address = signer::address_of(redeemer);
+
+        // Check that the market is actually resolved.
+        assert!(market.status == 2 || market.status == 3, E_MARKET_NOT_RESOLVED);
+
+        // Determine which token is the winning one based on market status.
+        let (winning_token_metadata, winning_token_burn_ref) = if (market.status == 2) { // Market resolved YES
+            (market.yes_token_metadata, &market.yes_token_burn_ref)
+        } else { // Market resolved NO
+            (market.no_token_metadata, &market.no_token_burn_ref)
+        };
+
+        // Withdraw the winning tokens from the redeemer's primary store.
+        let store_addr = primary_fungible_store::primary_store_address(redeemer_address, winning_token_metadata);
+        let store_obj = object::address_to_object<fungible_asset::FungibleStore>(store_addr);
+        let tokens_to_redeem = fungible_asset::withdraw(redeemer, store_obj, amount_to_redeem);
+
+        // Burn the redeemed tokens.
+        fungible_asset::burn(winning_token_burn_ref, tokens_to_redeem);
+
+        // ayout the corresponding amount of APT (MVP: 1:1 price).
+        let payout_amount = amount_to_redeem;
+        let treasury_signer = account::create_signer_with_capability(&market.treasury_cap);
+        let apt_to_return = coin::withdraw<AptosCoin>(&treasury_signer, payout_amount);
+        coin::deposit(redeemer_address, apt_to_return);
     }
 }
