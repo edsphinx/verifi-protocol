@@ -18,6 +18,7 @@ module VeriFiPublisher::verifi_protocol {
     use aptos_framework::coin::{Self};
     use aptos_framework::aptos_coin::{AptosCoin};
     use aptos_framework::primary_fungible_store;
+    use aptos_framework::timestamp;
 
     // === Errors ===
     const E_MARKET_ALREADY_RESOLVED: u64 = 1;
@@ -326,5 +327,40 @@ module VeriFiPublisher::verifi_protocol {
         let treasury_signer = account::create_signer_with_capability(&market.treasury_cap);
         let apt_to_return = coin::withdraw<AptosCoin>(&treasury_signer, payout_amount);
         coin::deposit(seller_address, apt_to_return);
+    }
+
+    /**
+    * @notice Resolves a market, setting the final outcome.
+    * @dev Can only be called by the designated `resolver` address for the market,
+    * and only after the `resolution_timestamp` has passed. This function
+    * locks the market status, preventing further trading and enabling redemptions.
+    * @param resolver The signer of the account designated as the market resolver.
+    * @param market_object The market object to be resolved.
+    * @param outcome_is_yes The final outcome of the market (true for YES, false for NO).
+    */
+    public entry fun resolve_market(
+        resolver: &signer,
+        market_object: Object<Market>,
+        outcome_is_yes: bool,
+    ) acquires Market {
+        let market_address = object::object_address(&market_object);
+        let market = borrow_global_mut<Market>(market_address);
+
+        // --- SECURITY CHECKS ---
+        // 1. Check if the caller is the authorized resolver for this market.
+        assert!(signer::address_of(resolver) == market.resolver, E_NOT_AUTHORIZED);
+
+        // 2. Check if the market's resolution time has passed.
+        assert!(timestamp::now_seconds() >= market.resolution_timestamp, E_MARKET_NOT_READY_FOR_RESOLUTION);
+
+        // 3. Check if the market is still open and has not been resolved yet.
+        assert!(market.status == 0, E_MARKET_ALREADY_RESOLVED); // 0 = Open
+
+        // --- SET FINAL OUTCOME ---
+        if (outcome_is_yes) {
+            market.status = 2; // 2 = Resolved-Yes
+        } else {
+            market.status = 3; // 3 = Resolved-No
+        };
     }
 }
