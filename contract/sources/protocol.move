@@ -269,9 +269,62 @@ module VeriFiPublisher::verifi_protocol {
             market.pool_yes_tokens = market.pool_yes_tokens + amount_to_mint;
             fungible_asset::destroy_zero(yes_shares);
         };
-//         💡 Important Note for Your Frontend
-// This change means your frontend application now has a new responsibility. Before a user can buy shares in a market for the first time, you must give them a button to execute a one-time transaction that calls primary_fungible_store::create_store for both the YES and NO tokens of that market. This initializes their "bank accounts" so they can receive the tokens.
+    //         💡 Important Note for Your Frontend
+    // This change means your frontend application now has a new responsibility. Before a user can buy shares in a market for the first time, you must give them a button to execute a one-time transaction that calls primary_fungible_store::create_store for both the YES and NO tokens of that market. This initializes their "bank accounts" so they can receive the tokens.
+    }
+    // In contract/sources/protocol.move
 
-// After updating the function, compile the contract again.
+    /**
+    * @notice Allows a user to sell their outcome shares back to the market for APT.
+    * @dev The user provides a FungibleAsset object containing their shares. The contract
+    * verifies, burns, and pays out the corresponding amount of APT from the treasury.
+    * @param seller The signer of the account selling the shares.
+    * @param market_object The market object to sell shares to.
+    * @param tokens_to_sell An ephemeral FungibleAsset containing the shares to be sold.
+    */
+    public entry fun sell_shares(
+        seller: &signer,
+        market_object: Object<Market>,
+        amount_to_sell: u64,
+        sells_yes_shares: bool,
+    ) acquires Market {
+        let market_address = object::object_address(&market_object);
+        let market = borrow_global_mut<Market>(market_address);
+        let seller_address = signer::address_of(seller);
+
+        if (sells_yes_shares) {
+            // <<< SECURITY CHECK >>>
+            // Get the seller's primary store for the YES token.
+            let yes_store_addr = primary_fungible_store::primary_store_address(seller_address, market.yes_token_metadata);
+            let yes_store_obj = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
+            
+            // Withdraw the tokens from the user's store.
+            let tokens_to_sell = fungible_asset::withdraw(seller, yes_store_obj, amount_to_sell);
+
+            // Update the pool and burn the tokens.
+            market.pool_yes_tokens = market.pool_yes_tokens - amount_to_sell;
+            fungible_asset::burn(&market.yes_token_burn_ref, tokens_to_sell);
+        } else {
+            // <<< SECURITY CHECK >>>
+            // Get the seller's primary store for the NO token.
+            let no_store_addr = primary_fungible_store::primary_store_address(seller_address, market.no_token_metadata);
+            let no_store_obj = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
+
+            // Withdraw the tokens from the user's store.
+            let tokens_to_sell = fungible_asset::withdraw(seller, no_store_obj, amount_to_sell);
+
+            // Update the pool and burn the tokens.
+            market.pool_no_tokens = market.pool_no_tokens - amount_to_sell;
+            fungible_asset::burn(&market.no_token_burn_ref, tokens_to_sell);
+        };
+
+        // Calculate the payout amount (MVP: 1:1 price).
+        let payout_amount = amount_to_sell;
+
+        // Withdraw APT from the market's treasury and pay the user. 🏦
+        // This is the step that the Resource Account enables.
+        let treasury_signer = account::create_signer_with_capability(&market.treasury_cap);
+        let apt_to_return = coin::withdraw<AptosCoin>(&treasury_signer, payout_amount);
+        coin::deposit(seller_address, apt_to_return);
     }
 }
