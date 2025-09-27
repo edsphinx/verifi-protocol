@@ -127,6 +127,17 @@ module VeriFiPublisher::verifi_protocol {
         protocol_treasury_cap: account::SignerCapability,
     }
 
+    /// @dev A data-transfer-object (DTO) for efficiently fetching market data for the UI.
+    struct MarketView has store, drop {
+        description: String,
+        resolution_timestamp: u64,
+        status: u8,
+        pool_yes_tokens: u64,
+        pool_no_tokens: u64,
+        total_supply_yes: u64,
+        total_supply_no: u64,
+    }
+
     // === Initialization Function ===
 
     /**
@@ -192,7 +203,7 @@ module VeriFiPublisher::verifi_protocol {
         
         let market_constructor_ref = object::create_object(factory_address);
         let new_market_signer = object::generate_signer(&market_constructor_ref);
-        
+
         let (resource_signer, treasury_cap) = account::create_resource_account(
           &factory_signer, 
           bcs::to_bytes(&object::address_from_constructor_ref(&market_constructor_ref))
@@ -202,7 +213,7 @@ module VeriFiPublisher::verifi_protocol {
         let yes_meta_constructor_ref = object::create_sticky_object(factory_address);
         let no_meta_constructor_ref = object::create_sticky_object(factory_address);
 
-        let yes_token_metadata_obj = fungible_asset::add_fungibility(
+        primary_fungible_store::create_primary_store_enabled_fungible_asset(
             &yes_meta_constructor_ref,
             option::none<u128>(), // Unlimited supply for now
             string::utf8(b"VeriFi YES Token"),
@@ -212,7 +223,7 @@ module VeriFiPublisher::verifi_protocol {
             string::utf8(b""), // project_uri
         );
 
-        let no_token_metadata_obj = fungible_asset::add_fungibility(
+        primary_fungible_store::create_primary_store_enabled_fungible_asset(
             &no_meta_constructor_ref,
             option::none<u128>(), // Unlimited supply for now
             string::utf8(b"VeriFi NO Token"),
@@ -221,6 +232,9 @@ module VeriFiPublisher::verifi_protocol {
             string::utf8(b""), // icon_uri
             string::utf8(b""), // project_uri
         );
+
+        let yes_token_metadata_obj = object::object_from_constructor_ref<Metadata>(&yes_meta_constructor_ref);
+        let no_token_metadata_obj = object::object_from_constructor_ref<Metadata>(&no_meta_constructor_ref);
 
         let yes_token_mint_ref = fungible_asset::generate_mint_ref(&yes_meta_constructor_ref);
         let yes_token_burn_ref = fungible_asset::generate_burn_ref(&yes_meta_constructor_ref);
@@ -321,30 +335,28 @@ module VeriFiPublisher::verifi_protocol {
         let buyer_address = signer::address_of(buyer);
 
         if (buys_yes_shares) {
+            primary_fungible_store::ensure_primary_store_exists(buyer_address, market.yes_token_metadata);
+
             // Send YES shares to the buyer, deposit NO shares into the AMM pool.
             let yes_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.yes_token_metadata);
-
-            assert!(account::exists_at(yes_store_addr), E_STORE_NOT_CREATED);
-
             let yes_store_obj = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
             fungible_asset::deposit(yes_store_obj, yes_shares);
 
             market.pool_no_tokens = market.pool_no_tokens + amount_to_mint;
             // For simplicity, we "deposit" the NO shares by just adding to the pool count.
             // We'll burn the object `no_shares` to remove it from scope.
-            fungible_asset::destroy_zero(no_shares);
+            fungible_asset::burn(&market.no_token_burn_ref, no_shares);
         } else {
+            primary_fungible_store::ensure_primary_store_exists(buyer_address, market.no_token_metadata);
+            
             // Send NO shares to the buyer, deposit YES shares into the AMM pool.
             let no_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.no_token_metadata);
-
-            assert!(account::exists_at(no_store_addr), E_STORE_NOT_CREATED);
-            
             let no_store_obj = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
             fungible_asset::deposit(no_store_obj, no_shares);
 
             // Deposit YES shares into the AMM pool.
             market.pool_yes_tokens = market.pool_yes_tokens + amount_to_mint;
-            fungible_asset::destroy_zero(yes_shares);
+            fungible_asset::burn(&market.yes_token_burn_ref, yes_shares);
         };
         event::emit_event(
             &mut market.shares_minted_events,
@@ -356,6 +368,7 @@ module VeriFiPublisher::verifi_protocol {
                 shares_minted: amount_to_mint,
             }
         );
+        
     //         💡 Important Note for the Frontend DON'T FORGET!!!!!!!!!!!
     // This change means that the frontend now has a new responsibility. 
     // Before a user can buy shares in a market for the first time, we must give them a button
@@ -605,7 +618,7 @@ module VeriFiPublisher::verifi_protocol {
     #[view]
     /**
     * @notice Gets the YES and NO share balance for a specific owner in a given market.
-    * @dev This is a read-only view function.
+    * @dev This is a read-only view function that gracefully handles cases where a store doesn't exist.
     * @param owner The address of the account to check.
     * @param market_object The market to check the balance in.
     * @return (u64, u64) A tuple containing the YES balance and the NO balance.
@@ -613,24 +626,30 @@ module VeriFiPublisher::verifi_protocol {
     public fun get_balances(owner: address, market_object: Object<Market>): (u64, u64) acquires Market {
         let market = borrow_global<Market>(object::object_address(&market_object));
         
-        let yes_store_addr = primary_fungible_store::primary_store_address(owner, market.yes_token_metadata);
-        let no_store_addr = primary_fungible_store::primary_store_address(owner, market.no_token_metadata);
-
-        let yes_balance = if (account::exists_at(yes_store_addr)) {
-            let store_object = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
-            fungible_asset::balance(store_object)
-        } else {
-            0
-        };
-
-        let no_balance = if (account::exists_at(no_store_addr)) {
-            let store_object = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
-            fungible_asset::balance(store_object)
-        } else {
-            0
-        };
+        // --- CORRECCIÓN: Usar la función de ayuda `balance` que ya comprueba la existencia ---
+        let yes_balance = primary_fungible_store::balance(owner, market.yes_token_metadata);
+        let no_balance = primary_fungible_store::balance(owner, market.no_token_metadata);
+        // ---------------------------------------------------------------------------------
 
         (yes_balance, no_balance)
+    }
+
+    #[view]
+    /**
+    * @notice Gets all necessary UI data for a single market in one call.
+    * @dev Aggregates static and dynamic data into a single MarketView struct.
+    */
+    public fun get_market_view(market_object: Object<Market>): MarketView acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        MarketView {
+            description: market.description,
+            resolution_timestamp: market.resolution_timestamp,
+            status: market.status,
+            pool_yes_tokens: market.pool_yes_tokens,
+            pool_no_tokens: market.pool_no_tokens,
+            total_supply_yes: market.total_supply_yes,
+            total_supply_no: market.total_supply_no,
+        }
     }
 
     #[view]
