@@ -7,6 +7,7 @@
 module VeriFiPublisher::verifi_protocol {
 
     // === Imports ===
+    use std::bcs;
     use std::signer;
     use std::vector;
     use std::string::{Self, String};
@@ -28,22 +29,57 @@ module VeriFiPublisher::verifi_protocol {
     const E_FACTORY_NOT_FOUND: u64 = 5;
     const E_MARKET_NOT_RESOLVED: u64 = 6;
     const E_NO_WINNERS: u64 = 7;
+    const E_INSUFFICIENT_TREASURY_FUNDS: u64 = 8;
+    const E_STORE_NOT_CREATED: u64 = 9;
+    const E_FACTORY_SIGNER_NOT_FOUND: u64 = 10;
 
     // === Constants ===
     const PROTOCOL_FEE_BASIS_POINTS: u64 = 200; // 2%
-    /// @dev Seed used to create the deterministic address for the MarketFactory object.
-    const MARKET_FACTORY_SEED: vector<u8> = b"verifi_market_factory";
+    const MARKET_FACTORY_SEED: vector<u8> = b"verifi_protocol_market_factory";
     const STATUS_OPEN: u8 = 0;
     const STATUS_CLOSED: u8 = 1; // for markets closed before resolution
     const STATUS_RESOLVED_YES: u8 = 2;
     const STATUS_RESOLVED_NO: u8 = 3;
 
     // === Events ===
+    #[event]
     struct MarketCreatedEvent has drop, store {
         market_address: address,
         creator: address,
         description: String,
         resolution_timestamp: u64,
+    }
+
+    #[event]
+    struct SharesMintedEvent has drop, store {
+        market_address: address,
+        buyer: address,
+        is_yes_outcome: bool,
+        apt_amount_in: u64,
+        shares_minted: u64,
+    }
+
+    #[event]
+    struct MarketResolvedEvent has drop, store {
+        market_address: address,
+        outcome_is_yes: bool,
+    }
+
+    #[event]
+    struct WinningsRedeemedEvent has drop, store {
+        market_address: address,
+        redeemer: address,
+        shares_burned: u64,
+        apt_payout: u64,
+    }
+
+    #[event]
+    struct SharesSoldEvent has drop, store {
+        market_address: address,
+        seller: address,
+        is_yes_outcome: bool,
+        shares_burned: u64,
+        apt_amount_out: u64,
     }
 
     // === Data Structures ===   
@@ -72,18 +108,23 @@ module VeriFiPublisher::verifi_protocol {
         no_token_burn_ref: fungible_asset::BurnRef,
         /// @dev The signing capability for the market's treasury (a resource account).
         treasury_cap: account::SignerCapability,
+
+        shares_minted_events: EventHandle<SharesMintedEvent>,
+        market_resolved_events: EventHandle<MarketResolvedEvent>,
+        winnings_redeemed_events: EventHandle<WinningsRedeemedEvent>,
+        shares_sold_events: EventHandle<SharesSoldEvent>,
     }
 
     /// @dev Controller resource to hold the factory's capability to create new objects.
     struct MarketFactoryController has key {
         extend_ref: ExtendRef,
-        protocol_treasury_cap: account::SignerCapability,
     }
 
     struct MarketFactory has key {
         market_count: u64,
         markets: vector<Object<Market>>,
         creation_events: EventHandle<MarketCreatedEvent>,
+        protocol_treasury_cap: account::SignerCapability,
     }
 
     // === Initialization Function ===
@@ -103,7 +144,6 @@ module VeriFiPublisher::verifi_protocol {
 
         move_to(&factory_signer, MarketFactoryController {
             extend_ref: object::generate_extend_ref(&constructor_ref),
-            protocol_treasury_cap,
         });
 
         let creation_events = object::new_event_handle<MarketCreatedEvent>(&factory_signer);
@@ -112,6 +152,7 @@ module VeriFiPublisher::verifi_protocol {
             market_count: 0,
             markets: vector::empty(),
             creation_events,
+            protocol_treasury_cap,
         });
     }
 
@@ -145,26 +186,21 @@ module VeriFiPublisher::verifi_protocol {
         operator: u8,
     ) acquires MarketFactory, MarketFactoryController {
         let creator_address = signer::address_of(creator);
-        let factory = borrow_global_mut<MarketFactory>(get_factory_address());
+        let factory_address = get_factory_address();
         let factory_signer = get_factory_signer();
-
-        // We create the account first, then we will fund it.
+        let factory = borrow_global_mut<MarketFactory>(factory_address);
+        
+        let market_constructor_ref = object::create_object(factory_address);
+        let new_market_signer = object::generate_signer(&market_constructor_ref);
+        
         let (resource_signer, treasury_cap) = account::create_resource_account(
-            &factory_signer,
-            b"verifi_market_treasury", // seed
+          &factory_signer, 
+          bcs::to_bytes(&object::address_from_constructor_ref(&market_constructor_ref))
         );
-
-        // Fund the new resource account with a minimal amount to exist on-chain and register it for AptosCoin.
-        // NOTE: The `factory_signer` needs to have APT to pay for this.
         coin::register<AptosCoin>(&resource_signer);
 
-        let yes_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
-        let no_meta_constructor_ref = object::create_sticky_object(signer::address_of(&factory_signer));
-
-        let yes_token_mint_ref = fungible_asset::generate_mint_ref(&yes_meta_constructor_ref);
-        let yes_token_burn_ref = fungible_asset::generate_burn_ref(&yes_meta_constructor_ref);
-        let no_token_mint_ref = fungible_asset::generate_mint_ref(&no_meta_constructor_ref);
-        let no_token_burn_ref = fungible_asset::generate_burn_ref(&no_meta_constructor_ref);
+        let yes_meta_constructor_ref = object::create_sticky_object(factory_address);
+        let no_meta_constructor_ref = object::create_sticky_object(factory_address);
 
         let yes_token_metadata_obj = fungible_asset::add_fungibility(
             &yes_meta_constructor_ref,
@@ -186,8 +222,16 @@ module VeriFiPublisher::verifi_protocol {
             string::utf8(b""), // project_uri
         );
 
-        let market_constructor_ref = object::create_object_from_account(&factory_signer);
-        
+        let yes_token_mint_ref = fungible_asset::generate_mint_ref(&yes_meta_constructor_ref);
+        let yes_token_burn_ref = fungible_asset::generate_burn_ref(&yes_meta_constructor_ref);
+        let no_token_mint_ref = fungible_asset::generate_mint_ref(&no_meta_constructor_ref);
+        let no_token_burn_ref = fungible_asset::generate_burn_ref(&no_meta_constructor_ref);
+
+        let shares_minted_events = object::new_event_handle<SharesMintedEvent>(&new_market_signer);
+        let market_resolved_events = object::new_event_handle<MarketResolvedEvent>(&new_market_signer);
+        let winnings_redeemed_events = object::new_event_handle<WinningsRedeemedEvent>(&new_market_signer);
+        let shares_sold_events = object::new_event_handle<SharesSoldEvent>(&new_market_signer);
+
         let new_market = Market {
             description,
             resolver,
@@ -208,11 +252,19 @@ module VeriFiPublisher::verifi_protocol {
             no_token_mint_ref,
             no_token_burn_ref,
             treasury_cap,
+            shares_minted_events,
+            market_resolved_events,
+            winnings_redeemed_events,
+            shares_sold_events
         };
+        
+        move_to(&new_market_signer, new_market);
 
         let market_object = object::object_from_constructor_ref<Market>(&market_constructor_ref);
         let market_address = object::object_address(&market_object);
-
+        vector::push_back(&mut factory.markets, market_object);
+        factory.market_count = factory.market_count + 1;
+        
         event::emit_event(
             &mut factory.creation_events,
             MarketCreatedEvent {
@@ -222,12 +274,7 @@ module VeriFiPublisher::verifi_protocol {
                 resolution_timestamp,
             }
         );
-
-        factory.market_count = factory.market_count + 1;
-        vector::push_back(&mut factory.markets, market_object);
-
-        let new_market_signer = object::generate_signer(&market_constructor_ref);
-        move_to(&new_market_signer, new_market);
+        
     }
 
     /**
@@ -276,6 +323,9 @@ module VeriFiPublisher::verifi_protocol {
         if (buys_yes_shares) {
             // Send YES shares to the buyer, deposit NO shares into the AMM pool.
             let yes_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.yes_token_metadata);
+
+            assert!(account::exists_at(yes_store_addr), E_STORE_NOT_CREATED);
+
             let yes_store_obj = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
             fungible_asset::deposit(yes_store_obj, yes_shares);
 
@@ -286,6 +336,9 @@ module VeriFiPublisher::verifi_protocol {
         } else {
             // Send NO shares to the buyer, deposit YES shares into the AMM pool.
             let no_store_addr = primary_fungible_store::primary_store_address(buyer_address, market.no_token_metadata);
+
+            assert!(account::exists_at(no_store_addr), E_STORE_NOT_CREATED);
+            
             let no_store_obj = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
             fungible_asset::deposit(no_store_obj, no_shares);
 
@@ -293,6 +346,16 @@ module VeriFiPublisher::verifi_protocol {
             market.pool_yes_tokens = market.pool_yes_tokens + amount_to_mint;
             fungible_asset::destroy_zero(yes_shares);
         };
+        event::emit_event(
+            &mut market.shares_minted_events,
+            SharesMintedEvent {
+                market_address,
+                buyer: signer::address_of(buyer),
+                is_yes_outcome: buys_yes_shares,
+                apt_amount_in: amount_octas,
+                shares_minted: amount_to_mint,
+            }
+        );
     //         💡 Important Note for the Frontend DON'T FORGET!!!!!!!!!!!
     // This change means that the frontend now has a new responsibility. 
     // Before a user can buy shares in a market for the first time, we must give them a button
@@ -334,7 +397,6 @@ module VeriFiPublisher::verifi_protocol {
 
             // Update the pool and burn the tokens.
             market.total_supply_yes = market.total_supply_yes - amount_to_sell;
-            market.total_supply_no = market.total_supply_no - amount_to_sell;
             fungible_asset::burn(&market.yes_token_burn_ref, tokens_to_sell);
         } else {
             // <<< SECURITY CHECK >>>
@@ -347,18 +409,32 @@ module VeriFiPublisher::verifi_protocol {
 
             // Update the pool and burn the tokens.
             market.total_supply_no = market.total_supply_no - amount_to_sell;
-            market.total_supply_yes = market.total_supply_yes - amount_to_sell;
             fungible_asset::burn(&market.no_token_burn_ref, tokens_to_sell);
         };
 
         // Calculate the payout amount (MVP: 1:1 price).
         let payout_amount = amount_to_sell;
 
+        let treasury_address = account::get_signer_capability_address(&market.treasury_cap);
+        let treasury_balance = coin::balance<AptosCoin>(treasury_address);
+        assert!(treasury_balance >= payout_amount, E_INSUFFICIENT_TREASURY_FUNDS);
+
         // Withdraw APT from the market's treasury and pay the user. 🏦
         // This is the step that the Resource Account enables.
         let treasury_signer = account::create_signer_with_capability(&market.treasury_cap);
         let apt_to_return = coin::withdraw<AptosCoin>(&treasury_signer, payout_amount);
         coin::deposit(seller_address, apt_to_return);
+
+        event::emit_event(
+        &mut market.shares_sold_events,
+        SharesSoldEvent {
+            market_address,
+            seller: seller_address,
+            is_yes_outcome: sells_yes_shares,
+            shares_burned: amount_to_sell,
+            apt_amount_out: payout_amount,
+        }
+    );
     }
 
     /**
@@ -394,6 +470,14 @@ module VeriFiPublisher::verifi_protocol {
         } else {
             market.status = STATUS_RESOLVED_NO; // 3 = Resolved-No
         };
+
+        event::emit_event(
+            &mut market.market_resolved_events,
+            MarketResolvedEvent {
+                market_address,
+                outcome_is_yes,
+            }
+        );
     }
 
     /**
@@ -408,7 +492,7 @@ module VeriFiPublisher::verifi_protocol {
         redeemer: &signer,
         market_object: Object<Market>,
         amount_to_redeem: u64,
-    ) acquires Market, MarketFactoryController {
+    ) acquires Market, MarketFactory {
         let market_address = object::object_address(&market_object);
         let market = borrow_global_mut<Market>(market_address);
         let redeemer_address = signer::address_of(redeemer);
@@ -445,14 +529,24 @@ module VeriFiPublisher::verifi_protocol {
         let treasury_signer = account::create_signer_with_capability(&market.treasury_cap);
 
         // Pay out the protocolfee with the corresponding amount calculated of APT
-        let controller = borrow_global<MarketFactoryController>(get_factory_address());
-        let protocol_treasury_address = account::get_signer_capability_address(&controller.protocol_treasury_cap);
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let protocol_treasury_address = account::get_signer_capability_address(&factory.protocol_treasury_cap);
         let fee_apt = coin::withdraw<AptosCoin>(&treasury_signer, protocol_fee);
         coin::deposit(protocol_treasury_address, fee_apt);
 
         // Pay out the user with the corresponding amount calculated of APT
         let apt_to_return = coin::withdraw<AptosCoin>(&treasury_signer, (final_payout_to_user));
         coin::deposit(redeemer_address, apt_to_return);
+
+        event::emit_event(
+            &mut market.winnings_redeemed_events,
+            WinningsRedeemedEvent {
+                market_address,
+                redeemer: redeemer_address,
+                shares_burned: amount_to_redeem,
+                apt_payout: final_payout_to_user,
+            }
+        );
     }
 
     /**
@@ -506,5 +600,118 @@ module VeriFiPublisher::verifi_protocol {
         } else {
             market.status = STATUS_RESOLVED_NO; // 3 = Resolved-No
         };
+    }
+
+    #[view]
+    /**
+    * @notice Gets the YES and NO share balance for a specific owner in a given market.
+    * @dev This is a read-only view function.
+    * @param owner The address of the account to check.
+    * @param market_object The market to check the balance in.
+    * @return (u64, u64) A tuple containing the YES balance and the NO balance.
+    */
+    public fun get_balances(owner: address, market_object: Object<Market>): (u64, u64) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        
+        let yes_store_addr = primary_fungible_store::primary_store_address(owner, market.yes_token_metadata);
+        let no_store_addr = primary_fungible_store::primary_store_address(owner, market.no_token_metadata);
+
+        let yes_balance = if (account::exists_at(yes_store_addr)) {
+            let store_object = object::address_to_object<fungible_asset::FungibleStore>(yes_store_addr);
+            fungible_asset::balance(store_object)
+        } else {
+            0
+        };
+
+        let no_balance = if (account::exists_at(no_store_addr)) {
+            let store_object = object::address_to_object<fungible_asset::FungibleStore>(no_store_addr);
+            fungible_asset::balance(store_object)
+        } else {
+            0
+        };
+
+        (yes_balance, no_balance)
+    }
+
+    #[view]
+    /**
+    * @notice Gets the aggregate numerical state of a market.
+    * @dev A view function to efficiently fetch dynamic market data for the UI.
+    * @param market_object The market to query.
+    * @return (u8, u64, u64, u64, u64) A tuple containing:
+    * - status
+    * - total_supply_yes
+    * - total_supply_no
+    * - pool_yes_tokens
+    * - pool_no_tokens
+    */
+    public fun get_market_state(market_object: Object<Market>): (u8, u64, u64, u64, u64) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        (
+            market.status,
+            market.total_supply_yes,
+            market.total_supply_no,
+            market.pool_yes_tokens,
+            market.pool_no_tokens
+        )
+    }
+    
+    #[view]
+    /**
+    * @notice A view function to check if the MarketFactoryController has been initialized.
+    * @dev Used for debugging to confirm that `init_module` ran successfully.
+    * @return bool True if the controller resource exists at the factory address.
+    */
+    public fun is_factory_initialized(): bool {
+        exists<MarketFactoryController>(get_factory_address())
+    }
+
+    #[view]
+    /**
+     * @notice A comprehensive view function to debug the factory's initialization status.
+     * @dev Checks for the existence of both the controller and the factory resources.
+     * @return (bool, bool) A tuple where:
+     * - The first bool is true if MarketFactoryController exists.
+     * - The second bool is true if MarketFactory exists.
+     */
+    public fun get_factory_status(): (bool, bool) {
+        let factory_addr = get_factory_address();
+        let controller_exists = exists<MarketFactoryController>(factory_addr);
+        let factory_exists = exists<MarketFactory>(factory_addr);
+        (controller_exists, factory_exists)
+    }
+
+    /*
+    * @notice (FOR AMM) Calculates the current price of a YES share based on pool reserves.
+    * @dev Returns the price as a scaled fixed-point number (e.g., with 8 decimals).
+    * @param market_object The market to query.
+    * @return u128 The price of one YES share.
+    *
+    // public fun get_market_price(market_object: Object<Market>): u128 acquires Market {
+    //     let market = borrow_global<Market>(object::object_address(&market_object));
+    //     
+    //     // Evitar división por cero si el pool de YES está vacío
+    //     if (market.pool_yes_tokens == 0) {
+    //         return 0; // O un precio inicial, ej. 0.5 * 10^8
+    //     };
+    //
+    //     // Fórmula de precio: (reserva del token opuesto) / (reserva de este token)
+    //     // Se escala para manejar decimales (ej. 10^8)
+    //     let price = ((market.pool_no_tokens as u128) * 100_000_000) / (market.pool_yes_tokens as u128);
+    //     price
+    // }
+    */
+
+    #[view]
+    public fun get_factory_signer_address(): address acquires MarketFactoryController {
+        let factory_signer = get_factory_signer();
+        // 'signer::address_of' extrae el dato 'address' de la capacidad 'signer'.
+        // El 'address' sí es un dato simple que se puede devolver.
+        let factory_address = signer::address_of(&factory_signer);
+        if (!account::exists_at(factory_address)) {
+            @0x0
+        } else {
+            factory_address
+        }
     }
 }

@@ -1,13 +1,16 @@
 [package]
 name = "VeriFiProtocol"
-version = "1.0.0"
+version = "0.3.0"
 authors = ["edsphinx"]
 
 [addresses]
-VeriFiPublisher = "_"
+VeriFiPublisher = "0x247058d0fa4d63683376116b11ab90bea4a9582141794d83ddbcce5a75b3578c"
+
+[dev-addresses]
+VeriFiPublisher = "0x247058d0fa4d63683376116b11ab90bea4a9582141794d83ddbcce5a75b3578c"
 
 [dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "devnet", subdir = "aptos-framework" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
 
 [dev-dependencies]
 # For running tests in the future
