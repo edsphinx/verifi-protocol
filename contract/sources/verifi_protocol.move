@@ -32,6 +32,7 @@ module VeriFiPublisher::verifi_protocol {
     const E_INSUFFICIENT_TREASURY_FUNDS: u64 = 8;
     const E_STORE_NOT_CREATED: u64 = 9;
     const E_FACTORY_SIGNER_NOT_FOUND: u64 = 10;
+    const E_INVALID_TOKEN_FOR_MARKET: u64 = 11;
 
     // === Constants ===
     const PROTOCOL_FEE_BASIS_POINTS: u64 = 200; // 2%
@@ -613,6 +614,30 @@ module VeriFiPublisher::verifi_protocol {
         } else {
             market.status = STATUS_RESOLVED_NO; // 3 = Resolved-No
         };
+    }
+
+    #[view]
+    public fun get_fa_balance(
+        store_address: address,
+        market_address: address
+    ): u64 acquires Market {
+        if (!fungible_asset::store_exists(store_address)) {
+            return 0
+        };
+
+        let store_object = object::address_to_object<fungible_asset::FungibleStore>(store_address);
+
+        let market = borrow_global<Market>(market_address);
+        let store_metadata = fungible_asset::store_metadata(store_object);
+        let store_metadata_addr = object::object_address(&store_metadata);
+
+        assert!(
+            store_metadata_addr == object::object_address(&market.yes_token_metadata) ||
+            store_metadata_addr == object::object_address(&market.no_token_metadata),
+            E_INVALID_TOKEN_FOR_MARKET
+        );
+
+        fungible_asset::balance(store_object)
     }
 
     #[view]
