@@ -22,11 +22,15 @@ async function fetchActiveMarkets(): Promise<Market[]> {
 }
 
 export function MarketsHub() {
-  const { data: markets, isLoading, isError } = useQuery({
+  const {
+    data: markets,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["activeMarkets"],
     queryFn: fetchActiveMarkets,
   });
-  
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="active">
@@ -42,7 +46,7 @@ export function MarketsHub() {
         <TabsContent value="active">
           {isLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: Static list for skeletons
                 <Skeleton key={i} className="h-[250px] w-full" />
               ))}

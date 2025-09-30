@@ -2,7 +2,7 @@
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarketsHub } from "@/components/views/MarketsHub"; // 🆕 Nuevo componente de vista
+import { MarketsHub } from "@/components/views/MarketsHub";
 
 export default function HomePage() {
   const { connected } = useWallet();

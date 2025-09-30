@@ -17,16 +17,60 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getCreateMarketPayload, indexNewMarket } from "@/lib/aptos/api/market";
 import { aptosClient } from "@/lib/aptos/client";
 import { NETWORK } from "@/lib/aptos/constants";
 import { VERIFI_PROTOCOL_ABI } from "@/utils/abis";
 
+type OracleOption = {
+  id: string; // El oracle_id que espera el contrato
+  label: string; // El texto que ve el usuario
+  requiresTargetAddress: boolean;
+  targetMetric: string; // e.g., "balance", "total_supply"
+  targetValueLabel: string; // e.g., "Target Balance (in Octas)"
+};
+
+const ORACLE_OPTIONS: OracleOption[] = [
+  {
+    id: "aptos-balance",
+    label: "APT Balance of an Account",
+    requiresTargetAddress: true,
+    targetMetric: "balance",
+    targetValueLabel: "Target Balance (in Octas)",
+  },
+  {
+    id: "usdc-total-supply",
+    label: "USDC Total Supply",
+    requiresTargetAddress: false,
+    targetMetric: "total_supply",
+    targetValueLabel: "Target Supply (6 decimals)",
+  },
+  // Aquí es donde añadiremos los oráculos de los patrocinadores en el futuro.
+];
+
 export function CreateMarketForm() {
   const [description, setDescription] = useState("");
   const [resolutionDate, setResolutionDate] = useState("");
+  const [selectedOracleId, setSelectedOracleId] = useState<string>(
+    ORACLE_OPTIONS[0].id,
+  );
+  const [targetAddress, setTargetAddress] = useState("");
+  const [targetValue, setTargetValue] = useState("");
+  const [operator, setOperator] = useState<number>(0);
+
   const { signAndSubmitTransaction, account } = useWallet();
   const router = useRouter();
+
+  const selectedOracle =
+    ORACLE_OPTIONS.find((opt) => opt.id === selectedOracleId) ||
+    ORACLE_OPTIONS[0];
 
   const { mutate, isPending } = useMutation({
     mutationFn: getCreateMarketPayload,
@@ -56,7 +100,7 @@ export function CreateMarketForm() {
           );
           if (event) {
             await indexNewMarket(event.data);
-            
+
             const marketAddress = event.data.market_address;
             toast.success("Market created successfully!", {
               description: "Redirecting you to the market page...",
@@ -89,18 +133,19 @@ export function CreateMarketForm() {
       return;
     }
 
-    const resolutionTimestamp = Math.floor(
-      new Date(resolutionDate).getTime() / 1000,
-    );
-
     mutate({
       description,
-      resolutionTimestamp,
+      resolutionTimestamp: Math.floor(
+        new Date(resolutionDate).getTime() / 1000,
+      ),
       resolverAddress: account.address,
-      targetAddress: "0x1",
-      targetFunction: "get_tvl",
-      targetValue: 1,
-      operator: 0,
+      oracleId: selectedOracle.id,
+      targetAddress: selectedOracle.requiresTargetAddress
+        ? targetAddress
+        : "0x1",
+      targetFunction: selectedOracle.targetMetric,
+      targetValue,
+      operator,
     });
   };
 
@@ -108,9 +153,10 @@ export function CreateMarketForm() {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Market Details</CardTitle>
+          <CardTitle>Create New Market</CardTitle>
           <CardDescription>
-            Define the question and resolution criteria for your market.
+            Create a new prediction market based on a verifiable, on-chain
+            event.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -118,13 +164,81 @@ export function CreateMarketForm() {
             <Label htmlFor="description">Market Question</Label>
             <Input
               id="description"
-              placeholder="e.g., Will AMNIS Finance TVL be above $10M on...?"
+              placeholder="e.g., Will USDC total supply be > 1,000,000?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
               disabled={isPending}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="oracle-type">On-Chain Data Source (Oracle)</Label>
+            <Select
+              onValueChange={setSelectedOracleId}
+              defaultValue={selectedOracle.id}
+              disabled={isPending}
+            >
+              <SelectTrigger id="oracle-type">
+                <SelectValue placeholder="Select an oracle" />
+              </SelectTrigger>
+              <SelectContent>
+                {ORACLE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedOracle.requiresTargetAddress && (
+            <div className="space-y-2">
+              <Label htmlFor="target-address">Target Account Address</Label>
+              <Input
+                id="target-address"
+                placeholder="0x..."
+                value={targetAddress}
+                onChange={(e) => setTargetAddress(e.target.value)}
+                required
+                disabled={isPending}
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="operator">Condition</Label>
+              <Select
+                onValueChange={(val) => setOperator(Number(val))}
+                defaultValue="0"
+                disabled={isPending}
+              >
+                <SelectTrigger id="operator">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Greater Than (&gt;)</SelectItem>
+                  <SelectItem value="1">Less Than (&lt;)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target-value">
+                {selectedOracle.targetValueLabel}
+              </Label>
+              <Input
+                id="target-value"
+                type="number"
+                placeholder="e.g., 1000000"
+                value={targetValue}
+                onChange={(e) => setTargetValue(e.target.value)}
+                required
+                disabled={isPending}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="resolution-date">Resolution Date & Time</Label>
             <Input
@@ -143,7 +257,7 @@ export function CreateMarketForm() {
             className="w-full"
             disabled={!account || isPending}
           >
-            {isPending ? "Creating Market..." : "Create Market"}
+            {isPending ? "Submitting Transaction..." : "Create Market"}
           </Button>
         </CardFooter>
       </Card>

@@ -24,32 +24,34 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
   const handleTransactionSuccess = (hash: string, message: string) => {
     toast.info("Transaction submitted, waiting for confirmation...");
-    aptosClient().waitForTransaction({ 
+    aptosClient()
+      .waitForTransaction({
         transactionHash: hash,
         options: {
-            timeoutSecs: 60,
-            waitForIndexer: true,
-        }
-    })
-    .then(() => {
-      toast.success("Transaction confirmed!", {
-        description: message,
-        action: {
-          label: "View on Explorer",
-          onClick: () =>
-            window.open(
-              `https://explorer.aptoslabs.com/txn/${hash}?network=${NETWORK.toLowerCase()}`,
-              "_blank",
-            ),
+          timeoutSecs: 60,
+          waitForIndexer: true,
         },
-      });
-    })
-    .catch((error) => {
+      })
+      .then(() => {
+        toast.success("Transaction confirmed!", {
+          description: message,
+          action: {
+            label: "View on Explorer",
+            onClick: () =>
+              window.open(
+                `https://explorer.aptoslabs.com/txn/${hash}?network=${NETWORK.toLowerCase()}`,
+                "_blank",
+              ),
+          },
+        });
+      })
+      .catch((error) => {
         console.error("Error waiting for transaction confirmation:", error);
         toast.error("Confirmation Timed Out", {
-          description: "Your transaction may have succeeded, but we could not confirm it in time. Please check an explorer.",
+          description:
+            "Your transaction may have succeeded, but we could not confirm it in time. Please check an explorer.",
         });
-    });
+      });
   };
 
   const handleTransactionError = (e: any) => {

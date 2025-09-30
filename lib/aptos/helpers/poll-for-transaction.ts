@@ -15,7 +15,9 @@ export async function pollForTransaction(hash: string): Promise<void> {
   for (let i = 0; i < MAX_RETRIES; i++) {
     try {
       // Directly query the transaction by hash.
-      const response = await aptosClient().getTransactionByHash({ transactionHash: hash });
+      const response = await aptosClient().getTransactionByHash({
+        transactionHash: hash,
+      });
 
       // Use the type guard to ensure it's a user transaction.
       if (isUserTransactionResponse(response)) {
@@ -25,12 +27,13 @@ export async function pollForTransaction(hash: string): Promise<void> {
           return;
         } else {
           // The transaction was found but failed. Throw an error with the VM status.
-          throw new Error(`Transaction failed with VM status: ${response.vm_status}`);
+          throw new Error(
+            `Transaction failed with VM status: ${response.vm_status}`,
+          );
         }
       }
       // If the response is not a UserTransactionResponse, we'll just wait and retry,
       // as it might be an intermediate state.
-
     } catch (error: any) {
       // If the error is a 404, it's expected while we wait for propagation.
       // We'll ignore it and continue polling.
@@ -40,7 +43,7 @@ export async function pollForTransaction(hash: string): Promise<void> {
         throw error;
       }
     }
-    await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_MS));
+    await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS));
   }
   // If the loop finishes without finding the transaction, we throw a final timeout error.
   throw new Error("Transaction confirmation timed out after multiple retries.");
