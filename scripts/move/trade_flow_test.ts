@@ -21,12 +21,19 @@ async function checkBalances(
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [userAddress.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          userAddress.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
     console.log(`✅ Balances for user ${stepLabel}:`);
-    console.log(`   - YES Shares: ${parseInt(balances[0] as string, 10) / 10 ** 8}`);
-    console.log(`   - NO Shares:  ${parseInt(balances[1] as string, 10) / 10 ** 8}`);
+    console.log(
+      `   - YES Shares: ${parseInt(balances[0] as string, 10) / 10 ** 8}`,
+    );
+    console.log(
+      `   - NO Shares:  ${parseInt(balances[1] as string, 10) / 10 ** 8}`,
+    );
   } catch (error) {
     console.error(`❌ Failed to get balances at step: ${stepLabel}.`, error);
     throw error; // Re-throw to stop the script
@@ -74,17 +81,35 @@ async function main() {
       sender: userAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::create_market`,
-        functionArguments: ["Trade Flow Test Market", "1762017600", userAddress, "0x1", "get_tvl", "1", 0],
+        functionArguments: [
+          "Trade Flow Test Market",
+          "1762017600",
+          userAddress,
+          "0x1",
+          "get_tvl",
+          "1",
+          0,
+        ],
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: createTxn });
-    const response = await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: createTxn,
+    });
+    const response = await aptos.waitForTransaction({
+      transactionHash: committedTxn.hash,
+    });
 
     if (isUserTransactionResponse(response)) {
-      const event = response.events.find((e) => e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`);
+      const event = response.events.find(
+        (e) =>
+          e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`,
+      );
       if (event) {
         marketAddress = event.data.market_address;
-        console.log(`✅ Market created successfully at address: ${marketAddress}`);
+        console.log(
+          `✅ Market created successfully at address: ${marketAddress}`,
+        );
       } else {
         throw new Error("MarketCreatedEvent not found.");
       }
@@ -110,7 +135,10 @@ async function main() {
         functionArguments: [marketAddress, BUY_YES_OCTAS, true],
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: buyYesTxn });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: buyYesTxn,
+    });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     console.log(`✅ YES shares purchased successfully.`);
   } catch (error) {
@@ -128,7 +156,10 @@ async function main() {
         functionArguments: [marketAddress, BUY_NO_OCTAS, false],
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: buyNoTxn });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: buyNoTxn,
+    });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     console.log(`✅ NO shares purchased successfully.`);
   } catch (error) {
@@ -150,7 +181,10 @@ async function main() {
         functionArguments: [marketAddress, SELL_YES_OCTAS, true],
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: sellYesTxn });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: sellYesTxn,
+    });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     console.log(`✅ YES shares sold successfully.`);
   } catch (error) {
@@ -168,42 +202,55 @@ async function main() {
         functionArguments: [marketAddress, SELL_NO_OCTAS, false],
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: sellNoTxn });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: sellNoTxn,
+    });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     console.log(`✅ NO shares sold successfully.`);
   } catch (error) {
     console.error("❌ Failed to sell NO shares.", error);
     process.exit(1);
   }
-  
+
   // === Step 8: Check Final Balances ===
   console.log("\n[8/8] Checking final balances after selling...");
   await checkBalances(aptos, userAccount, marketAddress!, "after selling");
 
-
   // === (Bonus) Negative Test: Try to sell more than owned ===
-  console.log(`\n[Bonus] Attempting to sell more YES shares than owned (expecting failure)...`);
+  console.log(
+    `\n[Bonus] Attempting to sell more YES shares than owned (expecting failure)...`,
+  );
   try {
     const sellTooManyTxn = await aptos.transaction.build.simple({
       sender: userAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::sell_shares`,
-        functionArguments: [marketAddress, 999 * 10**8, true], // Try to sell an absurd amount
+        functionArguments: [marketAddress, 999 * 10 ** 8, true], // Try to sell an absurd amount
       },
     });
-    const committedTxn = await aptos.signAndSubmitTransaction({ signer: userAccount, transaction: sellTooManyTxn });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: userAccount,
+      transaction: sellTooManyTxn,
+    });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     // If we reach here, the test failed because the transaction should have aborted.
-    console.error("❌ Negative test FAILED: Transaction succeeded but should have failed.");
+    console.error(
+      "❌ Negative test FAILED: Transaction succeeded but should have failed.",
+    );
   } catch (error: any) {
     // We expect an error here. Let's check if it's the right kind.
     if (error.message && error.message.includes("EINSUFFICIENT_BALANCE")) {
-      console.log(`✅ Negative test PASSED: Transaction failed as expected with an insufficient balance error.`);
+      console.log(
+        `✅ Negative test PASSED: Transaction failed as expected with an insufficient balance error.`,
+      );
     } else {
-      console.warn(`⚠️ Negative test inconclusive: Transaction failed, but not with the expected error. Error:`, error.message);
+      console.warn(
+        `⚠️ Negative test inconclusive: Transaction failed, but not with the expected error. Error:`,
+        error.message,
+      );
     }
   }
-
 
   console.log("\n✨ Trade flow test completed successfully!");
 }
