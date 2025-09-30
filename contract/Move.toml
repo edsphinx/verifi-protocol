@@ -4,10 +4,7 @@ version = "0.3.0"
 authors = ["edsphinx"]
 
 [addresses]
-VeriFiPublisher = "0x247058d0fa4d63683376116b11ab90bea4a9582141794d83ddbcce5a75b3578c"
-
-[dev-addresses]
-VeriFiPublisher = "0x247058d0fa4d63683376116b11ab90bea4a9582141794d83ddbcce5a75b3578c"
+VeriFiPublisher = "0x91bf586a77ca2e15193f8068d0f7e4f5e43253fc724be1fbc5efb6134a544180"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }

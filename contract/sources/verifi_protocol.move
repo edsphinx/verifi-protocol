@@ -2,7 +2,8 @@
  * @title VeriFi Protocol
  * @author edsphinx
  * @notice This module contains the core logic for the VeriFi oracle-less derivatives protocol.
- * @dev Implements a MarketFactory singleton and individual Market objects on the Aptos blockchain using the Object model.
+ * @dev Implements a MarketFactory singleton using the Aptos Object model. It manages the lifecycle
+ * of individual prediction markets, from creation to resolution and payout.
  */
 module VeriFiPublisher::verifi_protocol {
 
@@ -20,6 +21,11 @@ module VeriFiPublisher::verifi_protocol {
     use aptos_framework::aptos_coin::{AptosCoin};
     use aptos_framework::primary_fungible_store;
     use aptos_framework::timestamp;
+    use VeriFiPublisher::oracle_registry;
+    use VeriFiPublisher::oracles;
+
+    // === Friends ===
+    friend VeriFiPublisher::verifi_resolvers;
 
     // === Errors ===
     const E_MARKET_ALREADY_RESOLVED: u64 = 1;
@@ -33,6 +39,7 @@ module VeriFiPublisher::verifi_protocol {
     const E_STORE_NOT_CREATED: u64 = 9;
     const E_FACTORY_SIGNER_NOT_FOUND: u64 = 10;
     const E_INVALID_TOKEN_FOR_MARKET: u64 = 11;
+    const E_ORACLE_NOT_ACTIVE: u64 = 12;
 
     // === Constants ===
     const PROTOCOL_FEE_BASIS_POINTS: u64 = 200; // 2%
@@ -41,6 +48,8 @@ module VeriFiPublisher::verifi_protocol {
     const STATUS_CLOSED: u8 = 1; // for markets closed before resolution
     const STATUS_RESOLVED_YES: u8 = 2;
     const STATUS_RESOLVED_NO: u8 = 3;
+    const OPERATOR_GREATER_THAN: u8 = 0;
+    const OPERATOR_LESS_THAN: u8 = 1;
 
     // === Events ===
     #[event]
@@ -83,12 +92,17 @@ module VeriFiPublisher::verifi_protocol {
         apt_amount_out: u64,
     }
 
-    // === Data Structures ===   
+    // === Data Structures ===
+
+    /**
+     * @dev Represents a single prediction market. Stored as a resource within a dedicated Object.
+     */
     struct Market has key {
         description: String,
         resolver: address,
         resolution_timestamp: u64,
         status: u8,
+        oracle_id: String, // ID required oracle (eg. "aptos-balance")
         target_address: address,
         target_function: String,
         target_value: u64,
@@ -99,28 +113,30 @@ module VeriFiPublisher::verifi_protocol {
         total_supply_no: u64,
         yes_token_metadata: Object<Metadata>,
         no_token_metadata: Object<Metadata>,
-        /// @dev Capability to mint new YES tokens.
         yes_token_mint_ref: fungible_asset::MintRef,
-        /// @dev Capability to burn YES tokens.
         yes_token_burn_ref: fungible_asset::BurnRef,
-        /// @dev Capability to mint new NO tokens.
         no_token_mint_ref: fungible_asset::MintRef,
-        /// @dev Capability to burn NO tokens.
         no_token_burn_ref: fungible_asset::BurnRef,
-        /// @dev The signing capability for the market's treasury (a resource account).
         treasury_cap: account::SignerCapability,
-
         shares_minted_events: EventHandle<SharesMintedEvent>,
         market_resolved_events: EventHandle<MarketResolvedEvent>,
         winnings_redeemed_events: EventHandle<WinningsRedeemedEvent>,
         shares_sold_events: EventHandle<SharesSoldEvent>,
     }
 
-    /// @dev Controller resource to hold the factory's capability to create new objects.
+    /**
+     * @dev A controller resource stored within the singleton factory object.
+     * It holds the `ExtendRef` capability, which allows the factory to generate a signer
+     * for itself to create and own other objects (the markets).
+     */
     struct MarketFactoryController has key {
         extend_ref: ExtendRef,
     }
 
+    /**
+     * @dev The main singleton resource for the protocol.
+     * It tracks all created markets and holds the capability for the protocol's fee treasury.
+     */
     struct MarketFactory has key {
         market_count: u64,
         markets: vector<Object<Market>>,
@@ -128,7 +144,10 @@ module VeriFiPublisher::verifi_protocol {
         protocol_treasury_cap: account::SignerCapability,
     }
 
-    /// @dev A data-transfer-object (DTO) for efficiently fetching market data for the UI.
+    /**
+     * @dev A data-transfer-object (DTO) for efficiently fetching market display data for the UI.
+     * This struct is not a resource and is designed to be returned by `#[view]` functions.
+     */
     struct MarketView has store, drop {
         description: String,
         resolution_timestamp: u64,
@@ -142,10 +161,11 @@ module VeriFiPublisher::verifi_protocol {
     // === Initialization Function ===
 
     /**
-     * @notice Initializes the module by creating a named, singleton MarketFactory object.
-     * @dev This is called once upon publish. It creates an object with a predictable address
-     * and stores the factory and its controller under that object's account.
-     * @param sender The signer of the account publishing the module.
+     * @notice Initializes the protocol by creating the singleton `MarketFactory` object.
+     * @dev Is called automatically when the contract is deployed
+     * It creates a named object at a deterministic address to house the
+     * factory resources, ensuring a single, discoverable entry point for the protocol.
+     * @param sender The signer of the account that will own the protocol's treasury.
      */
     fun init_module(sender: &signer) {
         let constructor_ref = object::create_named_object(sender, MARKET_FACTORY_SEED);
@@ -170,33 +190,53 @@ module VeriFiPublisher::verifi_protocol {
 
     // === Helper Functions ===
 
-    /// @dev Gets the deterministic address of the singleton MarketFactory object.
+    /**
+     * @dev Gets the deterministic address of the singleton `MarketFactory` object.
+     * @return The address of the factory object.
+     */
     fun get_factory_address(): address {
         object::create_object_address(&@VeriFiPublisher, MARKET_FACTORY_SEED)
     }
 
-    /// @dev Gets the signer for the MarketFactory, allowing it to own other objects.
+    /**
+     * @dev Gets the signer for the `MarketFactory` object.
+     * @dev This allows the factory to act as an account, owning the market objects it creates.
+     * @return A `signer` capability for the factory object's account.
+     */
     fun get_factory_signer(): signer acquires MarketFactoryController {
         let controller = borrow_global<MarketFactoryController>(get_factory_address());
         object::generate_signer_for_extending(&controller.extend_ref)
     }
 
-    // === Public Functions ===
+    // === Entry Functions ===
 
     /**
-     * @notice Creates a new prediction market object.
-     * @dev The new Market object is owned by the MarketFactory itself.
+     * @notice Creates a new prediction market.
+     * @dev The new `Market` object is created and owned by the `MarketFactory`. This function
+     * also creates the two fungible assets (YES/NO tokens) specific to this market.
+     * @param creator The signer of the account creating the market.
+     * @param description The question of the prediction market.
+     * @param resolution_timestamp The Unix timestamp when the market can be resolved.
+     * @param resolver The address authorized to perform manual resolution.
+     * @param oracle_id The string ID of the on-chain oracle used for programmatic resolution.
+     * @param target_address The address the oracle will query.
+     * @param target_function [Legacy] Not currently used in resolution logic (keep for backwards compatibility).
+     * @param target_value The value to compare the oracle's result against.
+     * @param operator The comparison operator to use (0 for >, 1 for <).
      */
     public entry fun create_market(
         creator: &signer,
         description: String,
         resolution_timestamp: u64,
         resolver: address,
+        oracle_id: String,
         target_address: address,
         target_function: String,
         target_value: u64,
         operator: u8,
     ) acquires MarketFactory, MarketFactoryController {
+        assert!(oracle_registry::is_oracle_active(oracle_id), E_ORACLE_NOT_ACTIVE);
+
         let creator_address = signer::address_of(creator);
         let factory_address = get_factory_address();
         let factory_signer = get_factory_signer();
@@ -252,6 +292,7 @@ module VeriFiPublisher::verifi_protocol {
             resolver,
             resolution_timestamp,
             status: 0,
+            oracle_id, // <-- ID required oracle
             target_address,
             target_function,
             target_value,
@@ -293,14 +334,16 @@ module VeriFiPublisher::verifi_protocol {
     }
 
     /**
-    * @notice Allows a user to buy outcome shares by paying with APT.
-    * @dev For the MVP, 1 APT mints one pair of shares (1 YES + 1 NO).
-    * The chosen outcome share is sent to the buyer, and the other is sent to the AMM pool.
-    * @param buyer The signer of the account buying the shares.
-    * @param market_object The specific market object to buy shares from.
-    * @param amount_apt The amount of APT coin to be paid.
-    * @param buys_yes_shares A boolean indicating the desired outcome (true for YES, false for NO).
-    */
+     * @notice Buy outcome shares for a market using APT.
+     * @dev Implements a 1:1 minting model for the MVP. A pair of 1 YES and 1 NO share is
+     * minted for each Octa of APT deposited. The chosen share is sent to the buyer, and
+     * the opposing share is burned after its value is added to the internal AMM pool counter.
+     * This function will automatically create a `FungibleStore` for the user if it doesn't exist.
+     * @param buyer The signer of the account buying the shares.
+     * @param market_object The market to buy shares from.
+     * @param amount_octas The amount of APT (in Octas) to spend.
+     * @param buys_yes_shares `true` to buy YES shares, `false` to buy NO shares.
+     */
     public entry fun buy_shares(
         buyer: &signer,
         market_object: Object<Market>,
@@ -369,23 +412,17 @@ module VeriFiPublisher::verifi_protocol {
                 shares_minted: amount_to_mint,
             }
         );
-        
-    //         💡 Important Note for the Frontend DON'T FORGET!!!!!!!!!!!
-    // This change means that the frontend now has a new responsibility. 
-    // Before a user can buy shares in a market for the first time, we must give them a button
-    // that allows them to execute a one-time transaction that calls primary_fungible_store::create_store 
-    // for both the YES and NO tokens of that market. 
-    // This initializes their "bank accounts" so they can receive the tokens.
     }
     
     /**
-    * @notice Allows a user to sell their outcome shares back to the market for APT.
-    * @dev The user provides a FungibleAsset object containing their shares. The contract
-    * verifies, burns, and pays out the corresponding amount of APT from the treasury.
-    * @param seller The signer of the account selling the shares.
-    * @param market_object The market object to sell shares to.
-    * @param tokens_to_sell An ephemeral FungibleAsset containing the shares to be sold.
-    */
+     * @notice Sell outcome shares back to the market for APT before resolution.
+     * @dev Implements a 1:1 redemption model for the MVP. This function is not a true AMM swap.
+     * The user's shares are burned, and an equivalent amount of APT is returned from the treasury.
+     * @param seller The signer of the account selling the shares.
+     * @param market_object The market to sell shares to.
+     * @param amount_to_sell The number of shares to sell.
+     * @param sells_yes_shares `true` if selling YES shares, `false` if selling NO shares.
+     */
     public entry fun sell_shares(
         seller: &signer,
         market_object: Object<Market>,
@@ -452,14 +489,13 @@ module VeriFiPublisher::verifi_protocol {
     }
 
     /**
-    * @notice Resolves a market, setting the final outcome.
-    * @dev Can only be called by the designated `resolver` address for the market,
-    * and only after the `resolution_timestamp` has passed. This function
-    * locks the market status, preventing further trading and enabling redemptions.
-    * @param resolver The signer of the account designated as the market resolver.
-    * @param market_object The market object to be resolved.
-    * @param outcome_is_yes The final outcome of the market (true for YES, false for NO).
-    */
+     * @notice Manually resolve a market.
+     * @dev This is a fallback resolution method. Can only be called by the designated `resolver`
+     * for the market and only after the `resolution_timestamp` has passed.
+     * @param resolver The signer of the designated resolver account.
+     * @param market_object The market to resolve.
+     * @param outcome_is_yes The final boolean outcome of the market.
+     */
     public entry fun resolve_market(
         resolver: &signer,
         market_object: Object<Market>,
@@ -495,13 +531,13 @@ module VeriFiPublisher::verifi_protocol {
     }
 
     /**
-    * @notice Allows a holder of winning tokens to redeem them for their share of the prize pool (APT).
-    * @dev This function can only be called after a market has been resolved. It withdraws the
-    * specified amount of winning tokens from the user's store, burns them, and pays out APT.
-    * @param redeemer The signer of the account redeeming the tokens.
-    * @param market_object The market object to redeem from.
-    * @param amount_to_redeem The amount of winning tokens to redeem.
-    */
+     * @notice Redeem winning shares for a proportional cut of the total prize pool (APT).
+     * @dev Can only be called after a market has been resolved. Calculates the user's payout,
+     * subtracts the protocol fee, and transfers the final APT amount.
+     * @param redeemer The signer of the account redeeming their winning shares.
+     * @param market_object The resolved market.
+     * @param amount_to_redeem The number of winning shares to redeem.
+     */
     public entry fun redeem_winnings(
         redeemer: &signer,
         market_object: Object<Market>,
@@ -563,60 +599,79 @@ module VeriFiPublisher::verifi_protocol {
         );
     }
 
+    // === Friend Functions ===
+
     /**
-    * @notice Resolves a market programmatically and trustlessly, The foundation for On Chain Oracle.
-    * @dev ANYONE can call this function after the `resolution_timestamp` has passed.
-    * The function itself will read the state of another contract on Aptos to determine
-    * the outcome in a trustless manner.
-    * @param caller The signer of any account paying the gas to execute the resolution.
-    * @param market_object The market object to be resolved.
-    */
-    public entry fun resolve_market_programmatically(
-        _caller: &signer, // Can be called by ANYONE.
+     * @notice Securely exposes necessary market data to the trusted resolver contract.
+     * @dev This is a `public(friend)` function, only callable by modules declared as friends
+     * (i.e., `verifi_resolvers`). It provides the data needed for programmatic resolution.
+     * @param market_object The market to query.
+     * @return A tuple containing the oracle configuration data.
+     */
+    public(friend) fun get_market_resolution_data(
+        market_object: Object<Market>
+    ): (String, address, u64, u8, u64) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        (
+            market.oracle_id,
+            market.target_address,
+            market.target_value,
+            market.operator,
+            market.resolution_timestamp
+        )
+    }
+
+    /**
+     * @notice Updates a market's status based on a programmatic resolution.
+     * @dev This is a `public(friend)` function, only callable by the trusted resolver contract.
+     * It performs the final checks and updates the market's `status` field.
+     * @param market_object The market to update.
+     * @param oracle_value The value read from the on-chain oracle.
+     * @param target_value The market's original target value.
+     * @param operator The market's comparison operator.
+     */
+    public(friend) fun update_market_status_from_resolver(
         market_object: Object<Market>,
+        oracle_value: u64,
+        target_value: u64,
+        operator: u8,
     ) acquires Market {
         let market_address = object::object_address(&market_object);
         let market = borrow_global_mut<Market>(market_address);
 
-        // --- SECURITY CHECKS ---
         assert!(timestamp::now_seconds() >= market.resolution_timestamp, E_MARKET_NOT_READY_FOR_RESOLUTION);
         assert!(market.status == STATUS_OPEN, E_MARKET_ALREADY_RESOLVED);
 
-        // --- ON-CHAIN VERIFICATION LOGIC (THE MAGIC) ---
-        // This is the part we will need to adapt for each market "template".
-        // For now, we assume we are reading a simple view function that returns a u64.
-        // IN A REAL-WORLD SCENARIO, THIS CALL WOULD BE DYNAMIC OR USE AN INTERMEDIARY MODULE.
-        // For the hackathon demo, we will hardcode the call to a known function.
-
-        // Example: Calling a `get_tvl()` function from the `target_address` contract.
-        // NOTE: Move does not currently support direct, generic calls to `view` functions in other modules.
-        // The idiomatic way to handle this is by creating a wrapper function in our own module or using an
-        // "on-chain oracle" module that specializes in these calls.
-        // For the MVP, we will SIMULATE this call. For production, a more advanced approach is needed.
-
-        // *** SIMULATION FOR THE DEMO ***
-        // In this demo, we will have a "test oracle" module that returns a value:
-        // let current_on_chain_value = test_oracle::get_mock_value(market.target_address);
-        // For this example, let's use a hardcoded value to illustrate the logic.
-        let current_on_chain_value = 5_500_000; // Simulated value for the demo.
-
-        let outcome_is_yes = if (market.operator == 0) { // 0 = Greater Than (>)
-            current_on_chain_value > market.target_value
-        } else if (market.operator == 1) { // 1 = Less Than (<)
-            current_on_chain_value < market.target_value
-        } else { // Add more operators as needed (==, >=, <=)
+        let outcome_is_yes = if (operator == OPERATOR_GREATER_THAN) {
+            oracle_value > target_value
+        } else if (operator == OPERATOR_LESS_THAN) {
+            oracle_value < target_value
+        } else {
             false
         };
 
-        // --- SET FINAL OUTCOME ---
         if (outcome_is_yes) {
-            market.status = STATUS_RESOLVED_YES; // 2 = Resolved-Yes
+            market.status = STATUS_RESOLVED_YES;
         } else {
-            market.status = STATUS_RESOLVED_NO; // 3 = Resolved-No
+            market.status = STATUS_RESOLVED_NO;
         };
+
+        event::emit_event(
+            &mut market.market_resolved_events,
+            MarketResolvedEvent {
+                market_address,
+                outcome_is_yes,
+            }
+        );
     }
 
+    // === View Functions ===
+
     #[view]
+    /**
+     * @notice Gets the balance of a specific fungible asset store if it belongs to a VeriFi market.
+     * @dev A `#[view]` function primarily for off-chain services.
+     */
     public fun get_fa_balance(
         store_address: address,
         market_address: address
@@ -642,28 +697,24 @@ module VeriFiPublisher::verifi_protocol {
 
     #[view]
     /**
-    * @notice Gets the YES and NO share balance for a specific owner in a given market.
-    * @dev This is a read-only view function that gracefully handles cases where a store doesn't exist.
-    * @param owner The address of the account to check.
-    * @param market_object The market to check the balance in.
-    * @return (u64, u64) A tuple containing the YES balance and the NO balance.
-    */
+     * @notice Gets the YES and NO share balances for a specific owner in a given market.
+     * @dev A `#[view]` function that gracefully returns 0 if the user does not have a store for a token.
+     */
     public fun get_balances(owner: address, market_object: Object<Market>): (u64, u64) acquires Market {
         let market = borrow_global<Market>(object::object_address(&market_object));
         
-        // --- CORRECCIÓN: Usar la función de ayuda `balance` que ya comprueba la existencia ---
         let yes_balance = primary_fungible_store::balance(owner, market.yes_token_metadata);
         let no_balance = primary_fungible_store::balance(owner, market.no_token_metadata);
-        // ---------------------------------------------------------------------------------
-
+        
         (yes_balance, no_balance)
     }
 
     #[view]
     /**
-    * @notice Gets all necessary UI data for a single market in one call.
-    * @dev Aggregates static and dynamic data into a single MarketView struct.
-    */
+     * @notice Gets all necessary UI data for a single market in one call.
+     * @dev A `#[view]` function that aggregates static and dynamic data into a `MarketView` struct
+     * for efficient frontend rendering.
+     */
     public fun get_market_view(market_object: Object<Market>): MarketView acquires Market {
         let market = borrow_global<Market>(object::object_address(&market_object));
         MarketView {
@@ -679,16 +730,9 @@ module VeriFiPublisher::verifi_protocol {
 
     #[view]
     /**
-    * @notice Gets the aggregate numerical state of a market.
-    * @dev A view function to efficiently fetch dynamic market data for the UI.
-    * @param market_object The market to query.
-    * @return (u8, u64, u64, u64, u64) A tuple containing:
-    * - status
-    * - total_supply_yes
-    * - total_supply_no
-    * - pool_yes_tokens
-    * - pool_no_tokens
-    */
+     * @notice Gets the aggregate numerical state of a market.
+     * @dev A `#[view]` function for efficiently fetching dynamic data for the UI.
+     */
     public fun get_market_state(market_object: Object<Market>): (u8, u64, u64, u64, u64) acquires Market {
         let market = borrow_global<Market>(object::object_address(&market_object));
         (
@@ -702,21 +746,15 @@ module VeriFiPublisher::verifi_protocol {
     
     #[view]
     /**
-    * @notice A view function to check if the MarketFactoryController has been initialized.
-    * @dev Used for debugging to confirm that `init_module` ran successfully.
-    * @return bool True if the controller resource exists at the factory address.
-    */
+     * @notice A diagnostic `#[view]` function to check if the `MarketFactoryController` has been initialized.
+     */
     public fun is_factory_initialized(): bool {
         exists<MarketFactoryController>(get_factory_address())
     }
 
     #[view]
     /**
-     * @notice A comprehensive view function to debug the factory's initialization status.
-     * @dev Checks for the existence of both the controller and the factory resources.
-     * @return (bool, bool) A tuple where:
-     * - The first bool is true if MarketFactoryController exists.
-     * - The second bool is true if MarketFactory exists.
+     * @notice A comprehensive diagnostic `#[view]` function to check the initialization status of all factory resources.
      */
     public fun get_factory_status(): (bool, bool) {
         let factory_addr = get_factory_address();
@@ -747,15 +785,61 @@ module VeriFiPublisher::verifi_protocol {
     */
 
     #[view]
+    /**
+     * @notice A diagnostic `#[view]` function to confirm the factory's signer address can be generated.
+     */
     public fun get_factory_signer_address(): address acquires MarketFactoryController {
         let factory_signer = get_factory_signer();
-        // 'signer::address_of' extrae el dato 'address' de la capacidad 'signer'.
-        // El 'address' sí es un dato simple que se puede devolver.
         let factory_address = signer::address_of(&factory_signer);
+        
         if (!account::exists_at(factory_address)) {
             @0x0
         } else {
             factory_address
         }
+    }
+
+    #[view]
+    /**
+     * @notice A diagnostic view function to check the programmatic resolution outcome without changing state.
+     * @dev Replicates the read and comparison logic of `resolve_market_programmatically`.
+     * @param market_object The market to check.
+     * @return bool The calculated outcome (true if YES, false if NO).
+     */
+    public fun debug_check_outcome(market_object: Object<Market>): bool
+        acquires Market {
+
+        let market = borrow_global<Market>(object::object_address(&market_object));
+
+        let current_on_chain_value = oracles::fetch_data(market.oracle_id, market.target_address);
+
+        let outcome_is_yes = if (market.operator == OPERATOR_GREATER_THAN) {
+            current_on_chain_value > market.target_value
+        } else if (market.operator == OPERATOR_LESS_THAN) {
+            current_on_chain_value < market.target_value
+        } else {
+            false
+        };
+
+        outcome_is_yes
+    }
+
+    #[view]
+    /**
+     * @notice Debugging function to check oracle value and market data
+     * @dev Returns (oracle_value, target_value, operator, resolution_timestamp, current_timestamp, status)
+     */
+    public fun debug_market_resolution_data(market_object: Object<Market>): (u64, u64, u8, u64, u64, u8)
+        acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        let oracle_value = oracles::fetch_data(market.oracle_id, market.target_address);
+        (
+            oracle_value,
+            market.target_value,
+            market.operator,
+            market.resolution_timestamp,
+            timestamp::now_seconds(),
+            market.status
+        )
     }
 }
