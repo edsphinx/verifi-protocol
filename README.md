@@ -125,5 +125,24 @@ We are fully aware that certain features were simplified to focus on the core in
 * **Leveraged Markets:** Build integrations to offer leveraged trading on outcomes.
 * **Governance and Fee Structure:** Introduce a protocol fee on trades managed by a DAO.
 
+* 💸 1. Market Creation Fee (`Fee on create_market`)
+
+To generate an additional revenue stream and prevent low-quality market spam, a **small, flat fee in APT** will be introduced every time a user creates a new market.
+
+* **Logic:** The `create_market` function will require the `creator` to attach a specific amount of APT (e.g., 0.1 APT) to the call.
+* **Benefits:**
+    * **Direct Revenue:** The fee will be immediately transferred to the main protocol treasury, generating consistent income.
+    * **Anti-Spam:** It discourages the mass creation of pointless markets, maintaining the quality of offerings on the platform.
+
+***
+
+* ⛽ 2. Gas Optimization for Market Creation
+
+Currently, the `MarketFactory` account (the protocol's account) **assumes the gas cost** for creating the resource account for each new market. This model is not scalable.
+
+* **Problem:** It requires the protocol's main wallet to be constantly refilled, creating an operational dependency.
+* **Solution:** The `create_market` function will be refactored so that the market's `creator` covers this cost. The `creator` will send the necessary APT, which will be used by the `factory_signer` to pay for the transaction, making the protocol completely **self-sustaining**.
+
+
 ## 👥 The Team
 * **edsphinx** - Lead Move & Fullstack Developer

@@ -51,7 +51,10 @@ export function WalletSelector() {
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
   const copyAddress = useCallback(async () => {
-    if (!account?.address.toString()) return;
+    if (!account?.address) return;
+    const address = account?.address?.toString();
+    if (!address) return;
+
     try {
       await navigator.clipboard.writeText(account.address.toString());
       toast.success("Success", {
@@ -67,7 +70,7 @@ export function WalletSelector() {
       <DropdownMenuTrigger asChild>
         <Button>
           {account?.ansName ||
-            truncateAddress(account?.address.toString()) ||
+            truncateAddress(account?.address?.toString()) ||
             "Unknown"}
         </Button>
       </DropdownMenuTrigger>

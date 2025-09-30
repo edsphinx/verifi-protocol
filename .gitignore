@@ -45,3 +45,4 @@ next-env.d.ts
 # Archivos de sistema operativo
 .DS_Store
 *.DS_Store
+/lib/generated/prisma

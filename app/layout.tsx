@@ -5,6 +5,7 @@ import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/WalletProvider";
+import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,7 @@ export default function RootLayout({
             <ReactQueryProvider>
               <Header />
               {children}
+              <WrongNetworkAlert />
               <Toaster richColors position="bottom-right" />
             </ReactQueryProvider>
           </WalletProvider>
