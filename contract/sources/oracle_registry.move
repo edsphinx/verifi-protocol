@@ -8,12 +8,14 @@
 module VeriFiPublisher::oracle_registry {
 
     // === Imports ===
+    use std::error;
     use std::string::{String};
     use aptos_framework::table::{Self, Table};
     use VeriFiPublisher::access_control;
 
     // === Errors ===
     const E_ORACLE_NOT_FOUND: u64 = 201;
+    const E_ORACLE_ALREADY_EXISTS: u64 = 202;
 
     // === Data Structures ===
 
@@ -68,6 +70,8 @@ module VeriFiPublisher::oracle_registry {
     public entry fun register_oracle(admin: &signer, id: String, protocol_name: String) acquires OracleRegistry {
         access_control::assert_is_admin(admin);
         let registry = borrow_global_mut<OracleRegistry>(@VeriFiPublisher);
+        assert!(!table::contains(&registry.oracles, id), error::already_exists(E_ORACLE_ALREADY_EXISTS));
+
         let info = OracleInfo { id, protocol_name, is_active: true };
         table::add(&mut registry.oracles, info.id, info);
     }
@@ -117,5 +121,23 @@ module VeriFiPublisher::oracle_registry {
         } else {
             false
         }
+    }
+
+    #[view]
+    public fun oracle_exists(id: String): bool acquires OracleRegistry {
+        let registry = borrow_global<OracleRegistry>(@VeriFiPublisher);
+        table::contains(&registry.oracles, id)
+    }
+
+    // === Test-Only Functions ===
+
+    #[test_only]
+    /**
+     * @notice Initializes oracle registry for testing.
+     * @dev Only available in test mode.
+     * @param admin The test account to initialize with
+     */
+    public fun init_for_test(admin: &signer) {
+        init_module(admin);
     }
 }

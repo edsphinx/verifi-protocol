@@ -68,10 +68,22 @@ module VeriFiPublisher::access_control {
      */
     public entry fun transfer_admin_role(admin: &signer, new_admin_address: address) acquires AdminStore {
         assert_is_admin(admin);
-        
+
         let publisher_address = @VeriFiPublisher;
         let admin_store = borrow_global_mut<AdminStore>(publisher_address);
 
         admin_store.admin_address = new_admin_address;
+    }
+
+    // === Test-Only Functions ===
+
+    #[test_only]
+    /**
+     * @notice Initializes admin store for testing.
+     * @dev Only available in test mode.
+     * @param deployer The test account to initialize with
+     */
+    public fun init_for_test(deployer: &signer) {
+        init_module(deployer);
     }
 }
