@@ -1,4 +1,7 @@
-import type { CreateMarketPayloadArgs, EntryFunctionPayload } from "@/lib/aptos/types";
+import type {
+  CreateMarketPayloadArgs,
+  EntryFunctionPayload,
+} from "@/lib/aptos/types";
 import { VERIFI_PROTOCOL_ABI } from "@/utils/abis";
 
 const MODULE_ADDRESS = VERIFI_PROTOCOL_ABI.address;

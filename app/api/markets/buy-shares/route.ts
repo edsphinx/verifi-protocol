@@ -4,7 +4,7 @@ import { buildBuySharesPayload } from "@/lib/aptos/transactions/buy-shares-trans
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     // The body should contain { marketObjectAddress, amountOctas, buysYesShares }
     // We can add validation here later if needed.
 
@@ -12,9 +12,11 @@ export async function POST(req: NextRequest) {
     const payload = buildBuySharesPayload(body);
 
     return NextResponse.json(payload);
-
   } catch (error) {
     console.error("Error creating buy_shares payload:", error);
-    return NextResponse.json({ error: "Failed to construct transaction" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to construct transaction" },
+      { status: 500 },
+    );
   }
 }

@@ -44,7 +44,6 @@ export async function getSellSharesPayload(
   return response.json();
 }
 
-
 export async function getCreateMarketPayload(
   data: any,
 ): Promise<EntryFunctionPayload> {
