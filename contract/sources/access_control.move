@@ -13,6 +13,7 @@ module VeriFiPublisher::access_control {
 
     // === Errors ===
     const E_NOT_ADMIN: u64 = 101;
+    const E_ALREADY_INITIALIZED: u64 = 102;
 
     // === Data Structures ===
 
@@ -37,9 +38,11 @@ module VeriFiPublisher::access_control {
      * @param deployer The signer of the account that will become the initial administrator.
      */
     fun init_module(deployer: &signer) {
+        let publisher_address = signer::address_of(deployer);
+        assert!(!exists<AdminStore>(publisher_address), E_ALREADY_INITIALIZED);
         // We move the AdminStore resource to the deployer's account.
         // The resource itself can only be created here, ensuring a single admin configuration.
-        move_to(deployer, AdminStore { admin_address: signer::address_of(deployer) });
+        move_to(deployer, AdminStore { admin_address: publisher_address });
     }
 
     // === Public Functions ===
@@ -75,6 +78,19 @@ module VeriFiPublisher::access_control {
         admin_store.admin_address = new_admin_address;
     }
 
+    // === View Function ===
+
+    #[view]
+    /**
+    * @notice Checks if a given address is the current admin.
+    * @dev A public view function for off-chain queries and on-chain checks.
+    * @param addr The address of the account to be verified as the admin role.
+    */
+    public fun is_admin(addr: address): bool acquires AdminStore {
+        let publisher_address = @VeriFiPublisher;
+        exists<AdminStore>(publisher_address) && borrow_global<AdminStore>(publisher_address).admin_address == addr
+    }
+
     // === Test-Only Functions ===
 
     #[test_only]
@@ -84,6 +100,12 @@ module VeriFiPublisher::access_control {
      * @param deployer The test account to initialize with
      */
     public fun init_for_test(deployer: &signer) {
-        init_module(deployer);
+        use aptos_framework::account;
+
+        let publisher_address = @VeriFiPublisher;
+        assert!(!exists<AdminStore>(publisher_address), E_ALREADY_INITIALIZED);
+        
+        let publisher_signer = account::create_signer_for_test(publisher_address);
+        move_to(&publisher_signer, AdminStore { admin_address: signer::address_of(deployer) });
     }
 }
