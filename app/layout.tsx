@@ -6,6 +6,7 @@ import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/WalletProvider";
+import { WalletConnectionGuard } from "@/components/WalletConnectionGuard";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { TappModeProvider } from "@/lib/tapp/context/TappModeContext";
 import "@/styles/globals.css";
@@ -43,16 +44,18 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <WalletProvider>
-            <ReactQueryProvider>
-              <NotificationProvider>
-                <TappModeProvider>
-                  <Header />
-                  {children}
-                  <WrongNetworkAlert />
-                  <Toaster richColors position="bottom-right" />
-                </TappModeProvider>
-              </NotificationProvider>
-            </ReactQueryProvider>
+            <WalletConnectionGuard>
+              <ReactQueryProvider>
+                <NotificationProvider>
+                  <TappModeProvider>
+                    <Header />
+                    {children}
+                    <WrongNetworkAlert />
+                    <Toaster richColors position="bottom-right" />
+                  </TappModeProvider>
+                </NotificationProvider>
+              </ReactQueryProvider>
+            </WalletConnectionGuard>
           </WalletProvider>
         </ThemeProvider>
       </body>

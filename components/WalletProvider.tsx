@@ -2,17 +2,21 @@
 
 import { Network } from "@aptos-labs/ts-sdk";
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
-import { useMemo, type PropsWithChildren } from "react";
+import { useMemo, type PropsWithChildren, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { APTOS_API_KEY, NETWORK } from "@/aptos/constants";
 
 export function WalletProvider({ children }: PropsWithChildren) {
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we only render on client to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Memoize dappConfig to prevent recreation on every render
   // This prevents wallet disconnection on navigation
   const dappConfig = useMemo(() => {
-    console.log('[WalletProvider] Creating dappConfig - NETWORK:', NETWORK);
-    console.log('[WalletProvider] APTOS_API_KEY configured:', !!APTOS_API_KEY);
-
     const config =
       NETWORK === Network.LOCAL
         ? {
@@ -24,13 +28,13 @@ export function WalletProvider({ children }: PropsWithChildren) {
             network: NETWORK,
           };
 
-    console.log('[WalletProvider] dappConfig created:', {
-      ...config,
-      aptosApiKeys: 'aptosApiKeys' in config && config.aptosApiKeys ? 'CONFIGURED' : 'MISSING'
-    });
-
     return config;
   }, []); // Empty deps array - only create once
+
+  // Prevent SSR/hydration issues
+  if (!isClient) {
+    return <>{children}</>;
+  }
 
   return (
     <AptosWalletAdapterProvider
@@ -39,7 +43,10 @@ export function WalletProvider({ children }: PropsWithChildren) {
       dappConfig={dappConfig}
       onError={(error) => {
         console.error("Wallet Error:", error);
-        toast.error(error.message || "An unknown wallet error occurred.");
+        // Only show toast for actual errors, not disconnections
+        if (!error.message?.includes("disconnected")) {
+          toast.error(error.message || "An unknown wallet error occurred.");
+        }
       }}
     >
       {children}

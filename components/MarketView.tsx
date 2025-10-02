@@ -8,6 +8,7 @@ import { MarketDetails } from "@/components/views/market/MarketDetails";
 import { PoolSection } from "@/components/tapp/PoolSection";
 import { SwapInterface } from "@/components/views/market/TappAMM/SwapInterface";
 import { LiquidityPanel } from "@/components/views/market/TappAMM/LiquidityPanel";
+import { TappPoolStats } from "@/components/TappPoolStats";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
@@ -87,12 +88,15 @@ export function MarketView({ marketId }: { marketId: string }) {
         </TabsContent>
       </Tabs>
 
-      {/* Pool Info Section */}
-      <PoolSection
-        marketAddress={marketId}
-        yesTokenAddress={details.yesTokenAddress}
-        noTokenAddress={details.noTokenAddress}
-      />
+      {/* Tapp Exchange Integration */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TappPoolStats marketAddress={marketId} />
+        <PoolSection
+          marketAddress={marketId}
+          yesTokenAddress={details.yesTokenAddress}
+          noTokenAddress={details.noTokenAddress}
+        />
+      </div>
     </div>
   );
 }
