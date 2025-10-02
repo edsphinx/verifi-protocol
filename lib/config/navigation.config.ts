@@ -4,15 +4,15 @@
  */
 
 import {
-  TrendingUp,
-  PlusCircle,
-  Wallet,
   Activity,
-  Droplets,
   ArrowLeftRight,
   BarChart3,
+  Droplets,
+  PlusCircle,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
-import type { NavigationConfig } from "@/types";
+import type { NavigationConfig } from "@/lib/types";
 
 export const navigationConfig: NavigationConfig = {
   mainNav: [

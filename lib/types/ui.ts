@@ -31,8 +31,8 @@ export type MarketCreatedEventData = {
 
 /**
  * @notice Generic props for a Next.js dynamic route page component.
- * @dev This utility type correctly types `params` and `searchParams`.
- * It can be used for both synchronous and asynchronous Server Components.
+ * @dev This utility type correctly types `params` and `searchParams` for Next.js 15.
+ * In Next.js 15, both params and searchParams are Promises in async Server Components.
  * @template PageParam The name of the dynamic parameter, e.g., `[id]`. Defaults to "id".
  * @template IsAsync A boolean to indicate if the page component is async. Defaults to `false`.
  */
@@ -48,5 +48,11 @@ export type PageProps<
     ? Promise<{ [key in PageParam]: string }>
     : { [key in PageParam]: string };
 
-  searchParams?: { [key: string]: string | string[] | undefined };
+  /**
+   * Search parameters from the URL query string.
+   * If `IsAsync` is true, this will also be a Promise that must be awaited.
+   */
+  searchParams?: IsAsync extends true
+    ? Promise<{ [key: string]: string | string[] | undefined }>
+    : { [key: string]: string | string[] | undefined };
 };

@@ -47,7 +47,7 @@ export function AMMDemoView() {
       )}
 
       {/* Pool Overview */}
-      <PoolOverview data={poolData} isLoading={isLoading} />
+      {poolData && <PoolOverview data={poolData} isLoading={isLoading} />}
 
       {/* Swap and Liquidity Panels */}
       {poolData && (

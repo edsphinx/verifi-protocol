@@ -1,5 +1,5 @@
 import { MarketView } from "@/components/MarketView";
-import type { PageProps } from "@/types";
+import type { PageProps } from "@/lib/types";
 
 export default async function MarketPage({ params }: PageProps<"id", true>) {
   const resolvedParams = await params;

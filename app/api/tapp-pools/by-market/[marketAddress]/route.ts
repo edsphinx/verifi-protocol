@@ -8,10 +8,11 @@ import { getTappPoolByMarket } from "@/services/tapp-pool.service";
 
 export async function GET(
   request: Request,
-  { params }: { params: { marketAddress: string } }
+  { params }: { params: Promise<{ marketAddress: string }> }
 ) {
   try {
-    const { marketAddress } = params;
+    // In Next.js 15, params is a Promise that must be awaited
+    const { marketAddress } = await params;
 
     const pool = await getTappPoolByMarket(marketAddress);
 

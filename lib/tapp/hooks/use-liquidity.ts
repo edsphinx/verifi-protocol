@@ -6,6 +6,8 @@ import { useTappMode } from "../context/TappModeContext";
 import { calculateAddLiquidity, calculateRemoveLiquidity } from "../cpmm";
 import { toast } from "sonner";
 import { Serializer } from "@aptos-labs/ts-sdk";
+import { aptosClient } from "@/aptos/client";
+import { TAPP_PROTOCOL_ADDRESS } from "../constants";
 
 interface AddLiquidityParams {
   marketId: string;
@@ -42,8 +44,6 @@ async function executeAddLiquidity(
   signAndSubmitTransaction: any,
   account: any,
 ) {
-  const { aptosClient } = await import("@/aptos/client");
-  const { TAPP_PROTOCOL_ADDRESS } = await import("../constants");
 
   if (!account?.address) {
     throw new Error("Wallet not connected");
@@ -114,9 +114,6 @@ async function executeRemoveLiquidity(
   signAndSubmitTransaction: any,
   account: any,
 ) {
-  const { aptosClient } = await import("@/aptos/client");
-  const { TAPP_PROTOCOL_ADDRESS } = await import("../constants");
-
   if (!account?.address) {
     throw new Error("Wallet not connected");
   }

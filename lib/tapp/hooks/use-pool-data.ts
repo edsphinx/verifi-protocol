@@ -3,13 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTappMode } from "../context/TappModeContext";
 import { generateMockPoolData, type PoolData } from "../mock/pool-data";
+import { aptosClient } from "@/aptos/client";
+import { TAPP_HOOK_MODULE, TAPP_FUNCTIONS } from "../constants";
 
 /**
  * Fetches live pool data from the blockchain
  */
 async function fetchLivePoolData(marketId: string): Promise<PoolData> {
-  const { aptosClient } = await import("@/aptos/client");
-  const { TAPP_HOOK_MODULE, TAPP_FUNCTIONS } = await import("../constants");
 
   // Get market details to find YES/NO tokens
   const market = await aptosClient().getAccountResource({
@@ -31,7 +31,7 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
     // Fetch pool reserves
     const reserves = await aptosClient().view({
       payload: {
-        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_RESERVES}`,
+        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_RESERVES}` as `${string}::${string}::${string}`,
         typeArguments: [],
         functionArguments: [poolAddress],
       },
@@ -42,7 +42,7 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
     // Fetch pool stats
     const stats = await aptosClient().view({
       payload: {
-        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_POOL_STATS}`,
+        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_POOL_STATS}` as `${string}::${string}::${string}`,
         typeArguments: [],
         functionArguments: [poolAddress],
       },
@@ -60,7 +60,7 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
     // Fetch current fee
     const currentFeeResult = await aptosClient().view({
       payload: {
-        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_CURRENT_FEE}`,
+        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_CURRENT_FEE}` as `${string}::${string}::${string}`,
         typeArguments: [],
         functionArguments: [poolAddress],
       },

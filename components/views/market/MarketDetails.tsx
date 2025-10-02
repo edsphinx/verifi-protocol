@@ -1,7 +1,7 @@
 import { LabelValueGrid } from "@/components/LabelValueGrid";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MarketDetailsData } from "@/types";
+import type { MarketDetailsData } from "@/lib/types";
 
 interface MarketDetailsProps {
   staticData: { title: string; category: string };

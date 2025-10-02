@@ -3,7 +3,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
 import { VERIFI_PROTOCOL_ABI } from "@/aptos/abis";
 import { aptosClient } from "@/aptos/client";
-import type { MarketDetailsData } from "@/types";
+import type { MarketDetailsData } from "@/lib/types";
 import { getAccountAPTBalance } from "./get-account-balance";
 
 const MODULE_ADDRESS = VERIFI_PROTOCOL_ABI.address;

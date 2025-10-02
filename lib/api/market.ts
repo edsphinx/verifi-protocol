@@ -6,7 +6,7 @@ import type {
   EntryFunctionPayload,
   MarketCreatedEventData,
   SellSharesApiPayload,
-} from "@/types";
+} from "@/lib/types";
 
 /**
  * @notice Fetches the enriched list of active markets from the server.

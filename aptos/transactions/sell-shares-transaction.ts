@@ -1,5 +1,5 @@
 import { VERIFI_PROTOCOL_ABI } from "@/aptos/abis";
-import type { EntryFunctionPayload, SellSharesApiPayload } from "@/types";
+import type { EntryFunctionPayload, SellSharesApiPayload } from "@/lib/types";
 
 const MODULE_ADDRESS = VERIFI_PROTOCOL_ABI.address;
 

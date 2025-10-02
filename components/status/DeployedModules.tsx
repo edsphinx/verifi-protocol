@@ -20,42 +20,42 @@ interface Module {
 const MODULES: Module[] = [
   {
     name: "verifi_protocol",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Core protocol - Markets, treasury, resolution logic",
   },
   {
     name: "oracle_registry",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Oracle whitelist and access control",
   },
   {
     name: "oracles",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Oracle routing and data fetching",
   },
   {
     name: "oracle_aptos_balance",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Aptos balance oracle implementation",
   },
   {
     name: "oracle_usdc",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "USDC total supply oracle implementation",
   },
   {
     name: "verifi_resolvers",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Market resolution logic (friend module)",
   },
   {
     name: "access_control",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Admin permission management",
   },
   {
     name: "tapp_prediction_hook",
-    address: MODULE_ADDRESS,
+    address: MODULE_ADDRESS || "",
     description: "Tapp AMM integration hook for prediction markets",
   },
 ];
@@ -82,7 +82,7 @@ export function DeployedModules() {
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={() => window.open(getExplorerUrl(MODULE_ADDRESS), "_blank")}
+          onClick={() => window.open(getExplorerUrl(MODULE_ADDRESS || ""), "_blank")}
         >
           View Publisher Account
           <ExternalLink className="h-3 w-3" />

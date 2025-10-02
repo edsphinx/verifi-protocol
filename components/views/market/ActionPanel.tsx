@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getBuySharesPayload, getSellSharesPayload } from "@/lib/api/market";
-import type { ActionPanelProps } from "@/types";
+import type { ActionPanelProps } from "@/lib/types";
 
 export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [buyAmount, setBuyAmount] = useState("");
