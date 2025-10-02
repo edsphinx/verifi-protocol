@@ -6,22 +6,24 @@ let aptos: Aptos | null = null;
 // Reuse same Aptos instance to utilize cookie based sticky routing
 export function aptosClient() {
   if (!aptos) {
-    // Only include API_KEY if it's defined
-    const clientConfig = APTOS_API_KEY ? { API_KEY: APTOS_API_KEY } : undefined;
-
     console.log('[aptos/client] Creating Aptos client (lazy):', {
       network: NETWORK,
       hasApiKey: !!APTOS_API_KEY,
-      hasClientConfig: !!clientConfig,
       apiKeyPreview: APTOS_API_KEY ? APTOS_API_KEY.substring(0, 15) + '...' : 'NOT_SET',
     });
 
-    aptos = new Aptos(
-      new AptosConfig({
-        network: NETWORK,
-        ...(clientConfig && { clientConfig }),
-      }),
-    );
+    const config: any = {
+      network: NETWORK,
+    };
+
+    // API key must be in clientConfig, not in the root
+    if (APTOS_API_KEY) {
+      config.clientConfig = {
+        API_KEY: APTOS_API_KEY,
+      };
+    }
+
+    aptos = new Aptos(new AptosConfig(config));
 
     console.log('[aptos/client] Aptos client created successfully');
   }
