@@ -4,18 +4,15 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { aptosClient } from "@/aptos/client";
+import { NETWORK } from "@/aptos/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  getBuySharesPayload,
-  getSellSharesPayload,
-} from "@/lib/aptos/api/market";
-import { aptosClient } from "@/lib/aptos/client";
-import { NETWORK } from "@/lib/aptos/constants";
-import type { ActionPanelProps } from "@/lib/aptos/types";
+import { getBuySharesPayload, getSellSharesPayload } from "@/lib/api/market";
+import type { ActionPanelProps } from "@/types";
 
 export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [buyAmount, setBuyAmount] = useState("");
