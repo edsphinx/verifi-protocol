@@ -1,0 +1,15 @@
+[package]
+name = "tapp"
+version = "1.0.0"
+upgrade_policy = "compatible"
+
+[addresses]
+base = "_"
+tapp = "_"
+
+[dependencies]
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "testnet", subdir = "aptos-token-objects" }
+basic = { local = "../hooks/basic" }
+advanced = { local = "../hooks/advanced" }
+vault = { local = "../hooks/vault" }
+VeriFiProtocol = { local = "../../contract" }
