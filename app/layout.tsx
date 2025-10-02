@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/WalletProvider";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { TappModeProvider } from "@/lib/tapp/context/TappModeContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import "@/styles/globals.css";
 
 const sora = Sora({
@@ -43,12 +44,14 @@ export default function RootLayout({
         >
           <WalletProvider>
             <ReactQueryProvider>
-              <TappModeProvider>
-                <Header />
-                {children}
-                <WrongNetworkAlert />
-                <Toaster richColors position="bottom-right" />
-              </TappModeProvider>
+              <NotificationProvider>
+                <TappModeProvider>
+                  <Header />
+                  {children}
+                  <WrongNetworkAlert />
+                  <Toaster richColors position="bottom-right" />
+                </TappModeProvider>
+              </NotificationProvider>
             </ReactQueryProvider>
           </WalletProvider>
         </ThemeProvider>
