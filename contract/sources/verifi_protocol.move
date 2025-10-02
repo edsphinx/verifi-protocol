@@ -743,7 +743,22 @@ module VeriFiPublisher::verifi_protocol {
             market.pool_no_tokens
         )
     }
-    
+
+    #[view]
+    /**
+     * @notice Gets the token metadata addresses for YES and NO tokens
+     * @dev Returns the addresses of the YES and NO token metadata objects
+     * @param market_object The market object
+     * @return (yes_token_address, no_token_address)
+     */
+    public fun get_token_addresses(market_object: Object<Market>): (address, address) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        (
+            object::object_address(&market.yes_token_metadata),
+            object::object_address(&market.no_token_metadata)
+        )
+    }
+
     #[view]
     /**
      * @notice A diagnostic `#[view]` function to check if the `MarketFactoryController` has been initialized.

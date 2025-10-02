@@ -28,4 +28,7 @@ export interface MarketDetailsData {
   userAptBalance: number;
   userYesBalance: number;
   userNoBalance: number;
+  // From get_token_addresses
+  yesTokenAddress: string;
+  noTokenAddress: string;
 }

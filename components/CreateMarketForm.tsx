@@ -163,7 +163,7 @@ export function CreateMarketForm() {
       return;
     }
 
-    mutate({
+    const payload = {
       description,
       resolutionTimestamp: Math.floor(
         new Date(resolutionDate).getTime() / 1000,
@@ -176,7 +176,13 @@ export function CreateMarketForm() {
       targetFunction: selectedOracle.targetMetric,
       targetValue: Number(targetValue),
       operator,
-    });
+    };
+
+    console.log('[CreateMarketForm] Submitting form with payload:', payload);
+    console.log('[CreateMarketForm] Account address:', account.address);
+    console.log('[CreateMarketForm] Selected oracle:', selectedOracle);
+
+    mutate(payload);
   };
 
   const hasNoActiveOracles = !checkingOracles && activeOracles.length === 0;
