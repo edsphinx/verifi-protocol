@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import type React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 /**
  * Tapp AMM Mode: DEMO (mock data) or LIVE (blockchain data)
