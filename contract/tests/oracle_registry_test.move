@@ -59,7 +59,7 @@ module VeriFiPublisher::oracle_registry_test {
         oracle_registry::register_oracle(admin, oracle_id, string::utf8(b"Second"));
     }
 
-    #[test(admin = @VeriFiPublisher, non_admin = @0x123)]
+    #[test(admin = @VeriFiPublisher, non_admin = @0x55ba2b4d7be676e77bbfef29c27401c9862eb6682e66b45e5924da34324c55cd)]
     #[expected_failure(abort_code = 327781, location = VeriFiPublisher::access_control)]
     fun test_non_admin_cannot_register_oracle(admin: &signer, non_admin: &signer) {
         access_control::init_for_test(admin);
@@ -93,7 +93,7 @@ module VeriFiPublisher::oracle_registry_test {
         oracle_registry::set_oracle_status(admin, string::utf8(b"nonexistent"), false);
     }
 
-    #[test(admin = @VeriFiPublisher, non_admin = @0x456)]
+    #[test(admin = @VeriFiPublisher, non_admin = @0xd3b36c7fea14a6939ec4a8bebb422459e85b65f523b3babffd31ddf2f1479c1d)]
     #[expected_failure(abort_code = 327781, location = VeriFiPublisher::access_control)]
     fun test_non_admin_cannot_set_status(admin: &signer, non_admin: &signer) {
         access_control::init_for_test(admin);
@@ -121,7 +121,7 @@ module VeriFiPublisher::oracle_registry_test {
         assert!(oracle_registry::is_oracle_active(oracle_id), 3);
     }
 
-    #[test(admin = @VeriFiPublisher, non_admin = @0x789)]
+    #[test(admin = @VeriFiPublisher, non_admin = @0xdfb0a131451d31fa932201392d1118e81cb39c1f9b122e1316468076ef22d62e)]
     #[expected_failure(abort_code = 327781, location = VeriFiPublisher::access_control)]
     fun test_non_admin_cannot_global_pause(admin: &signer, non_admin: &signer) {
         access_control::init_for_test(admin);

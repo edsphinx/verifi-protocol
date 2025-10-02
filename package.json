@@ -19,7 +19,7 @@
     "move:register_tapp_oracle": "ts-node --project tsconfig.scripts.json scripts/move/register_tapp_oracle.ts",
     "test:full": "ts-node --project tsconfig.scripts.json scripts/move/full_flow_test.ts",
     "test:tapp": "ts-node --project tsconfig.scripts.json scripts/move/tapp_amm_test.ts",
-    "test:tapp:real": "ts-node --project tsconfig.scripts.json scripts/move/tapp_integration_test.ts",
+    "test:tapp:integration": "ts-node --project tsconfig.scripts.json scripts/move/tapp_full_integration_test.ts",
     "test:trade": "ts-node --project tsconfig.scripts.json scripts/move/trade_flow_test.ts",
     "oracle": "ts-node --project tsconfig.scripts.json scripts/move/oracle_flow_test.ts",
     "usdc": "ts-node --project tsconfig.scripts.json scripts/move/test_usdc_view.ts",
