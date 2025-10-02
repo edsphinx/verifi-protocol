@@ -1,16 +1,13 @@
 "use client";
 
 import {
-  Activity,
   PlusCircle,
-  TestTube,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { forwardRef } from "react";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { LogoHoverEffect } from "@/components/ui/logo-hover-effect";
 import {
   NavigationMenu,
@@ -107,7 +104,7 @@ export function Header() {
                       >
                         <TrendingUp className="h-6 w-6" />
                         <div className="mb-2 mt-4 text-lg font-medium">
-                          Markets Hub
+                          Browse Markets
                         </div>
                         <p className="text-sm leading-tight text-muted-foreground">
                           Explore all active prediction markets and trade on
@@ -117,40 +114,28 @@ export function Header() {
                     </NavigationMenuLink>
                   </li>
                   <ListItem href="/create" title="Create Market">
-                    Launch a new prediction market based on any verifiable
-                    on-chain data
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="h-4 w-4" />
+                      <span>
+                        Launch a new prediction market on any verifiable data
+                      </span>
+                    </div>
                   </ListItem>
-                  <ListItem href="/portfolio" title="Portfolio">
-                    View your active positions, trading history, and winnings
+                  <ListItem href="/portfolio" title="My Portfolio">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4" />
+                      <span>View your positions, history, and winnings</span>
+                    </div>
                   </ListItem>
                 </ul>
               </NavigationMenuContent>
             </NavigationMenuItem>
 
-            {/* Liquidity (Tapp AMM) */}
+            {/* Liquidity */}
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Liquidity</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  <ListItem href="/pools" title="AMM Pools">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      <span>
-                        View all markets with active liquidity pools
-                      </span>
-                    </div>
-                  </ListItem>
-                  <ListItem href="/pools" title="Provide Liquidity">
-                    Earn fees by adding liquidity to market pools
-                  </ListItem>
-                  <ListItem href="/" title="Browse Markets">
-                    Explore markets and create pools for trading
-                  </ListItem>
-                  <ListItem href="/amm-demo" title="AMM Demo">
-                    Preview the AMM interface with mock data
-                  </ListItem>
-                </ul>
-              </NavigationMenuContent>
+              <Link href="/pools" className={navigationMenuTriggerStyle()}>
+                Liquidity
+              </Link>
             </NavigationMenuItem>
 
             {/* Protocol Status */}
@@ -188,14 +173,6 @@ export function Header() {
 
         {/* Right Side Actions */}
         <div className="flex flex-1 items-center justify-end space-x-2 md:space-x-4">
-          <HoverBorderGradient
-            containerClassName="rounded-full"
-            as="button"
-            className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 px-4 py-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <Link href="/create">Create Market</Link>
-          </HoverBorderGradient>
           <NotificationBell />
           <WalletSelector />
         </div>
