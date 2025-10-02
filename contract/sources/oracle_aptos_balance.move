@@ -29,4 +29,15 @@ module VeriFiPublisher::oracle_aptos_balance {
     public(friend) fun get_value(addr: address): u64 {
         coin::balance<AptosCoin>(addr)
     }
+
+    // === Test-Only Functions ===
+
+    #[test_only]
+    /**
+     * @notice A public wrapper for `get_value` that is only compiled during tests.
+     * @dev This allows our external test module to call the `public(friend)` function.
+     */
+    public fun get_value_for_test(addr: address): u64 {
+        get_value(addr)
+    }
 }

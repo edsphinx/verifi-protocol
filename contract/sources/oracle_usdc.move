@@ -35,14 +35,26 @@ module VeriFiPublisher::oracle_usdc {
      */
     public(friend) fun get_total_supply(): u64 {
         let usdc_metadata_object = object::address_to_object<fungible_asset::Metadata>(USDC_METADATA_ADDRESS);
-        
+
         // `fungible_asset::supply` returns an `option<u128>`, so we must handle it.
         let supply_option = fungible_asset::supply(usdc_metadata_object);
-             
+
         // Abort if for some reason the supply is not available.
         assert!(option::is_some(&supply_option), E_SUPPLY_NOT_AVAILABLE);
 
         // Extract the value and cast it to `u64` for compatibility with the VeriFi protocol.
         (option::extract(&mut supply_option) as u64)
+    }
+
+    // === Test-Only Functions ===
+
+    #[test_only]
+    /**
+     * @notice Test wrapper for get_total_supply.
+     * @dev Only available in test mode.
+     * @return The total supply of USDC
+     */
+    public fun get_total_supply_for_test(): u64 {
+        get_total_supply()
     }
 }

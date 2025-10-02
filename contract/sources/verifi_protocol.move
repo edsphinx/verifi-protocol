@@ -842,4 +842,83 @@ module VeriFiPublisher::verifi_protocol {
             market.status
         )
     }
+
+    // === Tapp Hook Integration Functions ===
+
+    #[view]
+    /**
+     * @notice Gets the current status of a market.
+     * @dev Used by Tapp hook to check if trading should be enabled.
+     * @param market_object The market to query
+     * @return Market status (0=OPEN, 1=CLOSED, 2=RESOLVED_YES, 3=RESOLVED_NO)
+     */
+    public fun get_market_status(market_object: Object<Market>): u8 acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        market.status
+    }
+
+    #[view]
+    /**
+     * @notice Gets the resolution timestamp for a market.
+     * @dev Used by Tapp hook to calculate dynamic fees.
+     * @param market_object The market to query
+     * @return Unix timestamp when market can be resolved
+     */
+    public fun get_resolution_timestamp(market_object: Object<Market>): u64 acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        market.resolution_timestamp
+    }
+
+    #[view]
+    /**
+     * @notice Gets the YES and NO token metadata objects for a market.
+     * @dev Used by Tapp hook to identify which tokens belong to a market.
+     * @param market_object The market to query
+     * @return (yes_token_metadata, no_token_metadata)
+     */
+    public fun get_market_tokens(market_object: Object<Market>): (Object<Metadata>, Object<Metadata>) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        (market.yes_token_metadata, market.no_token_metadata)
+    }
+
+    #[view]
+    /**
+     * @notice Gets all markets from the factory.
+     * @dev Used by Tapp hook to find markets by token addresses.
+     * @return Vector of all market objects
+     */
+    public fun get_all_markets(): vector<Object<Market>> acquires MarketFactory {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        factory.markets
+    }
+
+    #[view]
+    /**
+     * @notice Gets comprehensive market information.
+     * @dev Useful for Tapp hook integration and frontend display.
+     * @param market_object The market to query
+     * @return (description, resolver, resolution_timestamp, status, oracle_id)
+     */
+    public fun get_market_info(market_object: Object<Market>): (String, address, u64, u8, String) acquires Market {
+        let market = borrow_global<Market>(object::object_address(&market_object));
+        (
+            market.description,
+            market.resolver,
+            market.resolution_timestamp,
+            market.status,
+            market.oracle_id
+        )
+    }
+
+    // === Test-Only Functions ===
+
+    #[test_only]
+    /**
+     * @notice Initializes the market factory for testing.
+     * @dev Only available in test mode. Calls the private init_module.
+     * @param sender The test account to initialize with
+     */
+    public fun init_for_test(sender: &signer) {
+        init_module(sender);
+    }
 }
