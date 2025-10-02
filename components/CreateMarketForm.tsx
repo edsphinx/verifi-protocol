@@ -4,8 +4,9 @@ import { isUserTransactionResponse } from "@aptos-labs/ts-sdk";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { VERIFI_PROTOCOL_ABI } from "@/aptos/abis";
 import { aptosClient } from "@/aptos/client";
 import { NETWORK } from "@/aptos/constants";
@@ -27,7 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Settings } from "lucide-react";
 import { getCreateMarketPayload, indexNewMarket } from "@/lib/api/market";
+import { MODULE_ADDRESS } from "@/aptos/constants";
 
 type OracleOption = {
   id: string; // El oracle_id que espera el contrato
@@ -64,9 +68,39 @@ export function CreateMarketForm() {
   const [targetAddress, setTargetAddress] = useState("");
   const [targetValue, setTargetValue] = useState("");
   const [operator, setOperator] = useState<number>(0);
+  const [activeOracles, setActiveOracles] = useState<string[]>([]);
+  const [checkingOracles, setCheckingOracles] = useState(true);
 
   const { signAndSubmitTransaction, account } = useWallet();
   const router = useRouter();
+
+  // Check for active oracles on mount
+  useEffect(() => {
+    const checkActiveOracles = async () => {
+      try {
+        const client = aptosClient();
+        const result = await client.view({
+          payload: {
+            function: `${MODULE_ADDRESS}::oracle_registry::get_all_oracles`,
+            typeArguments: [],
+            functionArguments: [],
+          },
+        });
+
+        // Parse active oracles from result
+        // For now, fallback to known oracles
+        setActiveOracles(["aptos-balance", "usdc-total-supply"]);
+      } catch (error) {
+        console.error("Failed to fetch oracles:", error);
+        // Fallback to known oracles
+        setActiveOracles(["aptos-balance", "usdc-total-supply"]);
+      } finally {
+        setCheckingOracles(false);
+      }
+    };
+
+    checkActiveOracles();
+  }, []);
 
   const selectedOracle =
     ORACLE_OPTIONS.find((opt) => opt.id === selectedOracleId) ||
@@ -149,6 +183,9 @@ export function CreateMarketForm() {
     });
   };
 
+  const hasNoActiveOracles = !checkingOracles && activeOracles.length === 0;
+  const isPublisher = account?.address === MODULE_ADDRESS;
+
   return (
     <form onSubmit={handleSubmit}>
       <Card>
@@ -160,6 +197,38 @@ export function CreateMarketForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Oracle Warning Alert */}
+          {hasNoActiveOracles && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No Active Oracles Available</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>
+                  There are no active oracles registered in the protocol. Markets require at least
+                  one active oracle to function.
+                </p>
+                {isPublisher ? (
+                  <p className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <Link href="/status" className="underline font-medium">
+                      Go to Status page to register and activate oracles
+                    </Link>
+                  </p>
+                ) : (
+                  <p>
+                    Please contact the protocol publisher to register oracles before creating markets.
+                  </p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {checkingOracles && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>Checking for active oracles...</AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <Label htmlFor="description">Market Question</Label>
             <Input

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { WalletSelector } from "./WalletSelector";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 const Logo = () => (
   <svg
@@ -131,26 +132,34 @@ export function Header() {
               <NavigationMenuTrigger>Liquidity</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  <ListItem href="/amm-demo" title="AMM Overview">
+                  <ListItem href="/" title="AMM Pools">
                     <div className="flex items-center gap-2">
                       <Activity className="h-4 w-4" />
                       <span>
-                        View automated market maker pools and liquidity
+                        View all markets with active liquidity pools
                       </span>
                     </div>
                   </ListItem>
-                  <ListItem href="/amm-demo" title="Provide Liquidity">
-                    Earn fees by providing liquidity to prediction market pools
+                  <ListItem href="/" title="Provide Liquidity">
+                    Earn fees by adding liquidity to market pools
                   </ListItem>
-                  <ListItem href="/amm-demo" title="Swap Tokens">
-                    Trade YES/NO tokens directly through the AMM with instant
-                    execution
+                  <ListItem href="/" title="Swap Tokens">
+                    Trade YES/NO tokens via AMM with instant execution
                   </ListItem>
-                  <ListItem href="/amm-demo" title="Pool Analytics">
-                    Track pool performance, APY, and trading volume metrics
+                  <ListItem href="/amm-demo" title="AMM Demo">
+                    Preview the AMM interface with mock data
                   </ListItem>
                 </ul>
               </NavigationMenuContent>
+            </NavigationMenuItem>
+
+            {/* Protocol Status */}
+            <NavigationMenuItem>
+              <Link href="/status" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  Status
+                </NavigationMenuLink>
+              </Link>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
@@ -189,6 +198,7 @@ export function Header() {
             <PlusCircle className="h-4 w-4" />
             <Link href="/create">Create Market</Link>
           </HoverBorderGradient>
+          <NotificationBell />
           <WalletSelector />
         </div>
       </div>

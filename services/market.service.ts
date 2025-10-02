@@ -6,7 +6,7 @@
  */
 
 import type { Market } from "@prisma/client";
-import type { CreateMarketDbData } from "@/types/database";
+import type { CreateMarketDbData } from "@/lib/types";
 import client from "../lib/clients/prisma";
 
 /**

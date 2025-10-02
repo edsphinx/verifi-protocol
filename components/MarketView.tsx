@@ -4,6 +4,7 @@ import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActionPanel } from "@/components/views/market/ActionPanel";
 import { MarketDetails } from "@/components/views/market/MarketDetails";
+import { PoolSection } from "@/components/tapp/PoolSection";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
@@ -42,16 +43,20 @@ export function MarketView({ marketId }: { marketId: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-      <div className="lg:col-span-2">
-        <MarketDetails
-          staticData={staticMarketData}
-          dynamicData={marketDetails}
-        />
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="lg:col-span-2">
+          <MarketDetails
+            staticData={staticMarketData}
+            dynamicData={marketDetails}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <ActionPanel marketId={marketId} dynamicData={marketDetails} />
+        </div>
       </div>
-      <div className="lg:col-span-1">
-        <ActionPanel marketId={marketId} dynamicData={marketDetails} />
-      </div>
+
+      <PoolSection marketAddress={marketId} />
     </div>
   );
 }
