@@ -68,15 +68,26 @@ export function WalletSelector() {
   return connected ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button>
+        <Button
+          variant="outline"
+          className="gap-2 font-mono text-sm border-border/40 hover:border-primary/40"
+        >
+          <div className="h-2 w-2 rounded-full bg-green-400" />
           {account?.ansName ||
             truncateAddress(account?.address?.toString()) ||
             "Unknown"}
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-2 py-1.5 text-sm">
+          <p className="text-xs text-muted-foreground mb-1">Connected Wallet</p>
+          <p className="font-mono text-xs truncate">
+            {account?.address?.toString()}
+          </p>
+        </div>
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">
-          <Copy className="h-4 w-4" /> Copy address
+          <Copy className="h-4 w-4" /> Copy Address
         </DropdownMenuItem>
         {wallet && isAptosConnectWallet(wallet) && (
           <DropdownMenuItem asChild>
@@ -86,11 +97,11 @@ export function WalletSelector() {
               rel="noopener noreferrer"
               className="flex gap-2"
             >
-              <User className="h-4 w-4" /> Account
+              <User className="h-4 w-4" /> View Account
             </a>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={disconnect} className="gap-2">
+        <DropdownMenuItem onSelect={disconnect} className="gap-2 text-destructive focus:text-destructive">
           <LogOut className="h-4 w-4" /> Disconnect
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -98,7 +109,10 @@ export function WalletSelector() {
   ) : (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button>Connect a Wallet</Button>
+        <Button variant="default" className="gap-2">
+          <User className="h-4 w-4" />
+          Connect Wallet
+        </Button>
       </DialogTrigger>
       <ConnectWalletDialog close={closeDialog} />
     </Dialog>
