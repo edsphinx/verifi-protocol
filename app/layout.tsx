@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import { Header } from "@/components/Header";
 import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/WalletProvider";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
+import { TappModeProvider } from "@/lib/tapp/context/TappModeContext";
 import "@/styles/globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -32,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${sora.variable} ${inter.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -42,10 +43,12 @@ export default function RootLayout({
         >
           <WalletProvider>
             <ReactQueryProvider>
-              <Header />
-              {children}
-              <WrongNetworkAlert />
-              <Toaster richColors position="bottom-right" />
+              <TappModeProvider>
+                <Header />
+                {children}
+                <WrongNetworkAlert />
+                <Toaster richColors position="bottom-right" />
+              </TappModeProvider>
             </ReactQueryProvider>
           </WalletProvider>
         </ThemeProvider>
