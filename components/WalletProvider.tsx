@@ -2,30 +2,35 @@
 
 import { Network } from "@aptos-labs/ts-sdk";
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
-import type { PropsWithChildren } from "react";
+import { useMemo, type PropsWithChildren } from "react";
 import { toast } from "sonner";
 import { APTOS_API_KEY, NETWORK } from "@/aptos/constants";
 
 export function WalletProvider({ children }: PropsWithChildren) {
-  // Debug: Log API key presence (not the actual key)
-  console.log('[WalletProvider] APTOS_API_KEY configured:', !!APTOS_API_KEY);
-  console.log('[WalletProvider] NETWORK:', NETWORK);
+  // Memoize dappConfig to prevent recreation on every render
+  // This prevents wallet disconnection on navigation
+  const dappConfig = useMemo(() => {
+    console.log('[WalletProvider] Creating dappConfig - NETWORK:', NETWORK);
+    console.log('[WalletProvider] APTOS_API_KEY configured:', !!APTOS_API_KEY);
 
-  const dappConfig =
-    NETWORK === Network.LOCAL
-      ? {
-          // For local development, we omit the `network` property.
-          // This prevents a runtime error where the adapter rejects the "custom" network.
-        }
-      : {
-          // For public networks, we must specify the network.
-          network: NETWORK,
-        };
+    const config =
+      NETWORK === Network.LOCAL
+        ? {
+            // For local development, we omit the `network` property.
+            // This prevents a runtime error where the adapter rejects the "custom" network.
+          }
+        : {
+            // For public networks, we must specify the network.
+            network: NETWORK,
+          };
 
-  console.log('[WalletProvider] dappConfig:', {
-    ...dappConfig,
-    aptosApiKeys: dappConfig.aptosApiKeys ? 'CONFIGURED' : 'MISSING'
-  });
+    console.log('[WalletProvider] dappConfig created:', {
+      ...config,
+      aptosApiKeys: 'aptosApiKeys' in config && config.aptosApiKeys ? 'CONFIGURED' : 'MISSING'
+    });
+
+    return config;
+  }, []); // Empty deps array - only create once
 
   return (
     <AptosWalletAdapterProvider

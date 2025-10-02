@@ -45,12 +45,15 @@ export function MarketView({ marketId }: { marketId: string }) {
     );
   }
 
+  // Type assertion after guard - we know marketDetails is not null here
+  const details = marketDetails;
+
   return (
     <div className="space-y-8">
       {/* Market Header */}
       <MarketDetails
         staticData={staticMarketData}
-        dynamicData={marketDetails}
+        dynamicData={details}
       />
 
       {/* Trading Tabs */}
@@ -62,22 +65,24 @@ export function MarketView({ marketId }: { marketId: string }) {
         </TabsList>
 
         <TabsContent value="primary" className="mt-6">
-          <ActionPanel marketId={marketId} dynamicData={marketDetails} />
+          <ActionPanel marketId={marketId} dynamicData={details} />
         </TabsContent>
 
         <TabsContent value="swap" className="mt-6">
           <SwapInterface
-            marketAddress={marketId}
-            yesTokenAddress={marketDetails.yesTokenAddress}
-            noTokenAddress={marketDetails.noTokenAddress}
+            marketId={marketId}
+            yesReserve={details.poolYes}
+            noReserve={details.poolNo}
+            tradingEnabled={details.status === 0}
           />
         </TabsContent>
 
         <TabsContent value="liquidity" className="mt-6">
           <LiquidityPanel
-            marketAddress={marketId}
-            yesTokenAddress={marketDetails.yesTokenAddress}
-            noTokenAddress={marketDetails.noTokenAddress}
+            marketId={marketId}
+            yesReserve={details.poolYes}
+            noReserve={details.poolNo}
+            tradingEnabled={details.status === 0}
           />
         </TabsContent>
       </Tabs>
@@ -85,8 +90,8 @@ export function MarketView({ marketId }: { marketId: string }) {
       {/* Pool Info Section */}
       <PoolSection
         marketAddress={marketId}
-        yesTokenAddress={marketDetails.yesTokenAddress}
-        noTokenAddress={marketDetails.noTokenAddress}
+        yesTokenAddress={details.yesTokenAddress}
+        noTokenAddress={details.noTokenAddress}
       />
     </div>
   );
