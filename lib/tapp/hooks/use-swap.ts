@@ -33,6 +33,46 @@ async function simulateSwap(params: SwapParams) {
 }
 
 /**
+ * Serializes swap arguments for Tapp router
+ */
+function serializeSwapArgs(
+  poolAddr: string,
+  yesToNo: boolean,
+  amountIn: number,
+  minAmountOut: number,
+): Uint8Array {
+  const parts: Uint8Array[] = [];
+
+  // 1. Serialize pool address (32 bytes)
+  const AccountAddress = require("@aptos-labs/ts-sdk").AccountAddress;
+  parts.push(AccountAddress.from(poolAddr).toUint8Array());
+
+  // 2. Serialize a2b (YES to NO) as bool
+  parts.push(new Uint8Array([yesToNo ? 1 : 0]));
+
+  // 3. Serialize amount_in as u64 (little-endian)
+  const inBytes = new ArrayBuffer(8);
+  new DataView(inBytes).setBigUint64(0, BigInt(Math.floor(amountIn)), true);
+  parts.push(new Uint8Array(inBytes));
+
+  // 4. Serialize min_amount_out as u64 (little-endian)
+  const outBytes = new ArrayBuffer(8);
+  new DataView(outBytes).setBigUint64(0, BigInt(Math.floor(minAmountOut)), true);
+  parts.push(new Uint8Array(outBytes));
+
+  // Concatenate all parts
+  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+
+  return result;
+}
+
+/**
  * Executes a real swap on-chain
  */
 async function executeSwap(
@@ -45,29 +85,47 @@ async function executeSwap(
     throw new Error("Wallet not connected");
   }
 
-  // Get pool address (for now, using marketId)
-  // TODO: Implement proper pool address derivation from Tapp
-  const poolAddress = params.marketId;
+  console.log('[useSwap] Executing swap with params:', params);
 
-  // Serialize swap parameters using BCS
-  const serializer = new Serializer();
-  serializer.serializeU64(BigInt(Math.floor(params.amountIn)));
-  serializer.serializeBool(params.yesToNo);
-  serializer.serializeU64(BigInt(Math.floor(params.minAmountOut)));
-  const bcsStream = serializer.toUint8Array();
+  // Get pool address from API
+  const poolResponse = await fetch(`/api/tapp/pools/by-market/${params.marketId}`);
+  if (!poolResponse.ok) {
+    throw new Error("No AMM pool found for this market. Create a pool first.");
+  }
+
+  const poolData = await poolResponse.json();
+  if (!poolData || !poolData.poolAddress) {
+    throw new Error("Invalid pool data received");
+  }
+
+  const poolAddress = poolData.poolAddress;
+  console.log('[useSwap] Using pool address:', poolAddress);
+
+  // Serialize swap arguments
+  const swapArgs = serializeSwapArgs(
+    poolAddress,
+    params.yesToNo,
+    params.amountIn,
+    params.minAmountOut
+  );
+
+  console.log('[useSwap] Serialized args length:', swapArgs.length);
 
   // Build transaction payload
   const payload = {
-    function: `${TAPP_PROTOCOL_ADDRESS}::pool::swap`,
-    typeArguments: [], // YES and NO token types would go here
-    functionArguments: [poolAddress, Array.from(bcsStream)],
+    function: `${TAPP_PROTOCOL_ADDRESS}::router::swap`,
+    functionArguments: [swapArgs],
   };
+
+  console.log('[useSwap] Submitting transaction...');
 
   // Sign and submit transaction
   const response = await signAndSubmitTransaction({
     sender: account.address,
     data: payload,
   });
+
+  console.log('[useSwap] Transaction submitted:', response.hash);
 
   // Wait for transaction confirmation
   const txResponse = await aptosClient().waitForTransaction({
@@ -77,6 +135,8 @@ async function executeSwap(
       waitForIndexer: true,
     },
   });
+
+  console.log('[useSwap] Transaction confirmed');
 
   // Parse swap event to get actual output amount
   // For now, using expected amount

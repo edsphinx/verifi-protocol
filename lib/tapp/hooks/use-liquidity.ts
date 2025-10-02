@@ -37,6 +37,51 @@ async function simulateAddLiquidity(params: AddLiquidityParams) {
 }
 
 /**
+ * Serializes add liquidity arguments for Tapp router
+ */
+function serializeAddLiquidityArgs(
+  poolAddr: string,
+  amountYes: number,
+  amountNo: number,
+  minLpTokens: number,
+): Uint8Array {
+  const parts: Uint8Array[] = [];
+
+  // 1. Serialize pool address (32 bytes)
+  const AccountAddress = require("@aptos-labs/ts-sdk").AccountAddress;
+  parts.push(AccountAddress.from(poolAddr).toUint8Array());
+
+  // 2. Serialize Option<address> = None (0 = None, 1 = Some)
+  parts.push(new Uint8Array([0])); // None - no existing position
+
+  // 3. Serialize amount_yes as u64 (little-endian)
+  const yesBytes = new ArrayBuffer(8);
+  new DataView(yesBytes).setBigUint64(0, BigInt(Math.floor(amountYes)), true);
+  parts.push(new Uint8Array(yesBytes));
+
+  // 4. Serialize amount_no as u64 (little-endian)
+  const noBytes = new ArrayBuffer(8);
+  new DataView(noBytes).setBigUint64(0, BigInt(Math.floor(amountNo)), true);
+  parts.push(new Uint8Array(noBytes));
+
+  // 5. Serialize min_lp_tokens as u64 (little-endian)
+  const minBytes = new ArrayBuffer(8);
+  new DataView(minBytes).setBigUint64(0, BigInt(Math.floor(minLpTokens)), true);
+  parts.push(new Uint8Array(minBytes));
+
+  // Concatenate all parts
+  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+
+  return result;
+}
+
+/**
  * Executes real add liquidity on-chain
  */
 async function executeAddLiquidity(
@@ -49,30 +94,50 @@ async function executeAddLiquidity(
     throw new Error("Wallet not connected");
   }
 
-  const poolAddress = params.marketId;
+  console.log('[useAddLiquidity] Executing add liquidity with params:', params);
 
-  // Serialize add liquidity parameters
-  const serializer = new Serializer();
-  serializer.serializeU64(BigInt(Math.floor(params.yesAmount)));
-  serializer.serializeU64(BigInt(Math.floor(params.noAmount)));
-  const bcsStream = serializer.toUint8Array();
+  // Get pool address from API
+  const poolResponse = await fetch(`/api/tapp/pools/by-market/${params.marketId}`);
+  if (!poolResponse.ok) {
+    throw new Error("No AMM pool found for this market. Create a pool first.");
+  }
+
+  const poolData = await poolResponse.json();
+  if (!poolData || !poolData.poolAddress) {
+    throw new Error("Invalid pool data received");
+  }
+
+  const poolAddress = poolData.poolAddress;
+  console.log('[useAddLiquidity] Using pool address:', poolAddress);
+
+  // Calculate minimum LP tokens (allow 0.5% slippage)
+  const minLpTokens = Math.floor(Math.sqrt(params.yesAmount * params.noAmount) * 0.995);
+
+  // Serialize add liquidity arguments
+  const liquidityArgs = serializeAddLiquidityArgs(
+    poolAddress,
+    params.yesAmount,
+    params.noAmount,
+    minLpTokens
+  );
+
+  console.log('[useAddLiquidity] Serialized args length:', liquidityArgs.length);
 
   // Build transaction payload
   const payload = {
-    function: `${TAPP_PROTOCOL_ADDRESS}::pool::add_liquidity`,
-    typeArguments: [],
-    functionArguments: [
-      poolAddress,
-      params.positionIdx !== undefined ? [params.positionIdx] : [],
-      Array.from(bcsStream),
-    ],
+    function: `${TAPP_PROTOCOL_ADDRESS}::router::add_liquidity`,
+    functionArguments: [liquidityArgs],
   };
+
+  console.log('[useAddLiquidity] Submitting transaction...');
 
   // Sign and submit
   const response = await signAndSubmitTransaction({
     sender: account.address,
     data: payload,
   });
+
+  console.log('[useAddLiquidity] Transaction submitted:', response.hash);
 
   // Wait for confirmation
   const txResponse = await aptosClient().waitForTransaction({
@@ -83,7 +148,10 @@ async function executeAddLiquidity(
     },
   });
 
-  // TODO: Parse LiquidityAdded event for actual values
+  console.log('[useAddLiquidity] Transaction confirmed');
+
+  // Parse LiquidityAdded event to get actual values
+  // For now, using expected values
   return {
     success: true,
     lpTokens: Math.sqrt(params.yesAmount * params.noAmount),

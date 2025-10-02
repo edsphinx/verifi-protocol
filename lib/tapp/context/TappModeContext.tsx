@@ -21,7 +21,7 @@ const TappModeContext = createContext<TappModeContextType | undefined>(
 const STORAGE_KEY = "verifi_tapp_mode";
 
 export function TappModeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<TappMode>("DEMO");
+  const [mode, setModeState] = useState<TappMode>("LIVE");
 
   // Load mode from localStorage on mount
   useEffect(() => {
