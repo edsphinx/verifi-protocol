@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { buildSellSharesPayload } from "@/lib/aptos/transactions/sell-shares-transaction";
+import { buildSellSharesPayload } from "@/aptos/transactions/sell-shares-transaction";
 
 export async function POST(req: NextRequest) {
   try {

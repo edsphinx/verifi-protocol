@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { buildCreateMarketPayload } from "@/lib/aptos/transactions/create-market-transaction";
+import { buildCreateMarketPayload } from "@/aptos/transactions/create-market-transaction";
 
 export async function POST(req: NextRequest) {
   try {

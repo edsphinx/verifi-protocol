@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { buildBuySharesPayload } from "@/lib/aptos/transactions/buy-shares-transaction"; // ✅ Import our new builder
+import { buildBuySharesPayload } from "@/aptos/transactions/buy-shares-transaction"; // ✅ Import our new builder
 
 export async function POST(req: NextRequest) {
   try {

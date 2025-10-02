@@ -2,7 +2,7 @@
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { NETWORK } from "@/lib/aptos/constants";
+import { NETWORK } from "@/aptos/constants";
 
 export function WrongNetworkAlert() {
   const { network, connected } = useWallet();

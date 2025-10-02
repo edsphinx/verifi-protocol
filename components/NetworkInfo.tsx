@@ -1,7 +1,7 @@
 import { Network } from "@aptos-labs/ts-sdk";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { isValidNetworkName } from "@/aptos/helpers/network";
 import { DisplayValue, LabelValueGrid } from "@/components/LabelValueGrid";
-import { isValidNetworkName } from "@/lib/aptos/helpers/network";
 
 export function NetworkInfo() {
   const { network } = useWallet();

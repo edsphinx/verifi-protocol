@@ -6,6 +6,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { VERIFI_PROTOCOL_ABI } from "@/aptos/abis";
+import { aptosClient } from "@/aptos/client";
+import { NETWORK } from "@/aptos/constants";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,10 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getCreateMarketPayload, indexNewMarket } from "@/lib/aptos/api/market";
-import { aptosClient } from "@/lib/aptos/client";
-import { NETWORK } from "@/lib/aptos/constants";
-import { VERIFI_PROTOCOL_ABI } from "@/utils/abis";
+import { getCreateMarketPayload, indexNewMarket } from "@/lib/api/market";
 
 type OracleOption = {
   id: string; // El oracle_id que espera el contrato
@@ -138,13 +138,13 @@ export function CreateMarketForm() {
       resolutionTimestamp: Math.floor(
         new Date(resolutionDate).getTime() / 1000,
       ),
-      resolverAddress: account.address,
+      resolverAddress: account.address.toStringLong(),
       oracleId: selectedOracle.id,
       targetAddress: selectedOracle.requiresTargetAddress
         ? targetAddress
         : "0x1",
       targetFunction: selectedOracle.targetMetric,
-      targetValue,
+      targetValue: Number(targetValue),
       operator,
     });
   };

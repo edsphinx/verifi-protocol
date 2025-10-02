@@ -4,7 +4,7 @@ import { Network } from "@aptos-labs/ts-sdk";
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import type { PropsWithChildren } from "react";
 import { toast } from "sonner";
-import { APTOS_API_KEY, NETWORK } from "@/lib/aptos/constants";
+import { APTOS_API_KEY, NETWORK } from "@/aptos/constants";
 
 export function WalletProvider({ children }: PropsWithChildren) {
   const dappConfig =
