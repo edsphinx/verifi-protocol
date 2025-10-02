@@ -1,9 +1,9 @@
 "use client";
 
+import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActionPanel } from "@/components/views/market/ActionPanel";
 import { MarketDetails } from "@/components/views/market/MarketDetails";
-import { useMarketDetails } from "@/lib/aptos/queries/use-market-details";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
