@@ -163,11 +163,22 @@ export function CreateMarketForm() {
       return;
     }
 
+    // Convert datetime-local input to UTC timestamp
+    // datetime-local format: "2025-10-02T14:30"
+    // We need to explicitly treat it as UTC to match blockchain time
+    const dateInput = new Date(resolutionDate);
+    const utcTimestamp = Date.UTC(
+      dateInput.getFullYear(),
+      dateInput.getMonth(),
+      dateInput.getDate(),
+      dateInput.getHours(),
+      dateInput.getMinutes(),
+      0
+    ) / 1000;
+
     const payload = {
       description,
-      resolutionTimestamp: Math.floor(
-        new Date(resolutionDate).getTime() / 1000,
-      ),
+      resolutionTimestamp: Math.floor(utcTimestamp),
       resolverAddress: account.address.toString(),
       oracleId: selectedOracle.id,
       targetAddress: selectedOracle.requiresTargetAddress
@@ -179,6 +190,9 @@ export function CreateMarketForm() {
     };
 
     console.log('[CreateMarketForm] Submitting form with payload:', payload);
+    console.log('[CreateMarketForm] Resolution date input:', resolutionDate);
+    console.log('[CreateMarketForm] UTC timestamp:', utcTimestamp);
+    console.log('[CreateMarketForm] Current blockchain time:', Math.floor(Date.now() / 1000));
     console.log('[CreateMarketForm] Account address:', account.address);
     console.log('[CreateMarketForm] Selected oracle:', selectedOracle);
 
@@ -311,7 +325,7 @@ export function CreateMarketForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="resolution-date">Resolution Date & Time</Label>
+            <Label htmlFor="resolution-date">Resolution Date & Time (UTC)</Label>
             <Input
               id="resolution-date"
               type="datetime-local"
@@ -320,6 +334,14 @@ export function CreateMarketForm() {
               required
               disabled={isPending}
             />
+            <p className="text-sm text-muted-foreground">
+              Enter the resolution time in UTC timezone. The blockchain operates in UTC.
+              {resolutionDate && (
+                <span className="block mt-1 font-medium">
+                  Selected: {new Date(resolutionDate).toUTCString()}
+                </span>
+              )}
+            </p>
           </div>
         </CardContent>
         <CardFooter>
