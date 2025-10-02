@@ -89,6 +89,20 @@ We've pioneered the first prediction market hooks on Aptos:
 - Liquidity incentives for market makers
 - Seamless integration between primary and secondary markets
 
+### 💰 Economic Model
+
+**Hybrid Proportional Payout System:**
+- 📥 Primary: 1 APT → 1 YES + 1 NO (guaranteed minting)
+- 📊 Secondary: AMM speculation on Tapp.Exchange (CPMM: x × y = k)
+- 💸 Resolution: `Payout = Treasury / Winning_Supply` (rewards conviction!)
+
+**Why Proportional > 1:1?**
+- Selling losing side early → increases your payout
+- Creates natural liquidity incentives
+- Mathematically sound: payouts always = treasury
+
+📖 **[Full Economic Model & Visual Diagram →](./ECONOMIC_MODEL_DIAGRAM.md)**
+
 ## 🎬 Platform Overview
 
 ### Key User Flows
@@ -416,12 +430,32 @@ We welcome contributions! Please see our [CONTRIBUTING.md](./CONTRIBUTING.md) fo
 
 This project is built for the Aptos Hackathon 2025. License details coming soon.
 
+## 📚 Technical Documentation
+
+### Core Documentation
+- **📖 [Economic Model & Visual Diagram](./ECONOMIC_MODEL_DIAGRAM.md)** - Complete 3-phase value flow with examples
+- **🔒 [Security & Design Rationale](./SECURITY_AND_DESIGN_RATIONALE.md)** - Attack vectors, mitigations, and model justification
+- **📚 [Project Structure](./TAPP_PROJECT_STRUCTURE.md)** - Complete codebase architecture
+- **🏗️ [Architecture Overview](./ARCHITECTURE.md)** - System design and component interactions
+
+### Bounty Submissions
+- **💎 [Nodit Integration ($2,000)](./NODIT_BOUNTY_SUBMISSION.md)** - Webhook architecture and real-time indexing
+- **🔄 [Tapp.Exchange Integration ($2,000)](./TAPP_BOUNTY_SUBMISSION.md)** - Custom hooks and AMM implementation
+
+### Testing & Deployment
+- **🧪 [Testing Guide](./TAPP_TESTING_GUIDE.md)** - E2E tests and debugging
+- **🚀 [Deployment Guide](./TAPP_DEPLOYMENT_GUIDE.md)** - Step-by-step deployment instructions
+- **📊 [Test Results](./TEST_RESULTS.md)** - Latest test execution results
+
+### Integration Details
+- **🔗 [Tapp Integration Strategy](./TAPP_INTEGRATION_STRATEGY.md)** - AMM hybrid system design
+- **🪝 [Custom Hook Implementation](./TAPP_HOOK_IMPLEMENTATION.md)** - Prediction market hooks (715 LOC)
+- **📡 [Nodit Configuration](./NODIT_CONFIGURATION.md)** - Webhook setup and event handling
+
 ## 🔗 Links
 
 - **🌐 Live Demo:** https://verifi-protocol.vercel.app
 - **📦 Repository:** https://github.com/edsphinx/verifi-protocol
-- **📚 Documentation:** [START_HERE.md](./START_HERE.md)
-- **📡 Nodit Setup:** [NODIT_CONFIGURATION.md](./NODIT_CONFIGURATION.md)
 - **🔗 Contract Address:** `0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15`
 - **🌐 Network:** Aptos Testnet
 - **🔍 Explorer:** [View on Aptos Explorer](https://explorer.aptoslabs.com/account/0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15?network=testnet)

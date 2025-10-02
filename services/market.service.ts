@@ -31,7 +31,8 @@ export async function recordNewMarket(
  * @returns A promise that resolves to an array of active `Market` objects.
  */
 export async function getActiveMarkets(): Promise<Market[]> {
-  return await client.market.findMany({
+  console.log('[market.service] Fetching active markets from DB...');
+  const markets = await client.market.findMany({
     where: {
       status: "active",
     },
@@ -39,6 +40,11 @@ export async function getActiveMarkets(): Promise<Market[]> {
       createdAt: "desc",
     },
   });
+  console.log(`[market.service] Found ${markets.length} active markets:`, markets.map(m => ({
+    address: m.marketAddress,
+    description: m.description
+  })));
+  return markets;
 }
 
 /**

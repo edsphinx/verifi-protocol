@@ -6,6 +6,7 @@
     "// === DATABASE ===": "",
     "postinstall": "prisma generate",
     "db:seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts",
+    "db:sync": "ts-node --project tsconfig.scripts.json scripts/db-sync.ts",
 
     "// === PUBLISH (Move Modules) ===": "",
     "move:compile": "ts-node --project tsconfig.scripts.json scripts/move/util-compile.ts",

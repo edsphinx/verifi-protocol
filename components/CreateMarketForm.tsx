@@ -91,13 +91,18 @@ export function CreateMarketForm() {
     onSuccess: async (payload) => {
       if (!account?.address) return;
       try {
+        console.log('[CreateMarketForm] Submitting transaction with payload:', payload);
+        console.log('[CreateMarketForm] Sender address:', account.address);
+
         const committedTxn = await signAndSubmitTransaction({
           sender: account.address,
           data: payload,
         });
 
+        console.log('[CreateMarketForm] Transaction committed:', committedTxn.hash);
         toast.info("Market creation submitted, waiting for confirmation...");
 
+        console.log('[CreateMarketForm] Waiting for transaction confirmation...');
         const response = await aptosClient().waitForTransaction({
           transactionHash: committedTxn.hash,
           options: {
@@ -105,6 +110,8 @@ export function CreateMarketForm() {
             waitForIndexer: true,
           },
         });
+
+        console.log('[CreateMarketForm] Transaction confirmed:', response);
 
         if (isUserTransactionResponse(response)) {
           const event = response.events.find(
@@ -133,11 +140,19 @@ export function CreateMarketForm() {
           }
         }
       } catch (e: any) {
+        console.error('[CreateMarketForm] Transaction error:', e);
+        console.error('[CreateMarketForm] Error details:', {
+          message: e.message,
+          stack: e.stack,
+          response: e.response,
+        });
         toast.error("Transaction Failed", { description: e.message });
       }
     },
-    onError: (e: Error) =>
-      toast.error("Error building transaction", { description: e.message }),
+    onError: (e: Error) => {
+      console.error('[CreateMarketForm] Payload build error:', e);
+      toast.error("Error building transaction", { description: e.message });
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {

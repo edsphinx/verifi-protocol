@@ -13,14 +13,19 @@ import type {
  * @returns A promise that resolves to an array of markets ready for the UI.
  */
 export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
+  console.log('[market.ts] Fetching markets from /api/markets...');
   const response = await fetch("/api/markets");
+
   if (!response.ok) {
+    console.error('[market.ts] API response not OK:', response.status, response.statusText);
     throw new Error("Failed to fetch markets from API");
   }
+
   const data: DbMarket[] = await response.json();
+  console.log('[market.ts] Received data from API:', data);
 
   // The API already returns the enriched data, but we still need to format it for the UI component
-  return data.map((market: DbMarket) => ({
+  const uiMarkets = data.map((market: DbMarket) => ({
     id: market.marketAddress,
     title: market.description,
     category: "On-Chain",
@@ -28,6 +33,9 @@ export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
     resolvesOnDate: new Date(market.resolutionTimestamp),
     resolvesOn: new Date(market.resolutionTimestamp).toLocaleDateString(),
   }));
+
+  console.log('[market.ts] Transformed to UI markets:', uiMarkets);
+  return uiMarkets;
 }
 
 /**

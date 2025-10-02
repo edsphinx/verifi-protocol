@@ -7,6 +7,10 @@ import { toast } from "sonner";
 import { APTOS_API_KEY, NETWORK } from "@/aptos/constants";
 
 export function WalletProvider({ children }: PropsWithChildren) {
+  // Debug: Log API key presence (not the actual key)
+  console.log('[WalletProvider] APTOS_API_KEY configured:', !!APTOS_API_KEY);
+  console.log('[WalletProvider] NETWORK:', NETWORK);
+
   const dappConfig =
     NETWORK === Network.LOCAL
       ? {
@@ -23,6 +27,11 @@ export function WalletProvider({ children }: PropsWithChildren) {
             ? { [NETWORK]: APTOS_API_KEY }
             : undefined,
         };
+
+  console.log('[WalletProvider] dappConfig:', {
+    ...dappConfig,
+    aptosApiKeys: dappConfig.aptosApiKeys ? 'CONFIGURED' : 'MISSING'
+  });
 
   return (
     <AptosWalletAdapterProvider
