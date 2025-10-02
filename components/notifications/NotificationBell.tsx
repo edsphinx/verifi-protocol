@@ -5,9 +5,11 @@
  * Displays notification bell icon with badge and dropdown
  */
 
-import React, { useState } from "react";
 import { Bell } from "lucide-react";
-import { useNotifications } from "@/contexts/NotificationContext";
+import Link from "next/link";
+import React, { useState } from "react";
+import { useNotifications } from "@/components/providers/NotificationContext";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
 
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
