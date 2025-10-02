@@ -21,7 +21,7 @@ function publishHook(hookName: string, hookDir: string) {
 
   if (!privateKey) {
     console.error(
-      "❌ Error: NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY is required for publishing.",
+      " Error: NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY is required for publishing.",
     );
     process.exit(1);
   }
@@ -36,16 +36,16 @@ function publishHook(hookName: string, hookDir: string) {
       `aptos move publish --package-dir ${hookDir} --named-addresses ${hookNamedAddress} --private-key ${privateKey} --url ${nodeUrl} --assume-yes ${maxGasFlag}`,
       stdio,
     );
-    console.log(`✅ ${hookName} hook published successfully!`);
+    console.log(` ${hookName} hook published successfully!`);
   } catch (error: any) {
-    console.error(`❌ Error publishing ${hookName} hook.`);
+    console.error(` Error publishing ${hookName} hook.`);
     console.error(error.message);
     process.exit(1);
   }
 }
 
 function publishAllHooks() {
-  console.log("🚀 Publishing all hooks in order...");
+  console.log(" Publishing all hooks in order...");
   console.log(`🌐 Network: ${networkName} (${nodeUrl})\n`);
 
   // Publish in dependency order
@@ -53,8 +53,8 @@ function publishAllHooks() {
   publishHook("advanced", hooksAdvancedDir);
   publishHook("vault", hooksVaultDir);
 
-  console.log("\n✅ All hooks published successfully!");
-  console.log("📝 You can now publish tapp with: pnpm move:publish:tapp");
+  console.log("\n All hooks published successfully!");
+  console.log(" You can now publish tapp with: pnpm move:publish:tapp");
 }
 
 publishAllHooks();

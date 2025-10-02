@@ -9,11 +9,11 @@ import {
 } from "./_config";
 
 function publish() {
-  console.log("🚀 Publishing Move contracts...");
+  console.log(" Publishing Move contracts...");
 
   if (!privateKey) {
     console.error(
-      "❌ Error: NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY is required for publishing.",
+      " Error: NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY is required for publishing.",
     );
     process.exit(1);
   }
@@ -29,9 +29,9 @@ function publish() {
     console.log("\n🚚 Contracts published. Generating TypeScript ABIs...");
     // After a successful publish, generate the TS ABIs
     execSync("pnpm move:get_abi", stdio);
-    console.log("✅ Move contracts published and ABIs generated successfully.");
+    console.log(" Move contracts published and ABIs generated successfully.");
   } catch (error) {
-    console.error("❌ Error publishing Move contracts.");
+    console.error(" Error publishing Move contracts.");
     process.exit(1);
   }
 }
