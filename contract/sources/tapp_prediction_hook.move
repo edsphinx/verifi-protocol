@@ -517,13 +517,14 @@ module VeriFiPublisher::tapp_prediction_hook {
         yes_token_addr: address,
         no_token_addr: address
     ): (Object<Market>, Object<Metadata>, Object<Metadata>) {
-        // Query all markets from VeriFi protocol factory
-        let markets = verifi_protocol::get_all_markets();
-        let len = vector::length(&markets);
+        // Query all market addresses from VeriFi protocol factory
+        let market_addresses = verifi_protocol::get_all_market_addresses();
+        let len = vector::length(&market_addresses);
         let i = 0;
 
         while (i < len) {
-            let market_obj = *vector::borrow(&markets, i);
+            let market_addr = *vector::borrow(&market_addresses, i);
+            let market_obj = object::address_to_object<Market>(market_addr);
             let (yes_meta, no_meta) = verifi_protocol::get_market_tokens(market_obj);
 
             let yes_addr = object::object_address(&yes_meta);

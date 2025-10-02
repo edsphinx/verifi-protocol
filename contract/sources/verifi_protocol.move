@@ -894,6 +894,26 @@ module VeriFiPublisher::verifi_protocol {
 
     #[view]
     /**
+     * @notice Gets all market addresses (simplified version for iteration).
+     * @dev Returns just the addresses, not the full objects, for easier iteration.
+     * @return Vector of market addresses
+     */
+    public fun get_all_market_addresses(): vector<address> acquires MarketFactory {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let addresses = vector::empty<address>();
+        let len = vector::length(markets);
+        let i = 0;
+        while (i < len) {
+            let market_obj = *vector::borrow(markets, i);
+            vector::push_back(&mut addresses, object::object_address(&market_obj));
+            i = i + 1;
+        };
+        addresses
+    }
+
+    #[view]
+    /**
      * @notice Gets comprehensive market information.
      * @dev Useful for Tapp hook integration and frontend display.
      * @param market_object The market to query
