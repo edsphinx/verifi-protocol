@@ -71,10 +71,10 @@ if (!address) {
 
 export const namedAddress: string = `VeriFiPublisher=${address}`;
 export const packageDir: string = "./contract";
-export const tappDir: string = "./tapp";
-export const hooksAdvancedDir: string = "./hooks/advanced";
-export const hooksBasicDir: string = "./hooks/basic";
-export const hooksVaultDir: string = "./hooks/vault";
+export const tappDir: string = "./contract/test-deps/tapp";
+export const hooksAdvancedDir: string = "./contract/test-deps/hooks/advanced";
+export const hooksBasicDir: string = "./contract/test-deps/hooks/basic";
+export const hooksVaultDir: string = "./contract/test-deps/hooks/vault";
 export const stdio: { stdio: StdioOptions } = { stdio: "inherit" };
 // Export the dynamically selected node URL
 export { privateKey, nodeUrl, networkName };
