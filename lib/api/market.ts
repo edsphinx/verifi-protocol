@@ -13,29 +13,49 @@ import type {
  * @returns A promise that resolves to an array of markets ready for the UI.
  */
 export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
-  console.log('[market.ts] Fetching markets from /api/markets...');
-  const response = await fetch("/api/markets");
+  try {
+    console.log('[market.ts] Fetching markets from /api/markets...');
+    const response = await fetch("/api/markets");
 
-  if (!response.ok) {
-    console.error('[market.ts] API response not OK:', response.status, response.statusText);
-    throw new Error("Failed to fetch markets from API");
+    if (!response.ok) {
+      console.error('[market.ts] API response not OK:', response.status, response.statusText);
+      // Return empty array instead of throwing to prevent UI from breaking
+      return [];
+    }
+
+    const data: DbMarket[] = await response.json();
+    console.log('[market.ts] Received data from API:', data);
+
+    // Validate data is an array
+    if (!Array.isArray(data)) {
+      console.error('[market.ts] API response is not an array:', data);
+      return [];
+    }
+
+    // The API already returns the enriched data, but we still need to format it for the UI component
+    const uiMarkets = data.map((market: DbMarket) => {
+      try {
+        return {
+          id: market.marketAddress,
+          title: market.description,
+          category: "On-Chain",
+          totalVolume: market.totalVolume / 10 ** 8, // Convert from Octas
+          resolvesOnDate: new Date(market.resolutionTimestamp),
+          resolvesOn: new Date(market.resolutionTimestamp).toLocaleDateString(),
+        };
+      } catch (err) {
+        console.error('[market.ts] Error transforming market:', market, err);
+        return null;
+      }
+    }).filter((m): m is UiMarket => m !== null);
+
+    console.log('[market.ts] Transformed to UI markets:', uiMarkets);
+    return uiMarkets;
+  } catch (error) {
+    console.error('[market.ts] Error fetching markets:', error);
+    // Return empty array instead of throwing to prevent UI from breaking
+    return [];
   }
-
-  const data: DbMarket[] = await response.json();
-  console.log('[market.ts] Received data from API:', data);
-
-  // The API already returns the enriched data, but we still need to format it for the UI component
-  const uiMarkets = data.map((market: DbMarket) => ({
-    id: market.marketAddress,
-    title: market.description,
-    category: "On-Chain",
-    totalVolume: market.totalVolume / 10 ** 8, // Convert from Octas
-    resolvesOnDate: new Date(market.resolutionTimestamp),
-    resolvesOn: new Date(market.resolutionTimestamp).toLocaleDateString(),
-  }));
-
-  console.log('[market.ts] Transformed to UI markets:', uiMarkets);
-  return uiMarkets;
 }
 
 /**

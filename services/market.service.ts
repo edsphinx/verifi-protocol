@@ -31,20 +31,34 @@ export async function recordNewMarket(
  * @returns A promise that resolves to an array of active `Market` objects.
  */
 export async function getActiveMarkets(): Promise<Market[]> {
-  console.log('[market.service] Fetching active markets from DB...');
-  const markets = await client.market.findMany({
-    where: {
-      status: "active",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-  console.log(`[market.service] Found ${markets.length} active markets:`, markets.map(m => ({
-    address: m.marketAddress,
-    description: m.description
-  })));
-  return markets;
+  try {
+    console.log('[market.service] Fetching active markets from DB...');
+    const markets = await client.market.findMany({
+      where: {
+        status: "active",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    console.log(`[market.service] Found ${markets.length} active markets:`, markets.map(m => ({
+      address: m.marketAddress,
+      description: m.description
+    })));
+    return markets;
+  } catch (error) {
+    console.error('[market.service] Error fetching from database:', error);
+
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('[market.service] Error name:', error.name);
+      console.error('[market.service] Error message:', error.message);
+    }
+
+    // Return empty array instead of throwing to prevent cascading failures
+    console.warn('[market.service] Returning empty array due to DB error');
+    return [];
+  }
 }
 
 /**

@@ -16,16 +16,10 @@ export function WalletProvider({ children }: PropsWithChildren) {
       ? {
           // For local development, we omit the `network` property.
           // This prevents a runtime error where the adapter rejects the "custom" network.
-          aptosApiKeys: APTOS_API_KEY
-            ? { [NETWORK]: APTOS_API_KEY }
-            : undefined,
         }
       : {
           // For public networks, we must specify the network.
           network: NETWORK,
-          aptosApiKeys: APTOS_API_KEY
-            ? { [NETWORK]: APTOS_API_KEY }
-            : undefined,
         };
 
   console.log('[WalletProvider] dappConfig:', {

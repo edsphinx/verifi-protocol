@@ -34,6 +34,7 @@ export function buildCreateMarketPayload(
 
   return {
     function: `${MODULE_ADDRESS}::verifi_protocol::create_market`,
+    typeArguments: [],
     functionArguments: [
       description,
       resolutionTimestamp.toString(),

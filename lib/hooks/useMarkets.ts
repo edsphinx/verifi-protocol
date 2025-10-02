@@ -15,13 +15,15 @@ export function useMarkets() {
 
   // La lógica de filtrado y separación vive en el hook, no en el componente.
   const { featuredMarket, otherMarkets, soon, resolved } = useMemo(() => {
-    if (!markets)
+    // Handle null, undefined, or empty arrays
+    if (!markets || !Array.isArray(markets) || markets.length === 0) {
       return {
         featuredMarket: undefined,
         otherMarkets: [],
         soon: [],
         resolved: [],
       };
+    }
 
     const now = new Date();
     const soonThreshold = new Date();
@@ -31,12 +33,21 @@ export function useMarkets() {
     const others = markets.slice(1);
 
     const soon = markets.filter((market) => {
-      const resolutionDate = new Date(market.resolvesOn);
-      return resolutionDate > now && resolutionDate <= soonThreshold;
+      try {
+        const resolutionDate = new Date(market.resolvesOn);
+        return resolutionDate > now && resolutionDate <= soonThreshold;
+      } catch {
+        return false;
+      }
     });
-    const resolved = markets.filter(
-      (market) => new Date(market.resolvesOn) < now,
-    );
+
+    const resolved = markets.filter((market) => {
+      try {
+        return new Date(market.resolvesOn) < now;
+      } catch {
+        return false;
+      }
+    });
 
     return { featuredMarket: featured, otherMarkets: others, soon, resolved };
   }, [markets]);

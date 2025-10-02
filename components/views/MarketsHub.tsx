@@ -24,21 +24,27 @@ export function MarketsHub() {
     visible: { y: 0, opacity: 1 },
   };
 
-  const renderMarketGrid = (marketsToRender: typeof otherMarkets) => (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
-      {marketsToRender?.map((market) => (
-        <motion.div key={market.id} variants={itemVariants}>
-          <MarketCard market={market} />
-        </motion.div>
-      ))}
-    </motion.div>
-  );
+  const renderMarketGrid = (marketsToRender: typeof otherMarkets) => {
+    if (!marketsToRender || marketsToRender.length === 0) {
+      return null;
+    }
+
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        {marketsToRender.map((market) => (
+          <motion.div key={market.id} variants={itemVariants}>
+            <MarketCard market={market} />
+          </motion.div>
+        ))}
+      </motion.div>
+    );
+  };
 
   return (
     <div className="space-y-8 md:space-y-12">
@@ -67,8 +73,12 @@ export function MarketsHub() {
                     transition={{ duration: 0.5 }}
                     className="space-y-10"
                   >
-                    {featuredMarket && (
+                    {featuredMarket ? (
                       <FeaturedMarketCard market={featuredMarket} />
+                    ) : (
+                      !isLoading && (
+                        <EmptyState message="No active markets found. Create the first market!" />
+                      )
                     )}
                     {otherMarkets && otherMarkets.length > 0 && (
                       <div>
