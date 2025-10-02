@@ -6,6 +6,9 @@ authors = ["edsphinx"]
 [addresses]
 VeriFiPublisher = "_"
 
+[dev-addresses]
+VeriFiPublisher = "0xcafe"
+
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
 

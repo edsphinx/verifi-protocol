@@ -357,9 +357,9 @@ export function CreateMarketForm() {
               Enter the time when the market should close in your local timezone.
               {resolutionDate && (
                 <span className="block mt-1">
-                  <strong>Your time:</strong> {new Date(resolutionDate).toLocaleString()}
+                  <strong>Your time:</strong> {resolutionDate.replace('T', ' at ')}
                   <br />
-                  <strong>UTC:</strong> {new Date(resolutionDate).toUTCString()}
+                  <strong>UTC:</strong> {new Date(resolutionDate + 'Z').toUTCString()}
                 </span>
               )}
             </p>
