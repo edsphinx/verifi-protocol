@@ -15,10 +15,20 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
 
-    console.log("📨 Nodit webhook:", {
+    console.log("📨 Nodit webhook FULL PAYLOAD:", JSON.stringify(payload, null, 2));
+    console.log("📨 Nodit webhook summary:", {
       event: payload.event?.type,
       tx: payload.transaction?.hash,
     });
+
+    // Validate payload structure
+    if (!payload.event || !payload.transaction || !payload.transaction.hash) {
+      console.warn("⚠️ Invalid webhook payload structure - likely a test webhook");
+      return NextResponse.json({
+        status: "ignored",
+        reason: "Invalid payload structure - missing event or transaction data"
+      }, { status: 200 });
+    }
 
     const eventType = payload.event?.type;
     const eventData = payload.event?.data;

@@ -12,18 +12,15 @@ export function aptosClient() {
       apiKeyPreview: APTOS_API_KEY ? APTOS_API_KEY.substring(0, 15) + '...' : 'NOT_SET',
     });
 
-    const config: any = {
+    // Create config with API key in clientConfig
+    const aptosConfig = new AptosConfig({
       network: NETWORK,
-    };
-
-    // API key must be in clientConfig, not in the root
-    if (APTOS_API_KEY) {
-      config.clientConfig = {
+      clientConfig: APTOS_API_KEY ? {
         API_KEY: APTOS_API_KEY,
-      };
-    }
+      } : undefined,
+    });
 
-    aptos = new Aptos(new AptosConfig(config));
+    aptos = new Aptos(aptosConfig);
 
     console.log('[aptos/client] Aptos client created successfully');
   }
