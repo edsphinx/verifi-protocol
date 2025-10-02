@@ -19,8 +19,8 @@ async function main() {
   });
   const aptos = new Aptos(aptosConfig);
 
-  console.log("🚀 Registering Tapp Oracle...");
-  console.log(`📝 Publisher: ${publisherAccount.accountAddress}`);
+  console.log(" Registering Tapp Oracle...");
+  console.log(` Publisher: ${publisherAccount.accountAddress}`);
   console.log(`🌐 Network: ${networkName} (${nodeUrl})\n`);
 
   try {
@@ -47,15 +47,15 @@ async function main() {
       transactionHash: committedTxn.hash,
     });
 
-    console.log(`✅ Tapp oracle registered successfully!`);
+    console.log(` Tapp oracle registered successfully!`);
     console.log(`   Oracle ID: tapp_prediction`);
     console.log(
       `   TX: https://explorer.aptoslabs.com/txn/${committedTxn.hash}?network=${networkName}\n`,
     );
 
-    console.log("✨ Oracle registration completed!");
+    console.log(" Oracle registration completed!");
     console.log(
-      "📝 You can now create markets with oracle_id='tapp_prediction'",
+      " You can now create markets with oracle_id='tapp_prediction'",
     );
   } catch (error: any) {
     if (error.message && error.message.includes("EORACLE_ALREADY_EXISTS")) {
@@ -63,7 +63,7 @@ async function main() {
         "ℹ️  Oracle 'tapp_prediction' already exists. Skipping registration.",
       );
     } else {
-      console.error("❌ Failed to register oracle.", error);
+      console.error(" Failed to register oracle.", error);
       process.exit(1);
     }
   }

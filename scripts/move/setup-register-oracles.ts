@@ -36,8 +36,8 @@ async function main() {
   });
   const aptos = new Aptos(aptosConfig);
 
-  console.log("🚀 Registering Common Oracles...");
-  console.log(`📝 Publisher: ${publisherAccount.accountAddress}\n`);
+  console.log(" Registering Common Oracles...");
+  console.log(` Publisher: ${publisherAccount.accountAddress}\n`);
 
   for (const oracle of ORACLES) {
     try {
@@ -60,17 +60,17 @@ async function main() {
         transactionHash: committedTxn.hash,
       });
 
-      console.log(`✅ '${oracle.id}' registered successfully!\n`);
+      console.log(` '${oracle.id}' registered successfully!\n`);
     } catch (error: any) {
       if (error.message && error.message.includes("EORACLE_ALREADY_EXISTS")) {
         console.log(`ℹ️  '${oracle.id}' already exists. Skipping.\n`);
       } else {
-        console.error(`❌ Failed to register '${oracle.id}':`, error.message);
+        console.error(` Failed to register '${oracle.id}':`, error.message);
       }
     }
   }
 
-  console.log("✨ Oracle registration completed!");
+  console.log(" Oracle registration completed!");
 }
 
 main();
