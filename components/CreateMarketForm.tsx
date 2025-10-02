@@ -168,7 +168,7 @@ export function CreateMarketForm() {
       resolutionTimestamp: Math.floor(
         new Date(resolutionDate).getTime() / 1000,
       ),
-      resolverAddress: account.address.toStringLong(),
+      resolverAddress: account.address.toString(),
       oracleId: selectedOracle.id,
       targetAddress: selectedOracle.requiresTargetAddress
         ? targetAddress
