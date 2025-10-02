@@ -13,14 +13,14 @@ dotenv.config({ path: path.resolve(projectRoot, ".env"), override: true });
 // Extract the publisher account address
 const accountAddress = fullNamedAddress.split("=")[1];
 if (!accountAddress) {
-  console.error("❌ Could not parse account address from config.");
+  console.error(" Could not parse account address from config.");
   process.exit(1);
 }
 
 const OUTPUT_DIR = path.join(projectRoot, "aptos", "abis");
 
 async function main() {
-  console.log("📝 Generating TypeScript ABIs from the node...");
+  console.log(" Generating TypeScript ABIs from the node...");
 
   // Build the API URL to get all modules for the account
   const cleanNodeUrl = nodeUrl.endsWith("/v1") ? nodeUrl.slice(0, -3) : nodeUrl;
@@ -37,7 +37,7 @@ async function main() {
     const modulesData = await response.json();
 
     if (!Array.isArray(modulesData) || modulesData.length === 0) {
-      console.warn("⚠️ No modules found for this account on the node.");
+      console.warn(" No modules found for this account on the node.");
       return;
     }
 
@@ -67,7 +67,7 @@ export const ${moduleNameUpper}_ABI = ${JSON.stringify(abiContent, null, 2)} as 
       `;
 
       fs.writeFileSync(tsFilePath, tsContent);
-      console.log(`✅ Generated ABI for: ${tsFileName}`);
+      console.log(` Generated ABI for: ${tsFileName}`);
 
       // Prepare the export line for the index file
       const exportName = `${moduleNameUpper}_ABI`;
@@ -78,14 +78,14 @@ export const ${moduleNameUpper}_ABI = ${JSON.stringify(abiContent, null, 2)} as 
     if (indexFileContent.length > 0) {
       const indexTsPath = path.join(OUTPUT_DIR, "index.ts");
       fs.writeFileSync(indexTsPath, indexFileContent.join("\n"));
-      console.log(`✅ Generated main ABI index file at ${indexTsPath}`);
+      console.log(` Generated main ABI index file at ${indexTsPath}`);
     }
 
     console.log(
-      "✅ Raw ABI generation complete. Run 'pnpm format' to format the new files.",
+      " Raw ABI generation complete. Run 'pnpm format' to format the new files.",
     );
   } catch (error) {
-    console.error("❌ Error generating ABIs:", error);
+    console.error(" Error generating ABIs:", error);
     console.error(
       "Please ensure your local node is running and the contract has been published successfully.",
     );

@@ -113,7 +113,7 @@ async function main() {
           const { market_address, creator, description } =
             marketCreatedEvent.data;
 
-          console.log(`✅ Market ${i + 1} created on-chain.`);
+          console.log(` Market ${i + 1} created on-chain.`);
 
           try {
             await recordNewMarket({
@@ -124,7 +124,7 @@ async function main() {
             });
             console.log(`   - 💾 Saved to database successfully.`);
           } catch (dbError) {
-            console.error(`   - ❌ Failed to save to database:`, dbError);
+            console.error(`   -  Failed to save to database:`, dbError);
           }
           console.log(`   - Address: ${market_address}`);
           console.log(`   - Txn Hash: ${committedTxn.hash}`);
@@ -135,13 +135,13 @@ async function main() {
         }
       }
     } catch (error) {
-      console.error(`❌ Failed to create market ${i + 1}. Error:`, error);
+      console.error(` Failed to create market ${i + 1}. Error:`, error);
       // Optional: Stop the script if one transaction fails
       // break;
     }
   }
 
-  console.log("\n✨ Done creating mock markets.");
+  console.log("\n Done creating mock markets.");
 }
 
 main().catch((error) => {

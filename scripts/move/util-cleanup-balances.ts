@@ -56,9 +56,9 @@ async function main() {
     allMarkets = (markets as any[]).map((m: any) =>
       typeof m === "string" ? m : m?.inner || m?.toString(),
     );
-    console.log(`✅ Found ${allMarkets.length} markets\n`);
+    console.log(` Found ${allMarkets.length} markets\n`);
   } catch (error: any) {
-    console.error("❌ Failed to fetch markets:", error.message);
+    console.error(" Failed to fetch markets:", error.message);
     process.exit(1);
   }
 
@@ -79,7 +79,7 @@ async function main() {
   }> = [];
 
   for (const trader of traders) {
-    console.log(`📊 ${trader.name}: ${trader.account.accountAddress}`);
+    console.log(` ${trader.name}: ${trader.account.accountAddress}`);
 
     try {
       // Get all account resources to find FungibleStore resources
@@ -179,13 +179,13 @@ async function main() {
         }
       }
     } catch (error: any) {
-      console.log(`   ⚠️  Could not scan ${trader.name}: ${error.message}`);
+      console.log(`     Could not scan ${trader.name}: ${error.message}`);
     }
     console.log("");
   }
 
   if (cleanupTasks.length === 0) {
-    console.log("✅ All traders have clean balances. Nothing to sell.\n");
+    console.log(" All traders have clean balances. Nothing to sell.\n");
     return;
   }
 
@@ -217,13 +217,13 @@ async function main() {
           transaction: sellYesTxn,
         });
         await aptos.waitForTransaction({ transactionHash: yesCommit.hash });
-        console.log(`   ✅ Sold ${task.yesBalance / 100_000_000} YES shares`);
+        console.log(`    Sold ${task.yesBalance / 100_000_000} YES shares`);
         successCount++;
 
         // Small delay between transactions
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error: any) {
-        console.log(`   ❌ Failed to sell YES: ${error.message}`);
+        console.log(`    Failed to sell YES: ${error.message}`);
         failCount++;
       }
     }
@@ -243,13 +243,13 @@ async function main() {
           transaction: sellNoTxn,
         });
         await aptos.waitForTransaction({ transactionHash: noCommit.hash });
-        console.log(`   ✅ Sold ${task.noBalance / 100_000_000} NO shares`);
+        console.log(`    Sold ${task.noBalance / 100_000_000} NO shares`);
         successCount++;
 
         // Small delay between transactions
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error: any) {
-        console.log(`   ❌ Failed to sell NO: ${error.message}`);
+        console.log(`    Failed to sell NO: ${error.message}`);
         failCount++;
       }
     }
@@ -259,15 +259,15 @@ async function main() {
 
   // Summary
   console.log("=".repeat(60));
-  console.log("✨ CLEANUP SUMMARY");
+  console.log(" CLEANUP SUMMARY");
   console.log("=".repeat(60));
-  console.log(`✅ Successful sales: ${successCount}`);
-  console.log(`❌ Failed sales: ${failCount}`);
+  console.log(` Successful sales: ${successCount}`);
+  console.log(` Failed sales: ${failCount}`);
   console.log("=".repeat(60));
 
   if (successCount > 0) {
     console.log("\n💰 Traders have recovered APT from their shares!");
-    console.log("📊 Check balances with:");
+    console.log(" Check balances with:");
     console.log("   pnpm test:full (at the start it logs all accounts)\n");
   }
 }
