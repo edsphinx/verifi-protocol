@@ -1,12 +1,10 @@
 import {
   Aptos,
   AptosConfig,
-  Account,
-  Ed25519PrivateKey,
   type Network,
 } from "@aptos-labs/ts-sdk";
-import { networkName, nodeUrl } from "./_config";
-import { publisherAccount } from "./_test-accounts";
+import { networkName, nodeUrl } from "../_config";
+import { publisherAccount } from "../_test-accounts";
 
 const TRADER5_ADDR = process.env.NEXT_PUBLIC_TRADER5_ACCOUNT_ADDRESS!;
 

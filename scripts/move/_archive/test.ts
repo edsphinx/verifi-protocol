@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { namedAddress, nodeUrl, packageDir, stdio } from "./_config";
+import { namedAddress, packageDir, stdio } from "../_config";
 
 function test() {
   console.log("🧪 Testing Move contracts...");

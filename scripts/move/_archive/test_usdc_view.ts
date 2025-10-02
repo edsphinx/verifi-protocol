@@ -1,6 +1,6 @@
 import { Aptos, AptosConfig, type Network } from "@aptos-labs/ts-sdk";
 
-import { networkName, nodeUrl } from "./_config";
+import { networkName, nodeUrl } from "../_config";
 
 const MODULE_ADDRESS = process.env.NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS;
 
