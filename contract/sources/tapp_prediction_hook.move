@@ -509,13 +509,13 @@ module VeriFiPublisher::tapp_prediction_hook {
 
     /**
      * @dev Finds the VeriFi market that owns the given YES/NO tokens.
-     * @param yes_token_addr Address of the YES token
-     * @param no_token_addr Address of the NO token
+     * @param token0_addr Address of the first token (could be YES or NO)
+     * @param token1_addr Address of the second token (could be NO or YES)
      * @return (market_object, yes_metadata, no_metadata)
      */
     fun find_market_from_tokens(
-        yes_token_addr: address,
-        no_token_addr: address
+        token0_addr: address,
+        token1_addr: address
     ): (Object<Market>, Object<Metadata>, Object<Metadata>) {
         // Query all market addresses from VeriFi protocol factory
         let market_addresses = verifi_protocol::get_all_market_addresses();
@@ -530,7 +530,9 @@ module VeriFiPublisher::tapp_prediction_hook {
             let yes_addr = object::object_address(&yes_meta);
             let no_addr = object::object_address(&no_meta);
 
-            if (yes_addr == yes_token_addr && no_addr == no_token_addr) {
+            // Try both orderings since Tapp router doesn't guarantee order
+            if ((yes_addr == token0_addr && no_addr == token1_addr) ||
+                (yes_addr == token1_addr && no_addr == token0_addr)) {
                 return (market_obj, yes_meta, no_meta)
             };
 

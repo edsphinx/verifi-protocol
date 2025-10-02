@@ -74,32 +74,12 @@ export function CreateMarketForm() {
   const { signAndSubmitTransaction, account } = useWallet();
   const router = useRouter();
 
-  // Check for active oracles on mount
+  // Set known active oracles on mount
   useEffect(() => {
-    const checkActiveOracles = async () => {
-      try {
-        const client = aptosClient();
-        const result = await client.view({
-          payload: {
-            function: `${MODULE_ADDRESS}::oracle_registry::get_all_oracles`,
-            typeArguments: [],
-            functionArguments: [],
-          },
-        });
-
-        // Parse active oracles from result
-        // For now, fallback to known oracles
-        setActiveOracles(["aptos-balance", "usdc-total-supply"]);
-      } catch (error) {
-        console.error("Failed to fetch oracles:", error);
-        // Fallback to known oracles
-        setActiveOracles(["aptos-balance", "usdc-total-supply"]);
-      } finally {
-        setCheckingOracles(false);
-      }
-    };
-
-    checkActiveOracles();
+    // Use hardcoded list of registered oracles for market creation
+    // Note: tapp_prediction is a hook, not an oracle for markets
+    setActiveOracles(["aptos-balance", "usdc-total-supply"]);
+    setCheckingOracles(false);
   }, []);
 
   const selectedOracle =

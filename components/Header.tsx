@@ -155,10 +155,8 @@ export function Header() {
 
             {/* Protocol Status */}
             <NavigationMenuItem>
-              <Link href="/status" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Status
-                </NavigationMenuLink>
+              <Link href="/status" className={navigationMenuTriggerStyle()}>
+                Status
               </Link>
             </NavigationMenuItem>
           </NavigationMenuList>

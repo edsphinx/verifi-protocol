@@ -576,19 +576,38 @@ async function main() {
   // === Step 6: Trader 2 Buys Shares for Swapping ===
   console.log("\n[6/7] Trader 2 buying shares to swap in Tapp AMM...");
   try {
-    const buyTxn = await aptos.transaction.build.simple({
+    // Buy YES shares for swapping
+    const buyYesTxn = await aptos.transaction.build.simple({
       sender: trader2Account.accountAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
-        functionArguments: [marketAddress, 10_000_000, true], // 0.1 APT of YES (more for swap + fees)
+        functionArguments: [marketAddress, 10_000_000, true], // 0.1 APT of YES
       },
     });
-    const buyCommit = await aptos.signAndSubmitTransaction({
+    const yesCommit = await aptos.signAndSubmitTransaction({
       signer: trader2Account,
-      transaction: buyTxn,
+      transaction: buyYesTxn,
     });
-    await aptos.waitForTransaction({ transactionHash: buyCommit.hash });
-    console.log(`✅ Trader 2 bought 0.1 APT of YES shares`);
+    await aptos.waitForTransaction({ transactionHash: yesCommit.hash });
+    console.log(`   ✅ Bought YES shares`);
+
+    // Small NO purchase to initialize primary store for receiving NO from swap
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const buyNoTxn = await aptos.transaction.build.simple({
+      sender: trader2Account.accountAddress,
+      data: {
+        function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
+        functionArguments: [marketAddress, 100_000, false], // 0.001 APT of NO (minimal)
+      },
+    });
+    const noCommit = await aptos.signAndSubmitTransaction({
+      signer: trader2Account,
+      transaction: buyNoTxn,
+    });
+    await aptos.waitForTransaction({ transactionHash: noCommit.hash });
+    console.log(`   ✅ Bought NO shares (to initialize store)`);
+
+    console.log(`✅ Trader 2 ready to swap YES → NO`);
   } catch (error: any) {
     console.error("❌ Failed to buy shares:", error.message || error);
     process.exit(1);
