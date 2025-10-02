@@ -130,10 +130,17 @@ async function main() {
 
   // === Step 2: Check Initial Balances ===
   console.log("\n[2/8] Checking initial balances for Trader 1...");
-  await checkBalances(aptos, trader1Account, marketAddress!, "Trader 1 (initial)");
+  await checkBalances(
+    aptos,
+    trader1Account,
+    marketAddress!,
+    "Trader 1 (initial)",
+  );
 
   // === Step 3: Trader 1 Buys YES Shares ===
-  console.log(`\n[3/8] Trader 1 buying ${BUY_YES_AMOUNT_APT} APT of YES shares...`);
+  console.log(
+    `\n[3/8] Trader 1 buying ${BUY_YES_AMOUNT_APT} APT of YES shares...`,
+  );
   try {
     const buyYesTxn = await aptos.transaction.build.simple({
       sender: trader1Account.accountAddress,
@@ -154,7 +161,9 @@ async function main() {
   }
 
   // === Step 4: Trader 2 Buys NO Shares ===
-  console.log(`\n[4/8] Trader 2 buying ${BUY_NO_AMOUNT_APT} APT of NO shares...`);
+  console.log(
+    `\n[4/8] Trader 2 buying ${BUY_NO_AMOUNT_APT} APT of NO shares...`,
+  );
   try {
     const buyNoTxn = await aptos.transaction.build.simple({
       sender: trader2Account.accountAddress,
@@ -176,11 +185,23 @@ async function main() {
 
   // === Step 5: Check Balances After Buying ===
   console.log("\n[5/8] Checking balances after buying...");
-  await checkBalances(aptos, trader1Account, marketAddress!, "Trader 1 (after buying)");
-  await checkBalances(aptos, trader2Account, marketAddress!, "Trader 2 (after buying)");
+  await checkBalances(
+    aptos,
+    trader1Account,
+    marketAddress!,
+    "Trader 1 (after buying)",
+  );
+  await checkBalances(
+    aptos,
+    trader2Account,
+    marketAddress!,
+    "Trader 2 (after buying)",
+  );
 
   // === Step 6: Trader 1 Sells YES Shares (Partial Amount) ===
-  console.log(`\n[6/8] Trader 1 selling ${SELL_YES_AMOUNT_SHARES} YES shares...`);
+  console.log(
+    `\n[6/8] Trader 1 selling ${SELL_YES_AMOUNT_SHARES} YES shares...`,
+  );
   try {
     const sellYesTxn = await aptos.transaction.build.simple({
       sender: trader1Account.accountAddress,
@@ -223,8 +244,18 @@ async function main() {
 
   // === Step 8: Check Final Balances ===
   console.log("\n[8/8] Checking final balances after selling...");
-  await checkBalances(aptos, trader1Account, marketAddress!, "Trader 1 (final)");
-  await checkBalances(aptos, trader2Account, marketAddress!, "Trader 2 (final)");
+  await checkBalances(
+    aptos,
+    trader1Account,
+    marketAddress!,
+    "Trader 1 (final)",
+  );
+  await checkBalances(
+    aptos,
+    trader2Account,
+    marketAddress!,
+    "Trader 2 (final)",
+  );
 
   // === (Bonus) Negative Test: Try to sell more than owned ===
   console.log(

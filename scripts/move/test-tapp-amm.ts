@@ -36,7 +36,9 @@ async function main() {
 
   console.log("🚀 Starting Tapp AMM Integration Test...");
   console.log(`📝 Market Creator: ${marketCreatorAccount.accountAddress}`);
-  console.log(`💧 Liquidity Provider (Trader 1): ${trader1Account.accountAddress}`);
+  console.log(
+    `💧 Liquidity Provider (Trader 1): ${trader1Account.accountAddress}`,
+  );
   console.log(`🔄 Swapper (Trader 2): ${trader2Account.accountAddress}`);
   console.log(`🔄 Swapper (Trader 3): ${trader3Account.accountAddress}`);
 
@@ -71,7 +73,8 @@ async function main() {
 
     if (isUserTransactionResponse(response)) {
       const event = response.events.find(
-        (e) => e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`
+        (e) =>
+          e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`,
       );
       if (event) {
         marketAddress = event.data.market_address;
@@ -110,7 +113,9 @@ async function main() {
       transaction: buyTxn,
     });
 
-    console.log(`✅ Trader 1 bought initial shares (Tapp pool would be initialized here)`);
+    console.log(
+      `✅ Trader 1 bought initial shares (Tapp pool would be initialized here)`,
+    );
   } catch (error) {
     console.error("❌ Failed to initialize pool.", error);
     process.exit(1);
@@ -138,7 +143,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader2Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader2Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
     console.log(`   📊 Trader 2 Balances:`);
@@ -169,7 +177,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader3Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader3Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
     console.log(`   📊 Trader 3 Balances:`);
@@ -218,7 +229,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader2Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader2Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
     console.log(`   📊 Trader 2 Updated Balances:`);
@@ -240,19 +254,28 @@ async function main() {
       aptos.view({
         payload: {
           function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-          functionArguments: [trader1Account.accountAddress.toString(), marketAddress],
+          functionArguments: [
+            trader1Account.accountAddress.toString(),
+            marketAddress,
+          ],
         },
       }),
       aptos.view({
         payload: {
           function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-          functionArguments: [trader2Account.accountAddress.toString(), marketAddress],
+          functionArguments: [
+            trader2Account.accountAddress.toString(),
+            marketAddress,
+          ],
         },
       }),
       aptos.view({
         payload: {
           function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-          functionArguments: [trader3Account.accountAddress.toString(), marketAddress],
+          functionArguments: [
+            trader3Account.accountAddress.toString(),
+            marketAddress,
+          ],
         },
       }),
     ]);

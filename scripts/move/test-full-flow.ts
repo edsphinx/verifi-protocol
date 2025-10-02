@@ -34,7 +34,7 @@ async function main() {
 
   console.log("🚀 Starting Full End-to-End Test Flow...");
   console.log(
-    `📝 Market Creator: ${marketCreatorAccount.accountAddress.toString()}`
+    `📝 Market Creator: ${marketCreatorAccount.accountAddress.toString()}`,
   );
   console.log(`👤 Trader 1: ${trader1Account.accountAddress.toString()}`);
   console.log(`👤 Trader 2: ${trader2Account.accountAddress.toString()}`);

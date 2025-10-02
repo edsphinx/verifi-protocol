@@ -19,7 +19,8 @@ function publish() {
   }
 
   try {
-    const maxGasFlag = networkName === "local" ? "--max-gas 100000" : "";
+    const maxGasFlag =
+      networkName === "local" ? "--max-gas 100000" : "--max-gas 50000";
 
     execSync(
       `aptos move publish --package-dir ${packageDir} --named-addresses ${namedAddress} --private-key ${privateKey} --url ${nodeUrl} --assume-yes ${maxGasFlag}`,

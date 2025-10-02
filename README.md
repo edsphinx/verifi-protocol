@@ -136,9 +136,14 @@ We've pioneered the first prediction market hooks on Aptos:
 - **`access_control.move`** - Permission management system
 
 **Tapp Integration Modules:**
-- **`tapp_prediction_hook.move`** - Custom AMM hooks for prediction markets
-- **`router.move`** - Swap and liquidity routing
-- **Pool system** with specialized prediction market logic
+- **Local Tapp Deployment** - Deployed from [tapp-exchange/hook-documentation](https://github.com/tapp-exchange/hook-documentation)
+  - `pool.move` - Core pool logic
+  - `router.move` - Swap and liquidity routing
+  - `pool_manager.move` - Pool registry and management
+- **Custom Modules:**
+  - `tapp_prediction_hook.move` - First prediction market hook on Aptos
+  - Custom initialization and swap logic for YES/NO tokens
+  - Hook contract: `0x6fa...` (deployed on testnet)
 
 ### 🎨 Frontend (Next.js 15 + TypeScript)
 
@@ -300,6 +305,12 @@ We've built a **showcase application** for Nodit's infrastructure capabilities:
 ### 🔄 Tapp.Exchange Integration
 We've pioneered **custom hooks for prediction markets** on Tapp.Exchange:
 
+**✅ Local Tapp Deployment:**
+- Deployed local instance of Tapp.Exchange contracts from [hook-documentation](https://github.com/tapp-exchange/hook-documentation)
+- Modified and extended for prediction market use cases
+- Full control over hook implementation and testing
+- Located in `contract/sources/tapp/` directory
+
 **✅ Custom Hook Implementation:**
 - `tapp_prediction_hook.move` - First prediction market hook on Aptos
 - Specialized pool initialization for YES/NO tokens
@@ -407,10 +418,13 @@ This project is built for the Aptos Hackathon 2025. License details coming soon.
 
 ## 🔗 Links
 
-- **Live Demo:** Coming soon
-- **Documentation:** [START_HERE.md](./START_HERE.md)
-- **Discord:** Join our community (link coming soon)
-- **Twitter:** Follow for updates (link coming soon)
+- **🌐 Live Demo:** https://verifi-protocol.vercel.app
+- **📦 Repository:** https://github.com/edsphinx/verifi-protocol
+- **📚 Documentation:** [START_HERE.md](./START_HERE.md)
+- **📡 Nodit Setup:** [NODIT_CONFIGURATION.md](./NODIT_CONFIGURATION.md)
+- **🔗 Contract Address:** `0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15`
+- **🌐 Network:** Aptos Testnet
+- **🔍 Explorer:** [View on Aptos Explorer](https://explorer.aptoslabs.com/account/0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15?network=testnet)
 
 ---
 
