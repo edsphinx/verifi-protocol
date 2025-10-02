@@ -163,22 +163,15 @@ export function CreateMarketForm() {
       return;
     }
 
-    // Convert datetime-local input to UTC timestamp
-    // datetime-local format: "2025-10-02T14:30"
-    // We need to explicitly treat it as UTC to match blockchain time
-    const dateInput = new Date(resolutionDate);
-    const utcTimestamp = Date.UTC(
-      dateInput.getFullYear(),
-      dateInput.getMonth(),
-      dateInput.getDate(),
-      dateInput.getHours(),
-      dateInput.getMinutes(),
-      0
-    ) / 1000;
+    // User enters local time, we convert to UTC for blockchain
+    // datetime-local input gives us local time string like "2025-10-02T14:30"
+    const localDate = new Date(resolutionDate);
+    const utcTimestamp = Math.floor(localDate.getTime() / 1000);
+    const currentTimestamp = Math.floor(Date.now() / 1000);
 
     const payload = {
       description,
-      resolutionTimestamp: Math.floor(utcTimestamp),
+      resolutionTimestamp: utcTimestamp,
       resolverAddress: account.address.toString(),
       oracleId: selectedOracle.id,
       targetAddress: selectedOracle.requiresTargetAddress
@@ -189,12 +182,38 @@ export function CreateMarketForm() {
       operator,
     };
 
-    console.log('[CreateMarketForm] Submitting form with payload:', payload);
-    console.log('[CreateMarketForm] Resolution date input:', resolutionDate);
-    console.log('[CreateMarketForm] UTC timestamp:', utcTimestamp);
-    console.log('[CreateMarketForm] Current blockchain time:', Math.floor(Date.now() / 1000));
-    console.log('[CreateMarketForm] Account address:', account.address);
-    console.log('[CreateMarketForm] Selected oracle:', selectedOracle);
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📅 [CREATE MARKET] TIMEZONE DEBUGGING');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('📝 Input string from form:', resolutionDate);
+    console.log('');
+    console.log('🕐 LOCAL TIME:');
+    console.log('  - Full string:', localDate.toString());
+    console.log('  - ISO format:', localDate.toISOString());
+    console.log('  - Locale string:', localDate.toLocaleString());
+    console.log('  - Timezone offset:', -localDate.getTimezoneOffset() / 60, 'hours from UTC');
+    console.log('');
+    console.log('🌍 UTC TIME (Blockchain):');
+    console.log('  - Full string:', localDate.toUTCString());
+    console.log('  - Year:', localDate.getUTCFullYear());
+    console.log('  - Month:', localDate.getUTCMonth() + 1);
+    console.log('  - Day:', localDate.getUTCDate());
+    console.log('  - Hour:', localDate.getUTCHours());
+    console.log('  - Minute:', localDate.getUTCMinutes());
+    console.log('');
+    console.log('⏱️  TIMESTAMPS:');
+    console.log('  - Resolution timestamp (saved):', utcTimestamp);
+    console.log('  - Current timestamp:', currentTimestamp);
+    console.log('  - Difference (seconds):', utcTimestamp - currentTimestamp);
+    console.log('  - Difference (hours):', ((utcTimestamp - currentTimestamp) / 3600).toFixed(2));
+    console.log('  - Difference (days):', ((utcTimestamp - currentTimestamp) / 86400).toFixed(2));
+    console.log('');
+    console.log('✅ VERIFICATION:');
+    console.log('  - Market will close in future?', utcTimestamp > currentTimestamp ? '✓ YES' : '✗ NO (ERROR!)');
+    console.log('  - Time until closure:', Math.floor((utcTimestamp - currentTimestamp) / 60), 'minutes');
+    console.log('');
+    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+    console.log('═══════════════════════════════════════════════════════════');
 
     mutate(payload);
   };
@@ -325,7 +344,7 @@ export function CreateMarketForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="resolution-date">Resolution Date & Time (UTC)</Label>
+            <Label htmlFor="resolution-date">Resolution Date & Time</Label>
             <Input
               id="resolution-date"
               type="datetime-local"
@@ -335,10 +354,12 @@ export function CreateMarketForm() {
               disabled={isPending}
             />
             <p className="text-sm text-muted-foreground">
-              Enter the resolution time in UTC timezone. The blockchain operates in UTC.
+              Enter the time when the market should close in your local timezone.
               {resolutionDate && (
-                <span className="block mt-1 font-medium">
-                  Selected: {new Date(resolutionDate).toUTCString()}
+                <span className="block mt-1">
+                  <strong>Your time:</strong> {new Date(resolutionDate).toLocaleString()}
+                  <br />
+                  <strong>UTC:</strong> {new Date(resolutionDate).toUTCString()}
                 </span>
               )}
             </p>
