@@ -7,12 +7,22 @@
 
 import React from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet } from "lucide-react";
+import { Wallet, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useUserActivities } from "@/hooks/use-user-activities";
+import { useUserPositions } from "@/hooks/use-user-positions";
+import { ActivityFeed } from "@/components/portfolio/ActivityFeed";
+import { UserPositions } from "@/components/portfolio/UserPositions";
 
 export function PortfolioView() {
   const { account } = useWallet();
+
+  const { data: activitiesData, isLoading: isLoadingActivities, refetch: refetchActivities } =
+    useUserActivities(account?.address);
+
+  const { data: positions, isLoading: isLoadingPositions, refetch: refetchPositions } =
+    useUserPositions(account?.address);
 
   if (!account) {
     return (
@@ -28,31 +38,37 @@ export function PortfolioView() {
     );
   }
 
+  const handleRefresh = () => {
+    refetchActivities();
+    refetchPositions();
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight">Portfolio</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-4xl font-bold tracking-tight">Portfolio</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Positions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Portfolio integration with Nodit coming soon...
-          </p>
-        </CardContent>
-      </Card>
+      {/* Active Positions */}
+      <UserPositions
+        positions={positions || []}
+        isLoading={isLoadingPositions}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Trading History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Activity feed integration coming soon...
-          </p>
-        </CardContent>
-      </Card>
+      {/* Trading History */}
+      <ActivityFeed
+        activities={activitiesData?.activities || []}
+        isLoading={isLoadingActivities}
+      />
     </div>
   );
 }
