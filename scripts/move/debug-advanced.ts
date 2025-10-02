@@ -22,7 +22,7 @@ async function main() {
   });
   const adminAddress = admin.accountAddress.toString();
 
-  console.log("🚀 Starting Advanced Debug Flow...");
+  console.log(" Starting Advanced Debug Flow...");
   console.log(`- Using Account: ${adminAddress}`);
 
   let marketAddress: string;
@@ -64,9 +64,9 @@ async function main() {
       throw new Error("Market creation failed or event not found.");
     }
     marketAddress = event.data.market_address;
-    console.log(`  ✅ Market created successfully: ${marketAddress}`);
+    console.log(`   Market created successfully: ${marketAddress}`);
   } catch (e) {
-    console.error("  ❌ Failed to create market.", e);
+    console.error("   Failed to create market.", e);
     process.exit(1);
   }
 
@@ -80,10 +80,10 @@ async function main() {
       },
     });
     console.log(
-      `  ✅ DATO IRREFUTABLE: The contract's logic determined the outcome should be YES: ${outcome[0]}`,
+      `   DATO IRREFUTABLE: The contract's logic determined the outcome should be YES: ${outcome[0]}`,
     );
   } catch (e) {
-    console.error("  ❌ Failed to run diagnostic view function.", e);
+    console.error("   Failed to run diagnostic view function.", e);
     process.exit(1);
   }
 
@@ -102,9 +102,9 @@ async function main() {
       signer: admin,
       transaction: resolveTxn,
     });
-    console.log("  ✅ Resolve transaction sent successfully.");
+    console.log("   Resolve transaction sent successfully.");
   } catch (e) {
-    console.error(`  ❌ Failed to resolve market.`, e);
+    console.error(`   Failed to resolve market.`, e);
     process.exit(1);
   }
 
@@ -118,16 +118,16 @@ async function main() {
       },
     });
     const finalStatus = parseInt(state[0] as string, 10);
-    console.log(`  ✅ Post-resolution final status: ${finalStatus}`);
+    console.log(`   Post-resolution final status: ${finalStatus}`);
     if (finalStatus !== 2) {
       console.error(
         "  🔥 DISCREPANCY DETECTED: The pre-resolution check was YES, but the final status is NOT 2.",
       );
     } else {
-      console.log("  ✨ Logic is consistent. State updated correctly.");
+      console.log("   Logic is consistent. State updated correctly.");
     }
   } catch (e) {
-    console.error(`  ❌ Failed to verify final state.`, e);
+    console.error(`   Failed to verify final state.`, e);
     process.exit(1);
   }
 }

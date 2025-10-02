@@ -20,7 +20,7 @@ async function main() {
   });
   const aptos = new Aptos(aptosConfig);
 
-  console.log("🔍 Debugging Market Registry");
+  console.log(" Debugging Market Registry");
   console.log("=".repeat(60));
 
   // Try the new get_all_market_addresses function
@@ -42,7 +42,7 @@ async function main() {
     },
   });
 
-  console.log(`\n📊 Total markets: ${(markets as any[]).length}`);
+  console.log(`\n Total markets: ${(markets as any[]).length}`);
   console.log(`📍 Raw response:`, JSON.stringify(markets, null, 2));
 
   // Use the new function's output
@@ -76,7 +76,7 @@ async function main() {
       console.log(`   YES: ${yesAddr}`);
       console.log(`   NO:  ${noAddr}`);
     } catch (e: any) {
-      console.log(`   ❌ Failed to get tokens: ${e.message}`);
+      console.log(`    Failed to get tokens: ${e.message}`);
     }
   }
 }

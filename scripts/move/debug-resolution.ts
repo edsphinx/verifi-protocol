@@ -25,7 +25,7 @@ async function main() {
   });
   const adminAddress = admin.accountAddress.toString();
 
-  console.log("🚀 Testing Resolution Debug Flow...");
+  console.log(" Testing Resolution Debug Flow...");
   console.log(`- Using Account: ${adminAddress}`);
 
   let marketAddress: string;
@@ -65,12 +65,12 @@ async function main() {
 
     if (event && typeof event.data.market_address === "string") {
       marketAddress = event.data.market_address;
-      console.log(`  ✅ Market created: ${marketAddress}`);
+      console.log(`   Market created: ${marketAddress}`);
     } else {
       throw new Error("Market creation failed");
     }
   } catch (e) {
-    console.error("  ❌ Failed to create market.", e);
+    console.error("   Failed to create market.", e);
     process.exit(1);
   }
 
@@ -95,7 +95,7 @@ async function main() {
       "seconds",
     );
   } catch (e) {
-    console.error("  ❌ Failed to get debug data.", e);
+    console.error("   Failed to get debug data.", e);
   }
 
   // Wait
@@ -130,7 +130,7 @@ async function main() {
       });
     }
   } catch (e: any) {
-    console.error("  ❌ Resolution failed:", e.message);
+    console.error("   Resolution failed:", e.message);
     if (e.transaction) {
       console.error("  Transaction details:", e.transaction);
     }
@@ -154,14 +154,14 @@ async function main() {
 
     const expectedStatus = Number(debugData[0]) > Number(debugData[1]) ? 2 : 3;
     if (Number(debugData[5]) === expectedStatus) {
-      console.log("  ✅ Status is CORRECT!");
+      console.log("   Status is CORRECT!");
     } else {
       console.log(
-        `  ❌ Status is WRONG! Expected ${expectedStatus}, got ${debugData[5]}`,
+        `   Status is WRONG! Expected ${expectedStatus}, got ${debugData[5]}`,
       );
     }
   } catch (e) {
-    console.error("  ❌ Failed to get debug data.", e);
+    console.error("   Failed to get debug data.", e);
   }
 }
 

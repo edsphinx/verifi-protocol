@@ -26,7 +26,7 @@ async function main() {
   });
   const adminAddress = admin.accountAddress.toString();
 
-  console.log("🚀 Starting Advanced USDC Oracle Debug Flow...");
+  console.log(" Starting Advanced USDC Oracle Debug Flow...");
   console.log(`- Using Account: ${adminAddress}`);
 
   let marketAddress: string;
@@ -69,9 +69,9 @@ async function main() {
       "Market creation failed or event not found.",
     );
     marketAddress = event.data.market_address;
-    console.log(`  ✅ USDC Market created successfully: ${marketAddress}`);
+    console.log(`   USDC Market created successfully: ${marketAddress}`);
   } catch (e) {
-    console.error("  ❌ Failed to create USDC market.", e);
+    console.error("   Failed to create USDC market.", e);
     process.exit(1);
   }
 
@@ -89,10 +89,10 @@ async function main() {
     });
     preResolutionOutcome = outcome[0] as boolean;
     console.log(
-      `  ✅ DATO IRREFUTABLE: The contract's logic determined the outcome should be YES: ${preResolutionOutcome}`,
+      `   DATO IRREFUTABLE: The contract's logic determined the outcome should be YES: ${preResolutionOutcome}`,
     );
   } catch (e) {
-    console.error("  ❌ Failed to run diagnostic view function.", e);
+    console.error("   Failed to run diagnostic view function.", e);
     process.exit(1);
   }
 
@@ -112,9 +112,9 @@ async function main() {
       transaction: resolveTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committed.hash });
-    console.log("  ✅ Resolve transaction sent successfully.");
+    console.log("   Resolve transaction sent successfully.");
   } catch (e) {
-    console.error(`  ❌ Failed to resolve market.`, e);
+    console.error(`   Failed to resolve market.`, e);
     process.exit(1);
   }
 
@@ -128,13 +128,13 @@ async function main() {
       },
     });
     const finalStatus = parseInt(state[0] as string, 10);
-    console.log(`  ✅ Post-resolution final status from chain: ${finalStatus}`);
+    console.log(`   Post-resolution final status from chain: ${finalStatus}`);
 
     // Análisis Final
     const expectedStatus = preResolutionOutcome ? 2 : 3;
     if (finalStatus === expectedStatus) {
       console.log(
-        "  ✨ LOGIC IS CONSISTENT! The final status matches the pre-resolution check.",
+        "   LOGIC IS CONSISTENT! The final status matches the pre-resolution check.",
       );
     } else {
       console.error(
@@ -142,7 +142,7 @@ async function main() {
       );
     }
   } catch (e) {
-    console.error(`  ❌ Failed to verify final state.`, e);
+    console.error(`   Failed to verify final state.`, e);
     process.exit(1);
   }
 }
