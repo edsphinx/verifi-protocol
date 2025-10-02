@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import { Header } from "@/components/Header";
@@ -5,8 +6,8 @@ import { NotificationProvider } from "@/components/providers/NotificationContext
 import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { WalletProvider } from "@/components/WalletProvider";
 import { WalletConnectionGuard } from "@/components/WalletConnectionGuard";
+import { WalletProvider } from "@/components/WalletProvider";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { TappModeProvider } from "@/lib/tapp/context/TappModeContext";
 import "@/styles/globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${sora.variable} ${inter.variable} font-sans antialiased`}
       >
+        
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -50,6 +52,7 @@ export default function RootLayout({
                   <TappModeProvider>
                     <Header />
                     {children}
+                    <SpeedInsights/>
                     <WrongNetworkAlert />
                     <Toaster richColors position="bottom-right" />
                   </TappModeProvider>

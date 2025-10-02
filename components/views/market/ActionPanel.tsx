@@ -164,27 +164,62 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
           <TabsContent value="buy" className="pt-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="buy-amount">Amount to Buy (in APT)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="buy-amount">Amount to Buy (in APT)</Label>
+                <span className="text-xs text-muted-foreground">
+                  Balance: {userAptBalance} APT
+                </span>
+              </div>
               <Input
                 id="buy-amount"
                 type="number"
-                placeholder="e.g., 0.5"
+                placeholder="0.0"
                 value={buyAmount}
                 onChange={(e) => setBuyAmount(e.target.value)}
                 disabled={isProcessing}
               />
+
+              {/* Quick Amount Buttons */}
+              <div className="flex items-center gap-2">
+                {[25, 50, 75].map((percentage) => (
+                  <Button
+                    key={percentage}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                      setBuyAmount(amount.toFixed(4));
+                    }}
+                    disabled={isProcessing}
+                    className="flex-1 text-xs"
+                  >
+                    {percentage}%
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBuyAmount(userAptBalance)}
+                  disabled={isProcessing}
+                  className="flex-1 text-xs font-semibold"
+                >
+                  MAX
+                </Button>
+              </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <Button
                 onClick={() => handleBuyShares(true)}
                 disabled={isProcessing}
+                className="bg-green-600 hover:bg-green-700"
               >
                 {buyMutation.isPending ? "Processing..." : "Buy YES"}
               </Button>
               <Button
-                variant="secondary"
                 onClick={() => handleBuyShares(false)}
                 disabled={isProcessing}
+                className="bg-red-600 hover:bg-red-700"
               >
                 {buyMutation.isPending ? "Processing..." : "Buy NO"}
               </Button>
@@ -193,32 +228,98 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
           <TabsContent value="sell" className="pt-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="sell-amount">Amount to Sell (in Shares)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="sell-amount">Amount to Sell (in Shares)</Label>
+                <span className="text-xs text-muted-foreground">
+                  YES: {userYesBalance} | NO: {userNoBalance}
+                </span>
+              </div>
               <Input
                 id="sell-amount"
                 type="number"
-                placeholder="e.g., 10.0"
+                placeholder="0.0"
                 value={sellAmount}
                 onChange={(e) => setSellAmount(e.target.value)}
                 disabled={isProcessing}
               />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              {/* ✅ CORRECTED: Buttons use consistent styling and clearer disabled logic */}
-              <Button
-                variant="destructive"
-                onClick={() => handleSellShares(true)}
-                disabled={isProcessing || dynamicData.userYesBalance === 0}
-              >
-                {sellMutation.isPending ? "Processing..." : "Sell YES"}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleSellShares(false)}
-                disabled={isProcessing || dynamicData.userNoBalance === 0}
-              >
-                {sellMutation.isPending ? "Processing..." : "Sell NO"}
-              </Button>
+              {/* YES Sell Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {[25, 50, 75].map((percentage) => (
+                    <Button
+                      key={`yes-${percentage}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const amount = (parseFloat(userYesBalance) * percentage) / 100;
+                        setSellAmount(amount.toFixed(2));
+                      }}
+                      disabled={isProcessing || dynamicData.userYesBalance === 0}
+                      className="flex-1 text-xs"
+                    >
+                      {percentage}%
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSellAmount(userYesBalance)}
+                  disabled={isProcessing || dynamicData.userYesBalance === 0}
+                  className="w-full text-xs font-semibold"
+                >
+                  MAX YES
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleSellShares(true)}
+                  disabled={isProcessing || dynamicData.userYesBalance === 0}
+                  className="w-full"
+                >
+                  {sellMutation.isPending ? "Processing..." : "Sell YES"}
+                </Button>
+              </div>
+
+              {/* NO Sell Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {[25, 50, 75].map((percentage) => (
+                    <Button
+                      key={`no-${percentage}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const amount = (parseFloat(userNoBalance) * percentage) / 100;
+                        setSellAmount(amount.toFixed(2));
+                      }}
+                      disabled={isProcessing || dynamicData.userNoBalance === 0}
+                      className="flex-1 text-xs"
+                    >
+                      {percentage}%
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSellAmount(userNoBalance)}
+                  disabled={isProcessing || dynamicData.userNoBalance === 0}
+                  className="w-full text-xs font-semibold"
+                >
+                  MAX NO
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleSellShares(false)}
+                  disabled={isProcessing || dynamicData.userNoBalance === 0}
+                  className="w-full"
+                >
+                  {sellMutation.isPending ? "Processing..." : "Sell NO"}
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

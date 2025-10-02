@@ -118,7 +118,12 @@ export function SwapInterface({
 
         {/* Input Token */}
         <div className="space-y-2">
-          <Label htmlFor="amount-in">You Pay</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="amount-in">You Pay</Label>
+            <p className="text-xs text-muted-foreground">
+              Available: {formatNumber(inputReserve, 0)} {inputToken}
+            </p>
+          </div>
           <div className="relative">
             <Input
               id="amount-in"
@@ -135,9 +140,34 @@ export function SwapInterface({
               </Badge>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Available: {formatNumber(inputReserve, 0)} {inputToken}
-          </p>
+
+          {/* Quick Amount Buttons */}
+          <div className="flex items-center gap-2">
+            {[25, 50, 75].map((percentage) => (
+              <Button
+                key={percentage}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const amount = (inputReserve * percentage) / 100;
+                  setAmountIn(amount.toFixed(2));
+                }}
+                disabled={!tradingEnabled || swapMutation.isPending}
+                className="flex-1 text-xs"
+              >
+                {percentage}%
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAmountIn(inputReserve.toFixed(2))}
+              disabled={!tradingEnabled || swapMutation.isPending}
+              className="flex-1 text-xs font-semibold"
+            >
+              MAX
+            </Button>
+          </div>
         </div>
 
         {/* Flip Button */}

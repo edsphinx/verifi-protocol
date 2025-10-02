@@ -157,7 +157,12 @@ export function LiquidityPanel({
 
             {/* YES Token Input */}
             <div className="space-y-2">
-              <Label htmlFor="yes-amount">YES Tokens</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="yes-amount">YES Tokens</Label>
+                <span className="text-xs text-muted-foreground">
+                  Reserve: {formatNumber(yesReserve, 0)}
+                </span>
+              </div>
               <div className="relative">
                 <Input
                   id="yes-amount"
@@ -172,11 +177,38 @@ export function LiquidityPanel({
                   <Badge variant="default">YES</Badge>
                 </div>
               </div>
+
+              {/* Quick Amount Buttons for YES */}
+              <div className="flex items-center gap-2">
+                {[10, 25, 50].map((percentage) => (
+                  <Button
+                    key={`yes-${percentage}`}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const amount = (yesReserve * percentage) / 100;
+                      setYesAmount(amount.toFixed(2));
+                      // Auto-calculate NO amount
+                      const ratio = yesReserve / noReserve;
+                      setNoAmount((amount / ratio).toFixed(2));
+                    }}
+                    disabled={!tradingEnabled || addLiquidityMutation.isPending}
+                    className="flex-1 text-xs"
+                  >
+                    {percentage}%
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* NO Token Input */}
             <div className="space-y-2">
-              <Label htmlFor="no-amount">NO Tokens</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="no-amount">NO Tokens</Label>
+                <span className="text-xs text-muted-foreground">
+                  Reserve: {formatNumber(noReserve, 0)}
+                </span>
+              </div>
               <div className="relative">
                 <Input
                   id="no-amount"
@@ -190,6 +222,28 @@ export function LiquidityPanel({
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <Badge variant="secondary">NO</Badge>
                 </div>
+              </div>
+
+              {/* Quick Amount Buttons for NO */}
+              <div className="flex items-center gap-2">
+                {[10, 25, 50].map((percentage) => (
+                  <Button
+                    key={`no-${percentage}`}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const amount = (noReserve * percentage) / 100;
+                      setNoAmount(amount.toFixed(2));
+                      // Auto-calculate YES amount
+                      const ratio = yesReserve / noReserve;
+                      setYesAmount((amount * ratio).toFixed(2));
+                    }}
+                    disabled={!tradingEnabled || addLiquidityMutation.isPending}
+                    className="flex-1 text-xs"
+                  >
+                    {percentage}%
+                  </Button>
+                ))}
               </div>
             </div>
 
@@ -274,7 +328,12 @@ export function LiquidityPanel({
 
             {/* LP Tokens Input */}
             <div className="space-y-2">
-              <Label htmlFor="lp-tokens">LP Tokens to Remove</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="lp-tokens">LP Tokens to Remove</Label>
+                <span className="text-xs text-muted-foreground">
+                  Total LP: {formatNumber(totalLpSupply, 2)}
+                </span>
+              </div>
               <Input
                 id="lp-tokens"
                 type="number"
@@ -283,6 +342,25 @@ export function LiquidityPanel({
                 onChange={(e) => setLpTokens(e.target.value)}
                 disabled={removeLiquidityMutation.isPending}
               />
+
+              {/* Quick Amount Buttons for LP */}
+              <div className="flex items-center gap-2">
+                {[25, 50, 75, 100].map((percentage) => (
+                  <Button
+                    key={percentage}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const amount = (totalLpSupply * percentage) / 100;
+                      setLpTokens(amount.toFixed(2));
+                    }}
+                    disabled={removeLiquidityMutation.isPending}
+                    className="flex-1 text-xs"
+                  >
+                    {percentage}%
+                  </Button>
+                ))}
+              </div>
             </div>
 
             <Separator />
