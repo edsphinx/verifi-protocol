@@ -34,8 +34,8 @@ async function main() {
 
   logAllAccounts();
 
-  console.log("🚀 Starting Tapp AMM Integration Test...");
-  console.log(`📝 Market Creator: ${marketCreatorAccount.accountAddress}`);
+  console.log(" Starting Tapp AMM Integration Test...");
+  console.log(` Market Creator: ${marketCreatorAccount.accountAddress}`);
   console.log(
     `💧 Liquidity Provider (Trader 1): ${trader1Account.accountAddress}`,
   );
@@ -78,11 +78,11 @@ async function main() {
       );
       if (event) {
         marketAddress = event.data.market_address;
-        console.log(`✅ Market created with Tapp hook: ${marketAddress}`);
+        console.log(` Market created with Tapp hook: ${marketAddress}`);
       }
     }
   } catch (error) {
-    console.error("❌ Failed to create market.", error);
+    console.error(" Failed to create market.", error);
     process.exit(1);
   }
 
@@ -114,10 +114,10 @@ async function main() {
     });
 
     console.log(
-      `✅ Trader 1 bought initial shares (Tapp pool would be initialized here)`,
+      ` Trader 1 bought initial shares (Tapp pool would be initialized here)`,
     );
   } catch (error) {
-    console.error("❌ Failed to initialize pool.", error);
+    console.error(" Failed to initialize pool.", error);
     process.exit(1);
   }
 
@@ -137,7 +137,7 @@ async function main() {
       transaction: buyYesTxn,
     });
 
-    console.log(`✅ Trader 2 bought YES shares`);
+    console.log(` Trader 2 bought YES shares`);
 
     // Check balances
     const balances = await aptos.view({
@@ -149,11 +149,11 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 2 Balances:`);
+    console.log(`    Trader 2 Balances:`);
     console.log(`      - YES: ${balances[0]}`);
     console.log(`      - NO:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to swap.", error);
+    console.error(" Failed to swap.", error);
     process.exit(1);
   }
 
@@ -172,7 +172,7 @@ async function main() {
       transaction: buyNoTxn,
     });
 
-    console.log(`✅ Trader 3 bought NO shares`);
+    console.log(` Trader 3 bought NO shares`);
 
     const balances = await aptos.view({
       payload: {
@@ -183,11 +183,11 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 3 Balances:`);
+    console.log(`    Trader 3 Balances:`);
     console.log(`      - YES: ${balances[0]}`);
     console.log(`      - NO:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to swap.", error);
+    console.error(" Failed to swap.", error);
     process.exit(1);
   }
 
@@ -200,12 +200,12 @@ async function main() {
         functionArguments: [marketAddress],
       },
     });
-    console.log(`✅ Market Statistics:`);
+    console.log(` Market Statistics:`);
     console.log(`   - Total YES Pool: ${stats[0]}`);
     console.log(`   - Total NO Pool:  ${stats[1]}`);
     console.log(`   - Status: ${stats[2]}`);
   } catch (error) {
-    console.error("❌ Failed to get market stats.", error);
+    console.error(" Failed to get market stats.", error);
     process.exit(1);
   }
 
@@ -224,7 +224,7 @@ async function main() {
       transaction: sellTxn,
     });
 
-    console.log(`✅ Trader 2 sold shares`);
+    console.log(` Trader 2 sold shares`);
 
     const balances = await aptos.view({
       payload: {
@@ -235,18 +235,18 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 2 Updated Balances:`);
+    console.log(`    Trader 2 Updated Balances:`);
     console.log(`      - YES: ${balances[0]}`);
     console.log(`      - NO:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to sell shares.", error);
+    console.error(" Failed to sell shares.", error);
     process.exit(1);
   }
 
   // === Step 7: Summary ===
   console.log("\n[7/7] Final Summary...");
   try {
-    console.log(`\n✨ Tapp AMM Test Summary:`);
+    console.log(`\n Tapp AMM Test Summary:`);
     console.log(`================================`);
     console.log(`Market Address: ${marketAddress}`);
 
@@ -286,9 +286,9 @@ async function main() {
     console.log(`  Trader 3: YES=${t3Bal[0]}, NO=${t3Bal[1]}`);
     console.log(`================================\n`);
 
-    console.log("✅ Tapp AMM test completed successfully!");
+    console.log(" Tapp AMM test completed successfully!");
   } catch (error) {
-    console.error("❌ Failed to get final summary.", error);
+    console.error(" Failed to get final summary.", error);
     process.exit(1);
   }
 }

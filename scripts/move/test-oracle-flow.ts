@@ -34,7 +34,7 @@ async function registerOracle(
       transaction: registerTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Oracle "${oracleId}" registered successfully.`);
+    console.log(` Oracle "${oracleId}" registered successfully.`);
   } catch (error: any) {
     // Si el error es porque el oráculo ya existe, lo manejamos con gracia.
     // El código de error para `EALREADY_EXISTS` en el módulo de tabla es `0x6407`.
@@ -67,7 +67,7 @@ async function main() {
   const adminAccount = Account.fromPrivateKey({ privateKey: adminPrivateKey });
   const adminAddress = adminAccount.accountAddress;
 
-  console.log("🚀 Starting Oracle Architecture Test Flow...");
+  console.log(" Starting Oracle Architecture Test Flow...");
   console.log(`- Using Admin Account: ${adminAddress.toString()}`);
 
   // === Paso 1: Registrar nuestro nuevo oráculo ===
@@ -79,9 +79,9 @@ async function main() {
       ORACLE_ID_TO_TEST,
       "Aptos Native Balance",
     );
-    console.log("✅ Oracle registered successfully.");
+    console.log(" Oracle registered successfully.");
   } catch (error) {
-    console.error("❌ Failed to register oracle.", error);
+    console.error(" Failed to register oracle.", error);
     process.exit(1);
   }
 
@@ -114,7 +114,7 @@ async function main() {
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
 
     console.error(
-      "❌ Negative Test FAILED: Market was created with an unregistered oracle.",
+      " Negative Test FAILED: Market was created with an unregistered oracle.",
     );
     process.exit(1);
   } catch (error: any) {
@@ -122,11 +122,11 @@ async function main() {
     const expectedErrorMessage = `verifi_protocol: E_ORACLE_NOT_ACTIVE(0xc)`;
     if (error.message && error.message.includes(expectedErrorMessage)) {
       console.log(
-        "✅ Negative Test PASSED: Contract correctly rejected the transaction.",
+        " Negative Test PASSED: Contract correctly rejected the transaction.",
       );
     } else {
       console.error(
-        "❌ Negative Test FAILED with unexpected error:",
+        " Negative Test FAILED with unexpected error:",
         error.message,
       );
       process.exit(1);
@@ -173,12 +173,12 @@ async function main() {
       if (event) {
         marketAddress = event.data.market_address;
         console.log(
-          `✅ Market created successfully at address: ${marketAddress}`,
+          ` Market created successfully at address: ${marketAddress}`,
         );
       }
     }
   } catch (error) {
-    console.error("❌ Failed to create market.", error);
+    console.error(" Failed to create market.", error);
     process.exit(1);
   }
 
@@ -201,9 +201,9 @@ async function main() {
       transaction: resolveTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log("✅ Market resolved programmatically.");
+    console.log(" Market resolved programmatically.");
   } catch (error) {
-    console.error("❌ Failed to resolve market.", error);
+    console.error(" Failed to resolve market.", error);
     process.exit(1);
   }
 
@@ -219,18 +219,18 @@ async function main() {
     const status = marketState[0];
     // El estado 2 es STATUS_RESOLVED_YES
     if (status === 2) {
-      console.log(`✅ Market correctly resolved to YES (Status: ${status}).`);
+      console.log(` Market correctly resolved to YES (Status: ${status}).`);
     } else {
       console.error(
-        `❌ Market resolved INCORRECTLY. Expected status 2 (YES), but got ${status}.`,
+        ` Market resolved INCORRECTLY. Expected status 2 (YES), but got ${status}.`,
       );
     }
   } catch (error) {
-    console.error("❌ Failed to get final market state.", error);
+    console.error(" Failed to get final market state.", error);
     process.exit(1);
   }
 
-  console.log("\n✨ Oracle flow test completed successfully!");
+  console.log("\n Oracle flow test completed successfully!");
 }
 
 main();

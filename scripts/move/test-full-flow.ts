@@ -32,9 +32,9 @@ async function main() {
   // Log all test accounts
   logAllAccounts();
 
-  console.log("🚀 Starting Full End-to-End Test Flow...");
+  console.log(" Starting Full End-to-End Test Flow...");
   console.log(
-    `📝 Market Creator: ${marketCreatorAccount.accountAddress.toString()}`,
+    ` Market Creator: ${marketCreatorAccount.accountAddress.toString()}`,
   );
   console.log(`👤 Trader 1: ${trader1Account.accountAddress.toString()}`);
   console.log(`👤 Trader 2: ${trader2Account.accountAddress.toString()}`);
@@ -76,7 +76,7 @@ async function main() {
       if (event) {
         marketAddress = event.data.market_address;
         console.log(
-          `✅ Market created successfully at address: ${marketAddress}`,
+          ` Market created successfully at address: ${marketAddress}`,
         );
       } else {
         throw new Error("MarketCreatedEvent not found in transaction events.");
@@ -85,7 +85,7 @@ async function main() {
       throw new Error("Transaction was not a UserTransactionResponse.");
     }
   } catch (error) {
-    console.error("❌ Failed to create market.", error);
+    console.error(" Failed to create market.", error);
     process.exit(1);
   }
 
@@ -104,7 +104,7 @@ async function main() {
       transaction: buyYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 1 purchased YES shares successfully.`);
+    console.log(` Trader 1 purchased YES shares successfully.`);
 
     // Check balance
     const balances = await aptos.view({
@@ -116,11 +116,11 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 1 Balances:`);
+    console.log(`    Trader 1 Balances:`);
     console.log(`      - YES Shares: ${balances[0]}`);
     console.log(`      - NO Shares:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to buy YES shares.", error);
+    console.error(" Failed to buy YES shares.", error);
     process.exit(1);
   }
 
@@ -139,7 +139,7 @@ async function main() {
       transaction: buyNoTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 2 purchased NO shares successfully.`);
+    console.log(` Trader 2 purchased NO shares successfully.`);
 
     // Check balance
     const balances = await aptos.view({
@@ -151,11 +151,11 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 2 Balances:`);
+    console.log(`    Trader 2 Balances:`);
     console.log(`      - YES Shares: ${balances[0]}`);
     console.log(`      - NO Shares:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to buy NO shares.", error);
+    console.error(" Failed to buy NO shares.", error);
     process.exit(1);
   }
 
@@ -174,7 +174,7 @@ async function main() {
       transaction: sellYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 1 sold YES shares successfully.`);
+    console.log(` Trader 1 sold YES shares successfully.`);
 
     // Check updated balance
     const balances = await aptos.view({
@@ -186,11 +186,11 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Trader 1 Updated Balances:`);
+    console.log(`    Trader 1 Updated Balances:`);
     console.log(`      - YES Shares: ${balances[0]}`);
     console.log(`      - NO Shares:  ${balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to sell YES shares.", error);
+    console.error(" Failed to sell YES shares.", error);
     process.exit(1);
   }
 
@@ -203,12 +203,12 @@ async function main() {
         functionArguments: [marketAddress],
       },
     });
-    console.log(`✅ Market Statistics:`);
+    console.log(` Market Statistics:`);
     console.log(`   - Total YES Pool: ${stats[0]}`);
     console.log(`   - Total NO Pool:  ${stats[1]}`);
     console.log(`   - Status: ${stats[2]}`);
   } catch (error) {
-    console.error("❌ Failed to get market stats.", error);
+    console.error(" Failed to get market stats.", error);
     process.exit(1);
   }
 
@@ -234,7 +234,7 @@ async function main() {
       },
     });
 
-    console.log(`✅ Final Balances:`);
+    console.log(` Final Balances:`);
     console.log(`   👤 Trader 1:`);
     console.log(`      - YES Shares: ${trader1Balances[0]}`);
     console.log(`      - NO Shares:  ${trader1Balances[1]}`);
@@ -242,11 +242,11 @@ async function main() {
     console.log(`      - YES Shares: ${trader2Balances[0]}`);
     console.log(`      - NO Shares:  ${trader2Balances[1]}`);
   } catch (error) {
-    console.error("❌ Failed to get final balances.", error);
+    console.error(" Failed to get final balances.", error);
     process.exit(1);
   }
 
-  console.log("\n✨ Full flow test completed successfully!");
+  console.log("\n Full flow test completed successfully!");
 }
 
 main();

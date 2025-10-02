@@ -78,7 +78,7 @@ async function main() {
     privateKey: new Ed25519PrivateKey(privateKey),
   });
 
-  console.log("🚀 Starting Final Architecture Test Flow...");
+  console.log(" Starting Final Architecture Test Flow...");
   console.log(`- Using Admin Account: ${admin.accountAddress.toString()}`);
 
   // === 1. Registrar todos los oráculos ===
@@ -130,12 +130,12 @@ async function main() {
           marketAddress = event.data.market_address;
           if (marketAddress !== undefined)
             console.log(
-              `  ✅ Market created successfully: ${marketAddress.slice(0, 10)}...`,
+              `   Market created successfully: ${marketAddress.slice(0, 10)}...`,
             );
         }
       }
     } catch (e) {
-      console.error(`  ❌ Failed to create market for ${oracle.id}.`, e);
+      console.error(`   Failed to create market for ${oracle.id}.`, e);
       process.exit(1);
     }
 
@@ -154,9 +154,9 @@ async function main() {
         transaction: resolveTxn,
       });
       await aptos.waitForTransaction({ transactionHash: committed.hash });
-      console.log("  ✅ Market resolved programmatically.");
+      console.log("   Market resolved programmatically.");
     } catch (e) {
-      console.error(`  ❌ Failed to resolve market for ${oracle.id}.`, e);
+      console.error(`   Failed to resolve market for ${oracle.id}.`, e);
       process.exit(1);
     }
 
@@ -173,7 +173,7 @@ async function main() {
       console.log(`  Expected outcome: ${oracle.expectedOutcome}`);
       if (finalStatus === oracle.expectedOutcome) {
         console.log(
-          `  ✅ Market resolved to expected outcome (Status: ${finalStatus}).`,
+          `   Market resolved to expected outcome (Status: ${finalStatus}).`,
         );
       } else {
         throw new Error(
@@ -181,7 +181,7 @@ async function main() {
         );
       }
     } catch (e) {
-      console.error(`  ❌ Failed to verify final state for ${oracle.id}.`, e);
+      console.error(`   Failed to verify final state for ${oracle.id}.`, e);
       process.exit(1);
     }
   }
@@ -211,7 +211,7 @@ async function main() {
     });
     await aptos.waitForTransaction({ transactionHash: committed.hash });
     console.error(
-      "  ❌ Negative Test FAILED: Market was created with an unregistered oracle.",
+      "   Negative Test FAILED: Market was created with an unregistered oracle.",
     );
     process.exit(1);
   } catch (error: any) {
@@ -220,18 +220,18 @@ async function main() {
       (error.message?.includes("0xc") || error.message?.includes(": 12"))
     ) {
       console.log(
-        "  ✅ Negative Test PASSED: Contract correctly rejected the transaction (E_ORACLE_NOT_ACTIVE).",
+        "   Negative Test PASSED: Contract correctly rejected the transaction (E_ORACLE_NOT_ACTIVE).",
       );
     } else {
       console.error(
-        "  ❌ Negative Test FAILED with an unexpected error:",
+        "   Negative Test FAILED with an unexpected error:",
         error.message,
       );
       process.exit(1);
     }
   }
 
-  console.log("\n✨ Final architecture test completed successfully!");
+  console.log("\n Final architecture test completed successfully!");
 }
 
 main();

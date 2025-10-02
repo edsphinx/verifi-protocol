@@ -32,7 +32,7 @@ async function checkBalances(
         ],
       },
     });
-    console.log(`✅ Balances for ${stepLabel}:`);
+    console.log(` Balances for ${stepLabel}:`);
     console.log(
       `   - YES Shares: ${parseInt(balances[0] as string, 10) / 10 ** 8}`,
     );
@@ -40,7 +40,7 @@ async function checkBalances(
       `   - NO Shares:  ${parseInt(balances[1] as string, 10) / 10 ** 8}`,
     );
   } catch (error) {
-    console.error(`❌ Failed to get balances at step: ${stepLabel}.`, error);
+    console.error(` Failed to get balances at step: ${stepLabel}.`, error);
     throw error; // Re-throw to stop the script
   }
 }
@@ -73,8 +73,8 @@ async function main() {
   });
   const aptos = new Aptos(aptosConfig);
 
-  console.log("🚀 Starting Buy/Sell Test Flow...");
-  console.log(`📝 Market Creator: ${marketCreatorAccount.accountAddress}`);
+  console.log(" Starting Buy/Sell Test Flow...");
+  console.log(` Market Creator: ${marketCreatorAccount.accountAddress}`);
   console.log(`👤 Trader 1: ${trader1Account.accountAddress}`);
   console.log(`👤 Trader 2: ${trader2Account.accountAddress}`);
 
@@ -115,7 +115,7 @@ async function main() {
       if (event) {
         marketAddress = event.data.market_address;
         console.log(
-          `✅ Market created successfully at address: ${marketAddress}`,
+          ` Market created successfully at address: ${marketAddress}`,
         );
       } else {
         throw new Error("MarketCreatedEvent not found.");
@@ -124,7 +124,7 @@ async function main() {
       throw new Error("Transaction was not a UserTransactionResponse.");
     }
   } catch (error) {
-    console.error("❌ Failed to create market.", error);
+    console.error(" Failed to create market.", error);
     process.exit(1);
   }
 
@@ -154,9 +154,9 @@ async function main() {
       transaction: buyYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 1 purchased YES shares successfully.`);
+    console.log(` Trader 1 purchased YES shares successfully.`);
   } catch (error) {
-    console.error("❌ Failed to buy YES shares.", error);
+    console.error(" Failed to buy YES shares.", error);
     process.exit(1);
   }
 
@@ -177,9 +177,9 @@ async function main() {
       transaction: buyNoTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 2 purchased NO shares successfully.`);
+    console.log(` Trader 2 purchased NO shares successfully.`);
   } catch (error) {
-    console.error("❌ Failed to buy NO shares.", error);
+    console.error(" Failed to buy NO shares.", error);
     process.exit(1);
   }
 
@@ -215,9 +215,9 @@ async function main() {
       transaction: sellYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 1 sold YES shares successfully.`);
+    console.log(` Trader 1 sold YES shares successfully.`);
   } catch (error) {
-    console.error("❌ Failed to sell YES shares.", error);
+    console.error(" Failed to sell YES shares.", error);
     process.exit(1);
   }
 
@@ -236,9 +236,9 @@ async function main() {
       transaction: sellNoTxn,
     });
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-    console.log(`✅ Trader 2 sold NO shares successfully.`);
+    console.log(` Trader 2 sold NO shares successfully.`);
   } catch (error) {
-    console.error("❌ Failed to sell NO shares.", error);
+    console.error(" Failed to sell NO shares.", error);
     process.exit(1);
   }
 
@@ -276,23 +276,23 @@ async function main() {
     await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
     // If we reach here, the test failed because the transaction should have aborted.
     console.error(
-      "❌ Negative test FAILED: Transaction succeeded but should have failed.",
+      " Negative test FAILED: Transaction succeeded but should have failed.",
     );
   } catch (error: any) {
     // We expect an error here. Let's check if it's the right kind.
     if (error.message && error.message.includes("EINSUFFICIENT_BALANCE")) {
       console.log(
-        `✅ Negative test PASSED: Transaction failed as expected with an insufficient balance error.`,
+        ` Negative test PASSED: Transaction failed as expected with an insufficient balance error.`,
       );
     } else {
       console.warn(
-        `⚠️ Negative test inconclusive: Transaction failed, but not with the expected error. Error:`,
+        ` Negative test inconclusive: Transaction failed, but not with the expected error. Error:`,
         error.message,
       );
     }
   }
 
-  console.log("\n✨ Trade flow test completed successfully!");
+  console.log("\n Trade flow test completed successfully!");
 }
 
 main();

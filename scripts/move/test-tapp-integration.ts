@@ -194,9 +194,9 @@ async function main() {
 
   logAllAccounts();
 
-  console.log("🚀 Starting Tapp-VeriFi FULL Integration Test...");
+  console.log(" Starting Tapp-VeriFi FULL Integration Test...");
   console.log("=".repeat(60));
-  console.log(`📝 Market Creator: ${marketCreatorAccount.accountAddress}`);
+  console.log(` Market Creator: ${marketCreatorAccount.accountAddress}`);
   console.log(`💧 Liquidity Provider: ${trader1Account.accountAddress}`);
   console.log(`🔄 Swapper: ${trader2Account.accountAddress}`);
   console.log(`🌐 VeriFi Module: ${MODULE_ADDRESS}`);
@@ -220,7 +220,7 @@ async function main() {
     });
 
     if (!oracleExists[0]) {
-      console.log("⚠️  Oracle 'aptos-balance' not found. Registering...");
+      console.log("  Oracle 'aptos-balance' not found. Registering...");
       const registerTxn = await aptos.transaction.build.simple({
         sender: publisherAccount.accountAddress,
         data: {
@@ -233,7 +233,7 @@ async function main() {
         transaction: registerTxn,
       });
       await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-      console.log("✅ Oracle registered successfully");
+      console.log(" Oracle registered successfully");
     } else {
       // Oracle exists, check if it's active
       const isActive = await aptos.view({
@@ -245,7 +245,7 @@ async function main() {
 
       if (!isActive[0]) {
         console.log(
-          "⚠️  Oracle 'aptos-balance' exists but is not active. Activating...",
+          "  Oracle 'aptos-balance' exists but is not active. Activating...",
         );
         const activateTxn = await aptos.transaction.build.simple({
           sender: publisherAccount.accountAddress,
@@ -259,14 +259,14 @@ async function main() {
           transaction: activateTxn,
         });
         await aptos.waitForTransaction({ transactionHash: committedTxn.hash });
-        console.log("✅ Oracle activated successfully");
+        console.log(" Oracle activated successfully");
       } else {
-        console.log("✅ Oracle 'aptos-balance' is already active");
+        console.log(" Oracle 'aptos-balance' is already active");
       }
     }
   } catch (error: any) {
     console.error(
-      "❌ Failed to check/register oracle:",
+      " Failed to check/register oracle:",
       error.message || error,
     );
     process.exit(1);
@@ -306,14 +306,14 @@ async function main() {
       );
       if (event) {
         marketAddress = event.data.market_address;
-        console.log(`✅ Market created: ${marketAddress}`);
+        console.log(` Market created: ${marketAddress}`);
         console.log(
           `   TX: https://explorer.aptoslabs.com/txn/${committedTxn.hash}?network=${networkName}`,
         );
       }
     }
   } catch (error: any) {
-    console.error("❌ Failed to create market:", error.message || error);
+    console.error(" Failed to create market:", error.message || error);
     process.exit(1);
   }
 
@@ -328,7 +328,7 @@ async function main() {
     });
 
     // Debug: log the raw response
-    console.log(`   🔍 Raw tokens response:`, JSON.stringify(tokens, null, 2));
+    console.log(`    Raw tokens response:`, JSON.stringify(tokens, null, 2));
 
     // tokens might be objects with inner field, extract the actual address
     const yesToken = tokens[0];
@@ -351,10 +351,10 @@ async function main() {
     yesTokenAddr = padAddress(yesAddr);
     noTokenAddr = padAddress(noAddr);
 
-    console.log(`✅ YES Token: ${yesTokenAddr}`);
-    console.log(`✅ NO Token:  ${noTokenAddr}`);
+    console.log(` YES Token: ${yesTokenAddr}`);
+    console.log(` NO Token:  ${noTokenAddr}`);
   } catch (error: any) {
-    console.error("❌ Failed to get market tokens:", error.message || error);
+    console.error(" Failed to get market tokens:", error.message || error);
     process.exit(1);
   }
 
@@ -374,7 +374,7 @@ async function main() {
       transaction: buyYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: yesCommit.hash });
-    console.log(`   ✅ Bought YES shares`);
+    console.log(`    Bought YES shares`);
 
     // Wait a bit before next transaction
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -392,9 +392,9 @@ async function main() {
       transaction: buyNoTxn,
     });
     await aptos.waitForTransaction({ transactionHash: noCommit.hash });
-    console.log(`   ✅ Bought NO shares`);
+    console.log(`    Bought NO shares`);
 
-    console.log(`✅ Trader 1 bought 0.02 APT of YES and 0.02 APT of NO shares`);
+    console.log(` Trader 1 bought 0.02 APT of YES and 0.02 APT of NO shares`);
 
     // Check balances
     const balances = await aptos.view({
@@ -406,9 +406,9 @@ async function main() {
         ],
       },
     });
-    console.log(`   📊 Balances: YES=${balances[0]}, NO=${balances[1]}`);
+    console.log(`    Balances: YES=${balances[0]}, NO=${balances[1]}`);
   } catch (error: any) {
-    console.error("❌ Failed to buy shares:", error.message || error);
+    console.error(" Failed to buy shares:", error.message || error);
     process.exit(1);
   }
 
@@ -416,7 +416,7 @@ async function main() {
   console.log("\n[4/7] Creating Tapp AMM pool with prediction hook...");
 
   // First, verify the market exists in get_all_market_addresses
-  console.log("   🔍 Verifying market is in registry...");
+  console.log("    Verifying market is in registry...");
   try {
     const allMarketsResult = await aptos.view({
       payload: {
@@ -427,10 +427,10 @@ async function main() {
 
     // The result is wrapped in an array
     const allMarkets = (allMarketsResult as any[])[0] || [];
-    console.log(`   📊 Total markets in registry: ${allMarkets.length}`);
+    console.log(`    Total markets in registry: ${allMarkets.length}`);
     console.log(`   📍 Our market address: ${marketAddress}`);
 
-    console.log(`   🔍 Checking each market's tokens:`);
+    console.log(`    Checking each market's tokens:`);
     for (let i = 0; i < allMarkets.length; i++) {
       const mktAddr = allMarkets[i];
       const isOurs = mktAddr === marketAddress;
@@ -450,19 +450,19 @@ async function main() {
         const yesMatch = yesT === yesTokenAddr;
         const noMatch = noT === noTokenAddr;
 
-        console.log(`          YES: ${yesT} ${yesMatch ? "✅" : "❌"}`);
-        console.log(`          NO:  ${noT} ${noMatch ? "✅" : "❌"}`);
+        console.log(`          YES: ${yesT} ${yesMatch ? "" : ""}`);
+        console.log(`          NO:  ${noT} ${noMatch ? "" : ""}`);
       } catch (e: any) {
-        console.log(`          ❌ Could not get tokens: ${e.message}`);
+        console.log(`           Could not get tokens: ${e.message}`);
       }
     }
 
     const marketFound = allMarkets.includes(marketAddress);
     console.log(
-      `   ${marketFound ? "✅" : "❌"} Market ${marketFound ? "FOUND" : "NOT FOUND"} in address list`,
+      `   ${marketFound ? "" : ""} Market ${marketFound ? "FOUND" : "NOT FOUND"} in address list`,
     );
   } catch (e: any) {
-    console.log(`   ⚠️  Could not verify market registry: ${e.message}`);
+    console.log(`     Could not verify market registry: ${e.message}`);
   }
 
   try {
@@ -490,7 +490,7 @@ async function main() {
     );
 
     if (yesHex.length !== 64 || noHex.length !== 64) {
-      console.log(`      ⚠️  WARNING: Token addresses are not properly padded!`);
+      console.log(`        WARNING: Token addresses are not properly padded!`);
     }
 
     const createPoolTxn = await aptos.transaction.build.simple({
@@ -514,7 +514,7 @@ async function main() {
       );
       if (event) {
         poolAddress = event.data.pool_addr;
-        console.log(`✅ Tapp AMM Pool created: ${poolAddress}`);
+        console.log(` Tapp AMM Pool created: ${poolAddress}`);
         console.log(`   Hook Type: ${event.data.hook_type}`);
         console.log(`   Assets: [${event.data.assets}]`);
         console.log(
@@ -523,7 +523,7 @@ async function main() {
       }
     }
   } catch (error: any) {
-    console.error("❌ Failed to create Tapp pool:", error.message || error);
+    console.error(" Failed to create Tapp pool:", error.message || error);
     console.error(
       "   This is the CRITICAL test - if this fails, Tapp-VeriFi integration is not working",
     );
@@ -560,7 +560,7 @@ async function main() {
         (e) => e.type === `${TAPP_ADDRESS}::router::LiquidityAdded`,
       );
       if (event) {
-        console.log(`✅ Liquidity added successfully`);
+        console.log(` Liquidity added successfully`);
         console.log(`   Position Index: ${event.data.position_idx}`);
         console.log(`   Amounts: [${event.data.amounts}]`);
         console.log(
@@ -569,7 +569,7 @@ async function main() {
       }
     }
   } catch (error: any) {
-    console.error("❌ Failed to add liquidity:", error.message || error);
+    console.error(" Failed to add liquidity:", error.message || error);
     process.exit(1);
   }
 
@@ -589,7 +589,7 @@ async function main() {
       transaction: buyYesTxn,
     });
     await aptos.waitForTransaction({ transactionHash: yesCommit.hash });
-    console.log(`   ✅ Bought YES shares`);
+    console.log(`    Bought YES shares`);
 
     // Small NO purchase to initialize primary store for receiving NO from swap
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -605,11 +605,11 @@ async function main() {
       transaction: buyNoTxn,
     });
     await aptos.waitForTransaction({ transactionHash: noCommit.hash });
-    console.log(`   ✅ Bought NO shares (to initialize store)`);
+    console.log(`    Bought NO shares (to initialize store)`);
 
-    console.log(`✅ Trader 2 ready to swap YES → NO`);
+    console.log(` Trader 2 ready to swap YES → NO`);
   } catch (error: any) {
-    console.error("❌ Failed to buy shares:", error.message || error);
+    console.error(" Failed to buy shares:", error.message || error);
     process.exit(1);
   }
 
@@ -631,16 +631,16 @@ async function main() {
       },
     });
     console.log(
-      `   📊 Trader 2 balances before swap: YES=${balances[0]}, NO=${balances[1]}`,
+      `    Trader 2 balances before swap: YES=${balances[0]}, NO=${balances[1]}`,
     );
   } catch (e: any) {
-    console.log(`   ⚠️  Could not check balances: ${e.message}`);
+    console.log(`     Could not check balances: ${e.message}`);
   }
 
   try {
     // Use 10% of balance for swap (1M tokens = 0.01 APT)
     const swapAmount = 1_000_000; // 0.01 APT worth of YES tokens
-    console.log(`   💱 Attempting to swap ${swapAmount} YES tokens (0.01 APT)...`);
+    console.log(`    Attempting to swap ${swapAmount} YES tokens (0.01 APT)...`);
 
     const swapArgs = serializeSwapArgs(
       poolAddress!,
@@ -669,7 +669,7 @@ async function main() {
         (e) => e.type === `${TAPP_ADDRESS}::router::Swapped`,
       );
       if (event) {
-        console.log(`✅ Swap executed successfully via Tapp AMM!`);
+        console.log(` Swap executed successfully via Tapp AMM!`);
         console.log(`   Amount In: ${event.data.amount_in}`);
         console.log(`   Amount Out: ${event.data.amount_out}`);
         console.log(
@@ -678,29 +678,29 @@ async function main() {
       }
     }
   } catch (error: any) {
-    console.error("❌ Failed to swap:", error.message || error);
+    console.error(" Failed to swap:", error.message || error);
     process.exit(1);
   }
 
   // === Final Summary ===
   console.log("\n" + "=".repeat(60));
-  console.log("✨ TAPP-VERIFI INTEGRATION TEST SUMMARY");
+  console.log(" TAPP-VERIFI INTEGRATION TEST SUMMARY");
   console.log("=".repeat(60));
   console.log(`Market Address:     ${marketAddress}`);
   console.log(`YES Token:          ${yesTokenAddr}`);
   console.log(`NO Token:           ${noTokenAddr}`);
   console.log(`Tapp Pool Address:  ${poolAddress}`);
   console.log("=".repeat(60));
-  console.log("\n🎉 SUCCESS! Tapp-VeriFi integration is FULLY FUNCTIONAL!\n");
+  console.log("\n SUCCESS! Tapp-VeriFi integration is FULLY FUNCTIONAL!\n");
   console.log("📋 Operations Validated:");
-  console.log("  ✅ verifi_protocol::create_market");
-  console.log("  ✅ verifi_protocol::get_market_tokens");
-  console.log("  ✅ verifi_protocol::buy_shares");
-  console.log("  ✅ tapp::router::create_pool (with prediction hook)");
-  console.log("  ✅ tapp::router::add_liquidity");
-  console.log("  ✅ tapp::router::swap");
+  console.log("   verifi_protocol::create_market");
+  console.log("   verifi_protocol::get_market_tokens");
+  console.log("   verifi_protocol::buy_shares");
+  console.log("   tapp::router::create_pool (with prediction hook)");
+  console.log("   tapp::router::add_liquidity");
+  console.log("   tapp::router::swap");
   console.log(
-    "\n🔗 All Tapp AMM functions work with VeriFi prediction markets!\n",
+    "\n All Tapp AMM functions work with VeriFi prediction markets!\n",
   );
 }
 
