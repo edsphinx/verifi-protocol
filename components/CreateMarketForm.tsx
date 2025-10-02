@@ -103,26 +103,8 @@ export function CreateMarketForm() {
         toast.info("Market creation submitted, waiting for confirmation...");
 
         console.log('[CreateMarketForm] Waiting for transaction confirmation...');
-        console.log('[CreateMarketForm] API Key available:', !!process.env.NEXT_PUBLIC_APTOS_API_KEY);
-        console.log('[CreateMarketForm] API Key length:', process.env.NEXT_PUBLIC_APTOS_API_KEY?.length);
-        console.log('[CreateMarketForm] NETWORK:', NETWORK);
 
-        // Use Aptos SDK directly with API key from environment
-        const { Aptos, AptosConfig, Network } = await import("@aptos-labs/ts-sdk");
-
-        const apiKey = process.env.NEXT_PUBLIC_APTOS_API_KEY;
-        console.log('[CreateMarketForm] Using API key:', apiKey ? `${apiKey.substring(0, 15)}...` : 'NOT_SET');
-
-        const aptosForWait = new Aptos(
-          new AptosConfig({
-            network: NETWORK as Network,
-            clientConfig: apiKey ? { API_KEY: apiKey } : undefined,
-          })
-        );
-
-        console.log('[CreateMarketForm] Aptos client created for waiting');
-
-        const response = await aptosForWait.waitForTransaction({
+        const response = await aptosClient().waitForTransaction({
           transactionHash: committedTxn.hash,
           options: {
             timeoutSecs: 60,
