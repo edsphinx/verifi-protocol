@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AIMarketChat } from "@/components/AIMarketChat";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Settings } from "lucide-react";
 import { getCreateMarketPayload, indexNewMarket } from "@/lib/api/market";
@@ -221,17 +222,58 @@ export function CreateMarketForm() {
   const hasNoActiveOracles = !checkingOracles && activeOracles.length === 0;
   const isPublisher = account?.address === MODULE_ADDRESS;
 
+  const handleAIMarketReady = (market: {
+    title: string;
+    description: string;
+    oracleId: string;
+    targetAddress: string;
+    targetValue: string;
+    operator: number;
+    resolutionDate: string;
+  }) => {
+    if (!account?.address) {
+      toast.error("Please connect your wallet first.");
+      return;
+    }
+
+    // Find the oracle configuration
+    const selectedOracle = ORACLE_OPTIONS.find((opt) => opt.id === market.oracleId);
+    if (!selectedOracle) {
+      toast.error("Invalid oracle configuration");
+      return;
+    }
+
+    // Convert AI-generated data to CreateMarketApiPayload format
+    const localDate = new Date(market.resolutionDate);
+    const utcTimestamp = Math.floor(localDate.getTime() / 1000);
+
+    const payload = {
+      description: market.description,
+      resolutionTimestamp: utcTimestamp,
+      resolverAddress: account.address.toString(),
+      oracleId: market.oracleId,
+      targetAddress: selectedOracle.requiresTargetAddress ? market.targetAddress : "0x1",
+      targetFunction: selectedOracle.targetMetric,
+      targetValue: Number(market.targetValue),
+      operator: market.operator,
+    };
+
+    mutate(payload);
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Market</CardTitle>
-          <CardDescription>
-            Create a new prediction market based on a verifiable, on-chain
-            event.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <AIMarketChat onMarketReady={handleAIMarketReady} />
+
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Market</CardTitle>
+            <CardDescription>
+              Or manually fill in the details below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
           {/* Oracle Warning Alert */}
           {hasNoActiveOracles && (
             <Alert variant="destructive">
@@ -376,5 +418,6 @@ export function CreateMarketForm() {
         </CardFooter>
       </Card>
     </form>
+    </div>
   );
 }

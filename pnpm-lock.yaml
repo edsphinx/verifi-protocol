@@ -84,6 +84,9 @@ importers:
       got:
         specifier: ^11.8.6
         version: 11.8.6
+      grok-sdk:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
       keyv:
         specifier: ^5.5.2
         version: 5.5.3
@@ -99,6 +102,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      openai:
+        specifier: ^6.1.0
+        version: 6.1.0
       prisma:
         specifier: ^6.16.2
         version: 6.16.3(typescript@5.9.3)
@@ -1524,6 +1530,9 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  grok-sdk@0.0.1-security:
+    resolution: {integrity: sha512-RCXCYNbs+ndTHGyd6kENFyyQh+Guo+u4CDYn32Tg0YRvJ4TnrjmeEOQJC9OnMAmS4y6TJJ/m+0kdZLE8F1zzig==}
+
   has-symbols@1.1.0:
     resolution: {integrity: sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==}
     engines: {node: '>= 0.4'}
@@ -1800,6 +1809,18 @@ packages:
   onetime@7.0.0:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
     engines: {node: '>=18'}
+
+  openai@6.1.0:
+    resolution: {integrity: sha512-5sqb1wK67HoVgGlsPwcH2bUbkg66nnoIYKoyV9zi5pZPqh7EWlmSrSDjAh4O5jaIg/0rIlcDKBtWvZBuacmGZg==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   p-cancelable@2.1.1:
     resolution: {integrity: sha512-BZOr3nRQHOntUjTrH8+Lh54smKHoHyur8We1V8DSMVrl5A2malOOwuJRnKRDjSnkoeBh4at6BwEnb5I7Jl31wg==}
@@ -3430,6 +3451,8 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  grok-sdk@0.0.1-security: {}
+
   has-symbols@1.1.0: {}
 
   has-tostringtag@1.0.2:
@@ -3657,6 +3680,8 @@ snapshots:
   onetime@7.0.0:
     dependencies:
       mimic-function: 5.0.1
+
+  openai@6.1.0: {}
 
   p-cancelable@2.1.1: {}
 
