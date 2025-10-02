@@ -16,11 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { buildCreatePoolTransaction } from "@/aptos/transactions/tapp/create-pool-transaction";
 import { PlusCircle } from "lucide-react";
+import { useCreatePool } from "@/lib/tapp/hooks/use-create-pool";
 
 interface CreatePoolButtonProps {
   marketAddress: string;
@@ -35,47 +33,30 @@ export function CreatePoolButton({
   noTokenAddress,
   onPoolCreated,
 }: CreatePoolButtonProps) {
-  const { account, signAndSubmitTransaction } = useWallet();
+  const { account } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
-  const [fee, setFee] = useState("3000"); // 0.3% default
-  const [isCreating, setIsCreating] = useState(false);
+  const createPool = useCreatePool();
 
   const handleCreatePool = async () => {
     if (!account) {
-      toast.error("Please connect your wallet");
       return;
     }
 
-    setIsCreating(true);
     try {
-      const transaction = buildCreatePoolTransaction({
+      const result = await createPool.mutateAsync({
+        marketId: marketAddress,
         yesTokenAddress,
         noTokenAddress,
-        fee: Number.parseInt(fee),
-      });
-
-      const response = await signAndSubmitTransaction({
-        sender: account.address,
-        data: transaction,
-      });
-
-      toast.success("Pool creation submitted!", {
-        description: `Transaction hash: ${response.hash.substring(0, 8)}...`,
       });
 
       // Close dialog and notify parent
       setIsOpen(false);
-      if (onPoolCreated && response.hash) {
-        // In a real implementation, we'd extract pool address from events
-        onPoolCreated(response.hash);
+      if (onPoolCreated && result.poolAddress) {
+        onPoolCreated(result.poolAddress);
       }
     } catch (error) {
       console.error("Failed to create pool:", error);
-      toast.error("Failed to create pool", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setIsCreating(false);
+      // Error handling is done by the hook via toast
     }
   };
 
@@ -92,44 +73,56 @@ export function CreatePoolButton({
         <DialogHeader>
           <DialogTitle>Create Tapp AMM Pool</DialogTitle>
           <DialogDescription>
-            Create a liquidity pool for this market to enable automated trading
+            Create a liquidity pool for this market to enable automated trading with YES/NO tokens
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="fee">Fee (basis points)</Label>
-            <Input
-              id="fee"
-              type="number"
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
-              placeholder="3000"
-            />
-            <p className="text-xs text-muted-foreground">
-              3000 = 0.3%, 10000 = 1%
-            </p>
+            <Label>Pool Configuration</Label>
+            <div className="rounded-lg border p-3 space-y-2 bg-muted/50">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Hook Type:</span>
+                <span className="font-mono">HOOK_PREDICTION (4)</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Fee:</span>
+                <span className="font-mono">0.3% (3000 bp)</span>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Market: {marketAddress.substring(0, 8)}...
-            </p>
-            <p className="text-sm text-muted-foreground">
-              YES Token: {yesTokenAddress.substring(0, 8)}...
-            </p>
-            <p className="text-sm text-muted-foreground">
-              NO Token: {noTokenAddress.substring(0, 8)}...
-            </p>
+            <Label>Market Tokens</Label>
+            <div className="rounded-lg border p-3 space-y-2 bg-muted/50">
+              <div className="text-xs">
+                <span className="text-muted-foreground">Market: </span>
+                <span className="font-mono">{marketAddress.substring(0, 10)}...{marketAddress.substring(marketAddress.length - 8)}</span>
+              </div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">YES Token: </span>
+                <span className="font-mono">{yesTokenAddress.substring(0, 10)}...{yesTokenAddress.substring(yesTokenAddress.length - 8)}</span>
+              </div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">NO Token: </span>
+                <span className="font-mono">{noTokenAddress.substring(0, 10)}...{noTokenAddress.substring(noTokenAddress.length - 8)}</span>
+              </div>
+            </div>
           </div>
 
           <Button
             onClick={handleCreatePool}
-            disabled={isCreating || !account}
+            disabled={createPool.isPending || !account}
             className="w-full"
           >
-            {isCreating ? "Creating Pool..." : "Create Pool"}
+            {createPool.isPending ? "Creating Pool..." : "Create Pool"}
           </Button>
+
+          {!account && (
+            <p className="text-xs text-center text-muted-foreground">
+              Please connect your wallet to create a pool
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

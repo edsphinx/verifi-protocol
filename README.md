@@ -9,11 +9,11 @@ VeriFi is a decentralized derivatives protocol that empowers anyone to create pr
 
 ---
 
-## 🚀 The Vision
+##  The Vision
 
 Imagine a financial ecosystem where **any on-chain truth** can become a liquid, tradable market. Where creating financial instruments isn't restricted to experts, but open to the entire community. That's VeriFi Protocol.
 
-## ⛓️ The Problem
+##  The Problem
 
 Current prediction markets face two critical barriers:
 
@@ -22,27 +22,27 @@ Current prediction markets face two critical barriers:
 
 These limitations prevent Aptos from realizing its vision of trustless, frictionless value movement.
 
-## ✨ Our Solution
+##  Our Solution
 
 VeriFi solves both problems with:
 
-### 🎯 Oracle-less Architecture
+###  Oracle-less Architecture
 Markets resolve **100% programmatically** by directly querying other Aptos contracts. Check a protocol's TVL, a DAO proposal's outcome, or any on-chain metric—without external dependencies.
 
-### 🧠 Guided Market Creation
+###  Guided Market Creation
 Our intuitive dashboard makes market creation trivial:
-1. Select an Aptos protocol (e.g., "Amnis Finance")
+1. Select an Aptos protocol (e.g., "Circle")
 2. Choose a metric (e.g., "Total TVL")
 3. Set conditions (e.g., "exceeds 5M APT in 5 days")
 
 Done. The template engine handles the complexity.
 
-### 💡 The "Market Creator" Economy
+###  The "Market Creator" Economy
 Every user can become a market creator, monetizing their ecosystem insights and knowledge.
 
 ---
 
-## 🛠️ Technical Architecture
+##  Technical Architecture
 
 ```mermaid
 graph TB
@@ -80,9 +80,9 @@ graph TB
 
 ---
 
-## 🎯 What We've Built
+##  What We've Built
 
-### ✅ Core Features
+###  Core Features
 - [x] Oracle-less market creation and resolution
 - [x] Guided market creation dashboard
 - [x] Buy/sell YES/NO outcome tokens
@@ -91,14 +91,35 @@ graph TB
 - [x] Admin control panel
 - [x] Comprehensive test suite (90%+ coverage)
 
-### 🔮 Supported Oracles
+###  Supported Oracles
 - **Aptos Balance Oracle**: Track any account's APT holdings
 - **USDC Total Supply**: Monitor USDC circulation
 - **Extensible**: Add custom oracles via registry
 
+###  Tapp.Exchange Integration (In Review)
+
+**VeriFi is the first prediction market to implement a custom Tapp hook** 
+
+We've developed `tapp_prediction_hook.move` - a complete CPMM implementation for YES/NO token trading:
+
+-  **Full Hook Interface**: Implements create_pool, add_liquidity, remove_liquidity, swap, collect_fee
+-  **Dynamic Fees**: 0.3% base fee, 0.5% during high volatility (< 1h to resolution)
+-  **Auto-disable Trading**: Pools stop trading when market resolves
+-  **NFT-based Positions**: Liquidity providers receive Tapp position NFTs
+-  **Local Tests Passing**: Integration tested with 6/7 steps successful
+
+**Current Status:** Submitted for review with Tapp team per their [official submission process](https://github.com/tapp-exchange/hook-documentation#submission-process). Awaiting testnet deployment approval.
+
+**Why This Matters:**
+- **Composability**: YES/NO tokens tradable on any Tapp-compatible DEX
+- **Liquidity**: LPs earn fees on both outcome sides
+- **Innovation**: First hook to bring prediction markets to Tapp ecosystem
+
+See [TAPP_INTEGRATION_COMPLETE.md](./TAPP_INTEGRATION_COMPLETE.md) for technical implementation details.
+
 ---
 
-## 🏁 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -152,7 +173,7 @@ pnpm test:full-flow
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 - [Architecture Overview](./ARCHITECTURE.md)
 - [Smart Contract Guide](./contract/README.md)
@@ -161,28 +182,29 @@ pnpm test:full-flow
 
 ---
 
-## 🏆 Hackathon Deliverables
+##  Hackathon Deliverables
 
-### Aptos Global Hackathon 2025
+### Aptos Ctrl+MOVE Hackathon 2025
 
 **Track**: DeFi & Payments
 
 **Bounties Targeted**:
-- 🎯 **Best DeFi Protocol**: Novel oracle-less architecture for trustless markets
-- 🔧 **Best Use of Aptos Primitives**: Resource accounts, Object model, Fungible Assets
-- 🎨 **Best UX**: Guided market creation democratizes DeFi innovation
+-  **Best DeFi Protocol**: Novel oracle-less architecture for trustless markets
+-  **Best Use of Aptos Primitives**: Resource accounts, Object model, Fungible Assets
+-  **Best UX**: Guided market creation democratizes DeFi innovation
 
 **Key Differentiators**:
-1. First oracle-less prediction market on Aptos
-2. Template-driven market creation for non-developers
-3. Composable infrastructure other protocols can build on
-4. Production-ready with comprehensive testing
+1. **First oracle-less prediction market on Aptos** - Programmatic resolution eliminates trust assumptions
+2. **First prediction market Tapp hook** - Pioneering AMM integration for outcome tokens
+3. **Template-driven market creation** - Non-developers can create markets in 3 clicks
+4. **Production-ready architecture** - Comprehensive testing, proper error handling, event-driven indexing
+5. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
 
 ---
 
-## 🧠 Roadmap
+##  Roadmap
 
-### Phase 1: Foundation (✅ Complete)
+### Phase 1: Foundation ( Complete)
 - Core protocol implementation
 - Primary market trading
 - Basic oracle registry
@@ -200,23 +222,23 @@ pnpm test:full-flow
 
 ---
 
-## 👥 The Team
+##  The Team
 
 **EdSphinx** - Full-stack Web3 Developer
-- 🏆 Winner: Veritas Protocol (Aptos Hackathon)
-- 🏆 Winner: SocialDrop (Base Hackathon)
-- 💼 5+ years blockchain development
-- 🔗 [GitHub](https://github.com/edsphinx) | [Twitter](https://twitter.com/edsphinx)
+-  Winner: Veritas Protocol (Infinita DeSci Hackathon)
+-  Winner: SocialDrop (Base MiniApp Hackathon)
+-  5+ years blockchain development
+-  [GitHub](https://github.com/edsphinx) | [Twitter](https://twitter.com/edsphinx)
 
 ---
 
-## 📄 License
+##  License
 
 MIT License - see [LICENSE](./LICENSE) for details
 
 ---
 
-## 🔗 Links
+##  Links
 
 - **Live Demo**: [verifi-protocol.vercel.app](https://verifi-protocol.vercel.app)
 - **Demo Video**: [Coming Soon]
@@ -225,4 +247,4 @@ MIT License - see [LICENSE](./LICENSE) for details
 
 ---
 
-<p align="center">Built with ❤️ on Aptos</p>
+<p align="center">Built with ❤️ in Honduras and deployed on Aptos Testnet</p>
