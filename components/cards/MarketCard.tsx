@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Countdown } from "@/components/ui/countdown";
 import { cn } from "@/lib/utils";
 
 export interface Market {
@@ -21,6 +22,7 @@ export interface Market {
   totalVolume: number;
   resolvesOn: string;
   resolvesOnDate: Date;
+  resolutionTimestamp: number;
 }
 
 interface MarketCardProps {
@@ -79,7 +81,7 @@ export function MarketCard({ market }: MarketCardProps) {
                 {market.title}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="w-full flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <TrendingUp className="h-4 w-4" />
@@ -90,6 +92,19 @@ export function MarketCard({ market }: MarketCardProps) {
                   <span className="ml-1.5 text-primary/80">APT</span>
                 </div>
               </div>
+
+              {/* Countdown Timer */}
+              {!isExpired && (
+                <div className="pt-2 border-t border-border/40">
+                  <div className="text-xs text-muted-foreground mb-1.5">Time Remaining</div>
+                  <Countdown
+                    targetTimestamp={market.resolutionTimestamp}
+                    variant="compact"
+                    showIcon={false}
+                    className="text-sm"
+                  />
+                </div>
+              )}
             </CardContent>
           </div>
 
