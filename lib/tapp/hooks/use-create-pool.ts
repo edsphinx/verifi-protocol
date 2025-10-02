@@ -1,11 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useTappMode } from "../context/TappModeContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
+import { useTappMode } from "../context/TappModeContext";
 
 interface CreatePoolParams {
   marketId: string;
@@ -85,11 +85,13 @@ async function executeCreatePool(
     throw new Error("Wallet not connected");
   }
 
-  console.log('[useCreatePool] Creating pool with params:', params);
+  console.log("[useCreatePool] Creating pool with params:", params);
 
   // Validate token addresses
   if (!params.yesTokenAddress || !params.noTokenAddress) {
-    throw new Error("Invalid token addresses. Market may not have YES/NO tokens yet.");
+    throw new Error(
+      "Invalid token addresses. Market may not have YES/NO tokens yet.",
+    );
   }
 
   // Serialize pool creation arguments
@@ -97,14 +99,14 @@ async function executeCreatePool(
     HOOK_PREDICTION,
     params.yesTokenAddress,
     params.noTokenAddress,
-    BASE_FEE
+    BASE_FEE,
   );
 
-  console.log('[useCreatePool] Serialized args length:', poolArgs.length);
-  console.log('[useCreatePool] Hook type:', HOOK_PREDICTION);
-  console.log('[useCreatePool] YES token:', params.yesTokenAddress);
-  console.log('[useCreatePool] NO token:', params.noTokenAddress);
-  console.log('[useCreatePool] Fee:', BASE_FEE, 'basis points (0.3%)');
+  console.log("[useCreatePool] Serialized args length:", poolArgs.length);
+  console.log("[useCreatePool] Hook type:", HOOK_PREDICTION);
+  console.log("[useCreatePool] YES token:", params.yesTokenAddress);
+  console.log("[useCreatePool] NO token:", params.noTokenAddress);
+  console.log("[useCreatePool] Fee:", BASE_FEE, "basis points (0.3%)");
 
   // Build transaction payload
   const payload = {
@@ -112,7 +114,7 @@ async function executeCreatePool(
     functionArguments: [poolArgs],
   };
 
-  console.log('[useCreatePool] Submitting transaction...');
+  console.log("[useCreatePool] Submitting transaction...");
 
   // Sign and submit transaction
   const response = await signAndSubmitTransaction({
@@ -120,7 +122,7 @@ async function executeCreatePool(
     data: payload,
   });
 
-  console.log('[useCreatePool] Transaction submitted:', response.hash);
+  console.log("[useCreatePool] Transaction submitted:", response.hash);
 
   // Wait for transaction confirmation
   const txResponse = await aptosClient().waitForTransaction({
@@ -131,29 +133,29 @@ async function executeCreatePool(
     },
   });
 
-  console.log('[useCreatePool] Transaction confirmed');
+  console.log("[useCreatePool] Transaction confirmed");
 
   // Parse PoolCreated event to get pool address
   let poolAddress: string | undefined;
 
-  if ('events' in txResponse && Array.isArray(txResponse.events)) {
-    const poolCreatedEvent = txResponse.events.find((e: any) =>
-      e.type === `${TAPP_PROTOCOL_ADDRESS}::router::PoolCreated`
+  if ("events" in txResponse && Array.isArray(txResponse.events)) {
+    const poolCreatedEvent = txResponse.events.find(
+      (e: any) => e.type === `${TAPP_PROTOCOL_ADDRESS}::router::PoolCreated`,
     );
 
     if (poolCreatedEvent && poolCreatedEvent.data) {
       poolAddress = poolCreatedEvent.data.pool_addr;
-      console.log('[useCreatePool] Pool created at address:', poolAddress);
+      console.log("[useCreatePool] Pool created at address:", poolAddress);
     }
   }
 
   if (!poolAddress) {
-    console.warn('[useCreatePool] Could not extract pool address from events');
+    console.warn("[useCreatePool] Could not extract pool address from events");
   }
 
   return {
     success: true,
-    poolAddress: poolAddress || 'unknown',
+    poolAddress: poolAddress || "unknown",
     txHash: response.hash,
   };
 }
@@ -171,7 +173,11 @@ export function useCreatePool() {
       if (isDemo) {
         return await simulateCreatePool(params);
       } else {
-        return await executeCreatePool(params, signAndSubmitTransaction, account);
+        return await executeCreatePool(
+          params,
+          signAndSubmitTransaction,
+          account,
+        );
       }
     },
     onSuccess: (data, variables) => {

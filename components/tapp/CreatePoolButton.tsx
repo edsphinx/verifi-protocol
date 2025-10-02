@@ -5,8 +5,9 @@
  * Button to create a new Tapp AMM pool for a market
  */
 
-import React, { useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { PlusCircle } from "lucide-react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,7 +18,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
 import { useCreatePool } from "@/lib/tapp/hooks/use-create-pool";
 
 interface CreatePoolButtonProps {
@@ -73,7 +73,8 @@ export function CreatePoolButton({
         <DialogHeader>
           <DialogTitle>Create Tapp AMM Pool</DialogTitle>
           <DialogDescription>
-            Create a liquidity pool for this market to enable automated trading with YES/NO tokens
+            Create a liquidity pool for this market to enable automated trading
+            with YES/NO tokens
           </DialogDescription>
         </DialogHeader>
 
@@ -97,15 +98,24 @@ export function CreatePoolButton({
             <div className="rounded-lg border p-3 space-y-2 bg-muted/50">
               <div className="text-xs">
                 <span className="text-muted-foreground">Market: </span>
-                <span className="font-mono">{marketAddress.substring(0, 10)}...{marketAddress.substring(marketAddress.length - 8)}</span>
+                <span className="font-mono">
+                  {marketAddress.substring(0, 10)}...
+                  {marketAddress.substring(marketAddress.length - 8)}
+                </span>
               </div>
               <div className="text-xs">
                 <span className="text-muted-foreground">YES Token: </span>
-                <span className="font-mono">{yesTokenAddress.substring(0, 10)}...{yesTokenAddress.substring(yesTokenAddress.length - 8)}</span>
+                <span className="font-mono">
+                  {yesTokenAddress.substring(0, 10)}...
+                  {yesTokenAddress.substring(yesTokenAddress.length - 8)}
+                </span>
               </div>
               <div className="text-xs">
                 <span className="text-muted-foreground">NO Token: </span>
-                <span className="font-mono">{noTokenAddress.substring(0, 10)}...{noTokenAddress.substring(noTokenAddress.length - 8)}</span>
+                <span className="font-mono">
+                  {noTokenAddress.substring(0, 10)}...
+                  {noTokenAddress.substring(noTokenAddress.length - 8)}
+                </span>
               </div>
             </div>
           </div>
