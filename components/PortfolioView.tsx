@@ -10,8 +10,8 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUserActivities } from "@/hooks/use-user-activities";
-import { useUserPositions } from "@/hooks/use-user-positions";
+import { useUserActivities } from "@/lib/hooks/use-user-activities";
+import { useUserPositions } from "@/lib/hooks/use-user-positions";
 import { ActivityFeed } from "@/components/portfolio/ActivityFeed";
 import { UserPositions } from "@/components/portfolio/UserPositions";
 
@@ -19,10 +19,10 @@ export function PortfolioView() {
   const { account } = useWallet();
 
   const { data: activitiesData, isLoading: isLoadingActivities, refetch: refetchActivities } =
-    useUserActivities(account?.address);
+    useUserActivities(account?.address?.toString());
 
   const { data: positions, isLoading: isLoadingPositions, refetch: refetchPositions } =
-    useUserPositions(account?.address);
+    useUserPositions(account?.address?.toString());
 
   if (!account) {
     return (
