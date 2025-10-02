@@ -68,18 +68,32 @@ export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
 export async function getCreateMarketPayload(
   data: CreateMarketApiPayload,
 ): Promise<EntryFunctionPayload> {
-  const response = await fetch("/api/markets/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const errorBody = await response
-      .json()
-      .catch(() => ({ error: "Failed to parse error response" }));
-    throw new Error(errorBody.error || "Failed to get create market payload");
+  console.log('[market.ts] Calling /api/markets/create with data:', data);
+
+  try {
+    const response = await fetch("/api/markets/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    console.log('[market.ts] Response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorBody = await response
+        .json()
+        .catch(() => ({ error: "Failed to parse error response" }));
+      console.error('[market.ts] Error response body:', errorBody);
+      throw new Error(errorBody.error || "Failed to get create market payload");
+    }
+
+    const payload = await response.json();
+    console.log('[market.ts] Received payload:', payload);
+    return payload;
+  } catch (error) {
+    console.error('[market.ts] Error in getCreateMarketPayload:', error);
+    throw error;
   }
-  return response.json();
 }
 
 /**

@@ -37,6 +37,10 @@ export function MarketCard({ market }: MarketCardProps) {
     },
   };
 
+  // Check if market is expired
+  const now = new Date();
+  const isExpired = market.resolvesOnDate < now;
+
   return (
     <motion.div
       variants={itemVariants}
@@ -44,13 +48,14 @@ export function MarketCard({ market }: MarketCardProps) {
         y: -6,
         transition: { type: "spring", stiffness: 300 } as const,
       }}
-      className="h-full group" // Se añade la clase `group` para controlar el hover
+      className="h-full group" // Add `group` class to control hover effects
     >
       <Link href={`/market/${market.id}`} className="h-full">
-        {/* El `Link` ahora envuelve toda la tarjeta para una mejor UX */}
+        {/* Link wraps entire card for better UX */}
         <Card
           className={cn(
             "h-full flex flex-col justify-between transition-all duration-300",
+            isExpired && "opacity-60 border-muted-foreground/20"
           )}
         >
           <div>
@@ -58,9 +63,12 @@ export function MarketCard({ market }: MarketCardProps) {
               <div className="flex justify-between items-center mb-3">
                 <Badge
                   variant="outline"
-                  className="border-accent/40 text-accent font-semibold"
+                  className={cn(
+                    "border-accent/40 text-accent font-semibold",
+                    isExpired && "border-destructive/40 text-destructive bg-destructive/10"
+                  )}
                 >
-                  {market.category}
+                  {isExpired ? "Expired" : market.category}
                 </Badge>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
                   <CalendarDays className="h-3 w-3" />
@@ -86,7 +94,7 @@ export function MarketCard({ market }: MarketCardProps) {
           </div>
 
           <CardFooter className="p-4 pt-2">
-            {/* El botón ahora es más sutil y se integra con la tarjeta */}
+            {/* Subtle button that integrates with card design */}
             <div className="w-full text-sm font-semibold text-primary/80 group-hover:text-primary flex items-center transition-all duration-300">
               View & Trade
               <ArrowRight className="ml-2 h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />

@@ -132,7 +132,7 @@ export function Header() {
               <NavigationMenuTrigger>Liquidity</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  <ListItem href="/" title="AMM Pools">
+                  <ListItem href="/pools" title="AMM Pools">
                     <div className="flex items-center gap-2">
                       <Activity className="h-4 w-4" />
                       <span>
@@ -140,11 +140,11 @@ export function Header() {
                       </span>
                     </div>
                   </ListItem>
-                  <ListItem href="/" title="Provide Liquidity">
+                  <ListItem href="/pools" title="Provide Liquidity">
                     Earn fees by adding liquidity to market pools
                   </ListItem>
-                  <ListItem href="/" title="Swap Tokens">
-                    Trade YES/NO tokens via AMM with instant execution
+                  <ListItem href="/" title="Browse Markets">
+                    Explore markets and create pools for trading
                   </ListItem>
                   <ListItem href="/amm-demo" title="AMM Demo">
                     Preview the AMM interface with mock data

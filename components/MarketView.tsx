@@ -2,9 +2,12 @@
 
 import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActionPanel } from "@/components/views/market/ActionPanel";
 import { MarketDetails } from "@/components/views/market/MarketDetails";
 import { PoolSection } from "@/components/tapp/PoolSection";
+import { SwapInterface } from "@/components/views/market/TappAMM/SwapInterface";
+import { LiquidityPanel } from "@/components/views/market/TappAMM/LiquidityPanel";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
@@ -44,19 +47,47 @@ export function MarketView({ marketId }: { marketId: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        <div className="lg:col-span-2">
-          <MarketDetails
-            staticData={staticMarketData}
-            dynamicData={marketDetails}
-          />
-        </div>
-        <div className="lg:col-span-1">
-          <ActionPanel marketId={marketId} dynamicData={marketDetails} />
-        </div>
-      </div>
+      {/* Market Header */}
+      <MarketDetails
+        staticData={staticMarketData}
+        dynamicData={marketDetails}
+      />
 
-      <PoolSection marketAddress={marketId} />
+      {/* Trading Tabs */}
+      <Tabs defaultValue="primary" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="primary">Primary Market</TabsTrigger>
+          <TabsTrigger value="swap">AMM Swap</TabsTrigger>
+          <TabsTrigger value="liquidity">Liquidity</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="primary" className="mt-6">
+          <ActionPanel marketId={marketId} dynamicData={marketDetails} />
+        </TabsContent>
+
+        <TabsContent value="swap" className="mt-6">
+          <SwapInterface
+            marketAddress={marketId}
+            yesTokenAddress={marketDetails.yesTokenAddress}
+            noTokenAddress={marketDetails.noTokenAddress}
+          />
+        </TabsContent>
+
+        <TabsContent value="liquidity" className="mt-6">
+          <LiquidityPanel
+            marketAddress={marketId}
+            yesTokenAddress={marketDetails.yesTokenAddress}
+            noTokenAddress={marketDetails.noTokenAddress}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Pool Info Section */}
+      <PoolSection
+        marketAddress={marketId}
+        yesTokenAddress={marketDetails.yesTokenAddress}
+        noTokenAddress={marketDetails.noTokenAddress}
+      />
     </div>
   );
 }

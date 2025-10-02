@@ -24,7 +24,7 @@ export function useMarketDetails(marketObjectAddress: string) {
       const ownerAddress = AccountAddress.from(accountAddress);
 
       // Fetch all data in parallel for maximum efficiency
-      const [marketState, userBalances, aptBalance] = await Promise.all([
+      const [marketState, userBalances, aptBalance, tokenAddresses] = await Promise.all([
         // Call get_market_state
         aptosClient().view<[string, string, string, string, string]>({
           payload: {
@@ -41,11 +41,19 @@ export function useMarketDetails(marketObjectAddress: string) {
         }),
         // Get user's APT balance
         getAccountAPTBalance({ accountAddress: ownerAddress.toString() }),
+        // Get token addresses for YES and NO tokens
+        aptosClient().view<[string, string]>({
+          payload: {
+            function: `${MODULE_ADDRESS}::verifi_protocol::get_token_addresses`,
+            functionArguments: [marketObjectAddress],
+          },
+        }),
       ]);
 
       const [status, totalSupplyYes, totalSupplyNo, poolYes, poolNo] =
         marketState;
       const [userYesBalance, userNoBalance] = userBalances;
+      const [yesTokenAddress, noTokenAddress] = tokenAddresses;
 
       return {
         status: parseInt(status, 10),
@@ -56,6 +64,8 @@ export function useMarketDetails(marketObjectAddress: string) {
         userAptBalance: aptBalance,
         userYesBalance: parseInt(userYesBalance, 10),
         userNoBalance: parseInt(userNoBalance, 10),
+        yesTokenAddress,
+        noTokenAddress,
       };
     },
     enabled: !!accountAddress && !!marketObjectAddress,
