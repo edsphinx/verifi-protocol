@@ -5,7 +5,7 @@ function test() {
   console.log("🧪 Testing Move contracts...");
   try {
     execSync(
-      `aptos move test --package-dir ${packageDir} --named-addresses ${namedAddress} --url ${nodeUrl}`,
+      `aptos move test --package-dir ${packageDir} --named-addresses ${namedAddress}`,
       stdio,
     );
     console.log("✅ Move tests passed successfully.");

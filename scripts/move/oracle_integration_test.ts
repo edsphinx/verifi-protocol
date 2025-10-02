@@ -215,7 +215,10 @@ async function main() {
     );
     process.exit(1);
   } catch (error: any) {
-    if (error.message?.includes("verifi_protocol") && (error.message?.includes("0xc") || error.message?.includes(": 12"))) {
+    if (
+      error.message?.includes("verifi_protocol") &&
+      (error.message?.includes("0xc") || error.message?.includes(": 12"))
+    ) {
       console.log(
         "  ✅ Negative Test PASSED: Contract correctly rejected the transaction (E_ORACLE_NOT_ACTIVE).",
       );

@@ -17,7 +17,7 @@ if (!accountAddress) {
   process.exit(1);
 }
 
-const OUTPUT_DIR = path.join(projectRoot, "utils", "abis");
+const OUTPUT_DIR = path.join(projectRoot, "aptos", "abis");
 
 async function main() {
   console.log("📝 Generating TypeScript ABIs from the node...");
