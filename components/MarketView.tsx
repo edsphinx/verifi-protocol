@@ -2,13 +2,15 @@
 
 import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { ActionPanel } from "@/components/views/market/ActionPanel";
-import { MarketDetails } from "@/components/views/market/MarketDetails";
 import { PoolSection } from "@/components/tapp/PoolSection";
 import { SwapInterface } from "@/components/views/market/TappAMM/SwapInterface";
 import { LiquidityPanel } from "@/components/views/market/TappAMM/LiquidityPanel";
 import { TappPoolStats } from "@/components/TappPoolStats";
+import { TrendingUp, Users, BarChart3 } from "lucide-react";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
@@ -26,14 +28,9 @@ export function MarketView({ marketId }: { marketId: string }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-60 w-full" />
-        </div>
-        <div className="lg:col-span-1">
-          <Skeleton className="h-96 w-full" />
-        </div>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -46,56 +43,91 @@ export function MarketView({ marketId }: { marketId: string }) {
     );
   }
 
-  // Type assertion after guard - we know marketDetails is not null here
   const details = marketDetails;
+  const totalVolume = (details.totalSupplyYes + details.totalSupplyNo) / 2 / 10 ** 8;
 
   return (
-    <div className="space-y-8">
-      {/* Market Header */}
-      <MarketDetails
-        staticData={staticMarketData}
-        dynamicData={details}
-      />
+    <div className="space-y-6">
+      {/* Compact Market Header */}
+      <div className="space-y-3">
+        <Badge className="text-xs font-semibold px-3 py-1">
+          {staticMarketData.category}
+        </Badge>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+          {staticMarketData.title}
+        </h1>
 
-      {/* Trading Tabs */}
-      <Tabs defaultValue="primary" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="primary">Primary Market</TabsTrigger>
-          <TabsTrigger value="swap">AMM Swap</TabsTrigger>
-          <TabsTrigger value="liquidity">Liquidity</TabsTrigger>
-        </TabsList>
+        {/* Compact Stats Row */}
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground">Volume:</span>
+            <span className="font-mono font-semibold">{totalVolume.toFixed(2)} APT</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground">YES:</span>
+            <span className="font-mono font-semibold">{(details.totalSupplyYes / 10 ** 6).toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground">NO:</span>
+            <span className="font-mono font-semibold">{(details.totalSupplyNo / 10 ** 6).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
 
-        <TabsContent value="primary" className="mt-6">
-          <ActionPanel marketId={marketId} dynamicData={details} />
-        </TabsContent>
+      {/* Main Trading Interface - Centered and Prominent */}
+      <div className="max-w-2xl mx-auto">
+        <Tabs defaultValue="primary" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="primary">Trade</TabsTrigger>
+            <TabsTrigger value="swap">AMM Swap</TabsTrigger>
+            <TabsTrigger value="liquidity">Add Liquidity</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="swap" className="mt-6">
-          <SwapInterface
-            marketId={marketId}
-            yesReserve={details.poolYes}
-            noReserve={details.poolNo}
-            tradingEnabled={details.status === 0}
+          <TabsContent value="primary" className="mt-0">
+            <ActionPanel marketId={marketId} dynamicData={details} />
+          </TabsContent>
+
+          <TabsContent value="swap" className="mt-0">
+            <SwapInterface
+              marketId={marketId}
+              yesReserve={details.poolYes}
+              noReserve={details.poolNo}
+              tradingEnabled={details.status === 0}
+            />
+          </TabsContent>
+
+          <TabsContent value="liquidity" className="mt-0">
+            <LiquidityPanel
+              marketId={marketId}
+              yesReserve={details.poolYes}
+              noReserve={details.poolNo}
+              tradingEnabled={details.status === 0}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Market Details Section - Collapsed Below */}
+      <div className="pt-8 border-t border-border/40">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Market Details</h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tapp Pool Stats */}
+          <TappPoolStats marketAddress={marketId} />
+
+          {/* Pool Section */}
+          <PoolSection
+            marketAddress={marketId}
+            yesTokenAddress={details.yesTokenAddress}
+            noTokenAddress={details.noTokenAddress}
           />
-        </TabsContent>
-
-        <TabsContent value="liquidity" className="mt-6">
-          <LiquidityPanel
-            marketId={marketId}
-            yesReserve={details.poolYes}
-            noReserve={details.poolNo}
-            tradingEnabled={details.status === 0}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Tapp Exchange Integration */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TappPoolStats marketAddress={marketId} />
-        <PoolSection
-          marketAddress={marketId}
-          yesTokenAddress={details.yesTokenAddress}
-          noTokenAddress={details.noTokenAddress}
-        />
+        </div>
       </div>
     </div>
   );
