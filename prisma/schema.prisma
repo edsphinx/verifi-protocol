@@ -27,3 +27,15 @@ model Market {
   @@map("markets")
 }
 
+model Activity {
+  id        String   @id @default(uuid())
+  txHash    String   @unique @map("tx_hash")
+  marketAddress String @map("market_address")
+  userAddress String   @map("user_address")
+  action    String   // "BUY" o "SELL"
+  outcome   String   // "YES" o "NO"
+  amount    Float
+  timestamp DateTime @default(now())
+
+  @@map("activities")
+}
