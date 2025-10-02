@@ -21,7 +21,7 @@ async function main() {
   const aptos = new Aptos(aptosConfig);
 
   console.log(
-    `🚀 Calling get_total_supply from ${MODULE_ADDRESS}::oracle_usdc...`,
+    ` Calling get_total_supply from ${MODULE_ADDRESS}::oracle_usdc...`,
   );
 
   try {
@@ -39,13 +39,13 @@ async function main() {
     // Formateamos el valor para que sea legible, considerando los 6 decimales de USDC.
     const formattedSupply = rawSupply / 10 ** 6;
 
-    console.log("\n✅ View function executed successfully!");
+    console.log("\n View function executed successfully!");
     console.log(`   - Raw Total Supply (smallest unit): ${rawSupply}`);
     console.log(
       `   - Formatted Total Supply: ${formattedSupply.toLocaleString()} USDC`,
     );
   } catch (error) {
-    console.error("❌ Failed to call view function.", error);
+    console.error(" Failed to call view function.", error);
     process.exit(1);
   }
 }

@@ -22,7 +22,7 @@ if (fs.existsSync(envLocalPath)) {
   dotenv.config({ path: envPath });
 } else {
   console.warn(
-    "⚠️ Warning: No .env.local or .env file found. Scripts might fail if they need environment variables.",
+    " Warning: No .env.local or .env file found. Scripts might fail if they need environment variables.",
   );
 }
 
@@ -49,7 +49,7 @@ function getNodeUrl(network: string): string {
       return "https://fullnode.mainnet.aptoslabs.com/v1";
     default:
       console.error(
-        `❌ Error: Unknown network specified: '${network}'. Defaulting to local node.`,
+        ` Error: Unknown network specified: '${network}'. Defaulting to local node.`,
       );
       return "http://127.0.0.1:8080";
   }
@@ -64,7 +64,7 @@ const privateKey = process.env.NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY;
 
 if (!address) {
   console.error(
-    "❌ Error: NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS is not defined in your .env.local or .env file.",
+    " Error: NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS is not defined in your .env.local or .env file.",
   );
   process.exit(1);
 }

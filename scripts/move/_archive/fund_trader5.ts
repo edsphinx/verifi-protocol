@@ -31,7 +31,7 @@ async function main() {
   });
 
   await aptos.waitForTransaction({ transactionHash: committed.hash });
-  console.log("✅ Transferred 10 APT to trader 5");
+  console.log(" Transferred 10 APT to trader 5");
   console.log(
     `TX: https://explorer.aptoslabs.com/txn/${committed.hash}?network=${networkName}`,
   );

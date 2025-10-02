@@ -18,7 +18,7 @@ dotenv.config({ path: envPath });
 const publisherAddress = process.env.NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS;
 
 if (!publisherAddress) {
-  console.error("❌ Error: NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS not set");
+  console.error(" Error: NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS not set");
   process.exit(1);
 }
 
@@ -50,7 +50,7 @@ for (const file of filesToUpdate) {
 
     if (!fs.existsSync(templatePath)) {
       console.warn(
-        `⚠️  Template not found: ${templatePath}, using current file`,
+        `  Template not found: ${templatePath}, using current file`,
       );
       // Fallback to updating current file
       let content = fs.readFileSync(file.path, "utf-8");
@@ -70,7 +70,7 @@ for (const file of filesToUpdate) {
       );
 
       fs.writeFileSync(file.path, content, "utf-8");
-      console.log(`✅ Updated ${file.name} (in-place): ${file.path}`);
+      console.log(` Updated ${file.name} (in-place): ${file.path}`);
       continue;
     }
 
@@ -82,10 +82,10 @@ for (const file of filesToUpdate) {
 
     fs.writeFileSync(file.path, content, "utf-8");
     const mode = isTestMode ? "test" : "deployment";
-    console.log(`✅ Updated ${file.name} for ${mode} mode: ${file.path}`);
+    console.log(` Updated ${file.name} for ${mode} mode: ${file.path}`);
   } catch (error: any) {
-    console.error(`❌ Failed to update ${file.name}:`, error.message);
+    console.error(` Failed to update ${file.name}:`, error.message);
   }
 }
 
-console.log("\n✅ All addresses updated successfully!");
+console.log("\n All addresses updated successfully!");

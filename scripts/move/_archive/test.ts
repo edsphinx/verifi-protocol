@@ -8,9 +8,9 @@ function test() {
       `aptos move test --package-dir ${packageDir} --named-addresses ${namedAddress}`,
       stdio,
     );
-    console.log("✅ Move tests passed successfully.");
+    console.log(" Move tests passed successfully.");
   } catch (error) {
-    console.error("❌ Error running Move tests.");
+    console.error(" Error running Move tests.");
     process.exit(1);
   }
 }
