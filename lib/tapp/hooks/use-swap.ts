@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Serializer } from "@aptos-labs/ts-sdk";
 import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
+import { NETWORK } from "@/aptos/constants";
+import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 
 interface SwapParams {
   marketId: string;
@@ -164,12 +166,20 @@ export function useSwap() {
       }
     },
     onSuccess: (data, variables) => {
+      const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
+      const message = `Amount out: ${data.amountOut.toFixed(4)} tokens`;
+
       toast.success("Swap successful!", {
-        description: `Transaction hash: ${data.txHash.slice(0, 10)}...`,
+        description: `${message}\n\nView transaction: ${truncateHash(data.txHash)}`,
+        action: {
+          label: "View TX",
+          onClick: () => window.open(explorerLink, "_blank"),
+        },
+        duration: 10000,
       });
 
-      // Invalidate pool data to refetch
-      queryClient.invalidateQueries({
+      // Force refetch immediately after swap
+      queryClient.refetchQueries({
         queryKey: ["pool-data", variables.marketId],
       });
     },

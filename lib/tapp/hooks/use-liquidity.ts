@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Serializer } from "@aptos-labs/ts-sdk";
 import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
+import { NETWORK } from "@/aptos/constants";
+import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 
 interface AddLiquidityParams {
   marketId: string;
@@ -245,11 +247,20 @@ export function useAddLiquidity() {
       }
     },
     onSuccess: (data, variables) => {
+      const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
+      const message = `Position: ${data.positionIdx}, LP Tokens: ${data.lpTokens.toFixed(2)}`;
+
       toast.success("Liquidity added successfully!", {
-        description: `Position: ${data.positionIdx}, LP Tokens: ${data.lpTokens.toFixed(2)}`,
+        description: `${message}\n\nView transaction: ${truncateHash(data.txHash)}`,
+        action: {
+          label: "View TX",
+          onClick: () => window.open(explorerLink, "_blank"),
+        },
+        duration: 10000,
       });
 
-      queryClient.invalidateQueries({
+      // Force refetch immediately after adding liquidity
+      queryClient.refetchQueries({
         queryKey: ["pool-data", variables.marketId],
       });
     },
