@@ -20,7 +20,7 @@ import {
   TrendingUp,
   AlertTriangle,
 } from "lucide-react";
-import { useSwap, useSwapPreview } from "@/lib/tapp/hooks/use-swap";
+import { useSwap, calculateSwapPreview } from "@/lib/tapp/hooks/use-swap";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import {
@@ -59,9 +59,9 @@ export function SwapInterface({
   const { isDemo } = useTappMode();
   const swapMutation = useSwap();
 
-  // Calculate swap preview
+  // Calculate swap preview (using regular function, not hook)
   const amountInNum = parseFloat(amountIn) || 0;
-  const preview = useSwapPreview(
+  const preview = calculateSwapPreview(
     marketId,
     amountInNum,
     yesToNo,

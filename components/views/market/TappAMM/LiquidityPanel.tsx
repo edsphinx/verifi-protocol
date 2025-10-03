@@ -19,8 +19,8 @@ import { Droplets, Plus, Minus, Info, AlertTriangle } from "lucide-react";
 import {
   useAddLiquidity,
   useRemoveLiquidity,
-  useAddLiquidityPreview,
-  useRemoveLiquidityPreview,
+  calculateAddLiquidityPreview,
+  calculateRemoveLiquidityPreview,
 } from "@/lib/tapp/hooks/use-liquidity";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { useTappMode } from "@/lib/tapp/context/TappModeContext";
@@ -61,8 +61,8 @@ export function LiquidityPanel({
   // Calculate total LP supply (geometric mean of reserves)
   const totalLpSupply = Math.sqrt(yesReserve * noReserve);
 
-  // Preview calculations
-  const addPreview = useAddLiquidityPreview(
+  // Preview calculations (using regular functions, not hooks)
+  const addPreview = calculateAddLiquidityPreview(
     parseFloat(yesAmount) || 0,
     parseFloat(noAmount) || 0,
     yesReserve,
@@ -70,7 +70,7 @@ export function LiquidityPanel({
     totalLpSupply,
   );
 
-  const removePreview = useRemoveLiquidityPreview(
+  const removePreview = calculateRemoveLiquidityPreview(
     parseFloat(lpTokens) || 0,
     yesReserve,
     noReserve,

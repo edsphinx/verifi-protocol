@@ -310,9 +310,10 @@ export function useRemoveLiquidity() {
 }
 
 /**
- * Hook to calculate add liquidity preview
+ * Calculate add liquidity preview
+ * NOTE: This is NOT a React hook, just a helper function
  */
-export function useAddLiquidityPreview(
+export function calculateAddLiquidityPreview(
   yesAmount: number,
   noAmount: number,
   yesReserve: number,
@@ -345,9 +346,10 @@ export function useAddLiquidityPreview(
 }
 
 /**
- * Hook to calculate remove liquidity preview
+ * Calculate remove liquidity preview
+ * NOTE: This is NOT a React hook, just a helper function
  */
-export function useRemoveLiquidityPreview(
+export function calculateRemoveLiquidityPreview(
   lpTokens: number,
   yesReserve: number,
   noReserve: number,

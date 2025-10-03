@@ -192,9 +192,10 @@ export function useSwap() {
 }
 
 /**
- * Hook to calculate swap output (preview)
+ * Calculate swap output (preview)
+ * NOTE: This is NOT a React hook, just a helper function
  */
-export function useSwapPreview(
+export function calculateSwapPreview(
   marketId: string,
   amountIn: number,
   yesToNo: boolean,
