@@ -29,13 +29,14 @@ VeriFi solves both problems with:
 ###  Oracle-less Architecture
 Markets resolve **100% programmatically** by directly querying other Aptos contracts. Check a protocol's TVL, a DAO proposal's outcome, or any on-chain metric—without external dependencies.
 
-###  Guided Market Creation
-Our intuitive dashboard makes market creation trivial:
-1. Select an Aptos protocol (e.g., "Circle")
-2. Choose a metric (e.g., "Total TVL")
-3. Set conditions (e.g., "exceeds 5M APT in 5 days")
+###  AI-Powered Market Creation
+Our intelligent dashboard makes market creation trivial:
+1. **Natural Language Input**: Describe your market in plain English
+2. **AI Validation**: Claude analyzes feasibility and suggests improvements
+3. **Smart Extraction**: AI fills parameters (protocol, metric, conditions, dates)
+4. **One-Click Deploy**: Template engine handles all contract complexity
 
-Done. The template engine handles the complexity.
+Example: "Will Circle USDC total supply exceed 5M by March 15th?" → Fully configured market in seconds.
 
 ###  The "Market Creator" Economy
 Every user can become a market creator, monetizing their ecosystem insights and knowledge.
@@ -84,10 +85,14 @@ graph TB
 
 ###  Core Features
 - [x] Oracle-less market creation and resolution
-- [x] Guided market creation dashboard
+- [x] AI-powered market creation with natural language input
 - [x] Buy/sell YES/NO outcome tokens
 - [x] Portfolio tracking with P&L
-- [x] Real-time notifications
+- [x] AMM pools with liquidity provision (Tapp integration)
+- [x] Swap YES/NO tokens with real-time price impact
+- [x] Liquidity positions dashboard with PnL tracking
+- [x] Transaction explorer links for on-chain verification
+- [x] Real-time notifications with clickable transaction links
 - [x] Admin control panel
 - [x] Comprehensive test suite (90%+ coverage)
 
@@ -96,23 +101,35 @@ graph TB
 - **USDC Total Supply**: Monitor USDC circulation
 - **Extensible**: Add custom oracles via registry
 
-###  Tapp.Exchange Integration (In Review)
+###  Tapp.Exchange AMM Integration
 
-**VeriFi is the first prediction market to implement a custom Tapp hook** 
+**VeriFi is the first prediction market to implement a custom Tapp hook + integrated AMM UI**
 
-We've developed `tapp_prediction_hook.move` - a complete CPMM implementation for YES/NO token trading:
+We've developed a complete AMM solution for YES/NO token trading:
 
+####  Smart Contract Hook (`tapp_prediction_hook.move`)
 -  **Full Hook Interface**: Implements create_pool, add_liquidity, remove_liquidity, swap, collect_fee
 -  **Dynamic Fees**: 0.3% base fee, 0.5% during high volatility (< 1h to resolution)
 -  **Auto-disable Trading**: Pools stop trading when market resolves
 -  **NFT-based Positions**: Liquidity providers receive Tapp position NFTs
--  **Local Tests Passing**: Integration tested with 6/7 steps successful
+-  **Local Tests**: Integration tested with 6/7 steps successful
 
-**Current Status:** Submitted for review with Tapp team per their [official submission process](https://github.com/tapp-exchange/hook-documentation#submission-process). Awaiting testnet deployment approval.
+####  Integrated AMM UI (Production Ready)
+-  **Pool Creation**: One-click pool deployment from market page
+-  **Add Liquidity**: Deposit YES/NO tokens, receive LP tokens with position NFTs
+-  **Swap Interface**: Trade tokens with live price impact preview
+-  **Liquidity Dashboard**: View positions with real-time PnL calculations
+-  **Transaction Links**: Direct links to Aptos Explorer for verification
+-  **React Query Optimistic Updates**: Instant UI updates after transactions
+
+**Current Status:**
+- ✅ **UI/Frontend**: Fully functional on testnet with complete AMM flow
+- ⏳ **Hook Deployment**: Submitted for review with Tapp team per [official process](https://github.com/tapp-exchange/hook-documentation#submission-process)
 
 **Why This Matters:**
 - **Composability**: YES/NO tokens tradable on any Tapp-compatible DEX
 - **Liquidity**: LPs earn fees on both outcome sides
+- **Best UX**: Seamless integration directly in market pages
 - **Innovation**: First hook to bring prediction markets to Tapp ecosystem
 
 See [TAPP_INTEGRATION_COMPLETE.md](./TAPP_INTEGRATION_COMPLETE.md) for technical implementation details.
@@ -195,30 +212,34 @@ pnpm test:full-flow
 
 **Key Differentiators**:
 1. **First oracle-less prediction market on Aptos** - Programmatic resolution eliminates trust assumptions
-2. **First prediction market Tapp hook** - Pioneering AMM integration for outcome tokens
-3. **Template-driven market creation** - Non-developers can create markets in 3 clicks
+2. **First prediction market with Tapp AMM integration** - Full UI/UX for swap and liquidity provision
+3. **AI-powered market creation** - Natural language input with Claude validation and smart parameter extraction
 4. **Production-ready architecture** - Comprehensive testing, proper error handling, event-driven indexing
-5. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
+5. **Best-in-class UX** - Real-time updates, transaction explorer links, liquidity position tracking
+6. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
 
 ---
 
 ##  Roadmap
 
-### Phase 1: Foundation ( Complete)
+### Phase 1: Foundation (✅ Complete)
 - Core protocol implementation
 - Primary market trading
 - Basic oracle registry
+- AI-powered market creation
+- Full Tapp AMM integration (UI)
 
-### Phase 2: Enhanced Trading (In Progress)
-- Full Tapp.Exchange AMM integration
+### Phase 2: Enhanced Trading (🚧 In Progress)
+- Tapp hook testnet deployment
 - Advanced portfolio analytics
 - Multi-oracle market conditions
+- Cross-DEX liquidity aggregation
 
-### Phase 3: Ecosystem Growth
-- AI-powered market creation (natural language)
-- Cross-protocol oracle integrations
+### Phase 3: Ecosystem Growth (📋 Planned)
+- Multi-language AI support (Spanish, Chinese)
+- Cross-protocol oracle integrations (Thala, PancakeSwap, etc.)
 - Governance token and DAO
-- Mobile app
+- Mobile app with push notifications
 
 ---
 
