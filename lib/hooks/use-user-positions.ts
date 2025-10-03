@@ -14,6 +14,7 @@ interface Position {
   yesBalance: number;
   noBalance: number;
   totalValue: number; // In APT
+  marketStatus: number; // 0: OPEN, 1: CLOSED, 2: RESOLVED_YES, 3: RESOLVED_NO
 }
 
 async function fetchUserPositions(userAddress: string): Promise<Position[]> {
@@ -41,7 +42,7 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
           payload: {
             function: `${MODULE_ADDRESS}::verifi_protocol::get_balances` as `${string}::${string}::${string}`,
             typeArguments: [],
-            functionArguments: [marketAddress, userAddress],
+            functionArguments: [userAddress, marketAddress],
           },
         });
 
@@ -54,12 +55,24 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
           const marketResponse = await fetch(`/api/markets/${marketAddress}`);
           const marketData = await marketResponse.json();
 
+          // Get market status from chain
+          const marketState = await client.view({
+            payload: {
+              function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state` as `${string}::${string}::${string}`,
+              typeArguments: [],
+              functionArguments: [marketAddress],
+            },
+          });
+
+          const status = Number(marketState[0] || 0);
+
           positions.push({
             marketAddress,
             marketTitle: marketData.description || "Unknown Market",
             yesBalance: yesBalance / 1e6, // Convert from micro units
             noBalance: noBalance / 1e6,
             totalValue: (yesBalance + noBalance) / 1e8, // Approximate value in APT
+            marketStatus: status,
           });
         }
       } catch (error) {

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 
 export function MarketsHub() {
-  const { featuredMarket, otherMarkets, soon, resolved, isLoading, isError } =
+  const { featuredMarket, otherMarkets, soon, expired, resolved, isLoading, isError } =
     useMarkets();
 
   const containerVariants = {
@@ -50,11 +50,40 @@ export function MarketsHub() {
     <div className="space-y-8 md:space-y-12">
       <Tabs defaultValue="active">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Active Markets</h1>
-          <TabsList>
-            <TabsTrigger value="active">All</TabsTrigger>
-            <TabsTrigger value="soon">Resolving Soon</TabsTrigger>
-            <TabsTrigger value="resolved">Resolved</TabsTrigger>
+          <h1 className="text-3xl font-bold tracking-tight">Markets</h1>
+          <TabsList className="grid grid-cols-4 w-full md:w-auto">
+            <TabsTrigger value="active">
+              Active
+              {!isLoading && otherMarkets && featuredMarket && (
+                <span className="ml-2 text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                  {otherMarkets.length + 1}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="soon">
+              Soon
+              {!isLoading && soon && (
+                <span className="ml-2 text-xs bg-amber-500/20 px-2 py-0.5 rounded-full">
+                  {soon.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="expired">
+              Expired
+              {!isLoading && expired && (
+                <span className="ml-2 text-xs bg-destructive/20 px-2 py-0.5 rounded-full">
+                  {expired.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="resolved">
+              Resolved
+              {!isLoading && resolved && (
+                <span className="ml-2 text-xs bg-green-500/20 px-2 py-0.5 rounded-full">
+                  {resolved.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -92,9 +121,30 @@ export function MarketsHub() {
                 </TabsContent>
                 <TabsContent value="soon">
                   {soon.length > 0 ? (
-                    renderMarketGrid(soon)
+                    <>
+                      <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <p className="text-sm text-amber-200">
+                          These markets will resolve within the next 24 hours. Place your final trades now!
+                        </p>
+                      </div>
+                      {renderMarketGrid(soon)}
+                    </>
                   ) : (
-                    <EmptyState message="No markets resolving soon." />
+                    <EmptyState message="No markets resolving within the next 24 hours." />
+                  )}
+                </TabsContent>
+                <TabsContent value="expired">
+                  {expired.length > 0 ? (
+                    <>
+                      <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                        <p className="text-sm text-destructive/80">
+                          These markets have expired and are awaiting oracle resolution.
+                        </p>
+                      </div>
+                      {renderMarketGrid(expired)}
+                    </>
+                  ) : (
+                    <EmptyState message="No expired markets awaiting resolution." />
                   )}
                 </TabsContent>
                 <TabsContent value="resolved">

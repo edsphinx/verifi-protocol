@@ -22,11 +22,19 @@ export interface Market {
   resolvesOn: string;
   resolvesOnDate: Date;
   resolutionTimestamp: number;
+  onChainStatus?: number;
 }
 
 interface MarketCardProps {
   market: Market;
 }
+
+const MARKET_STATUS = {
+  OPEN: 0,
+  CLOSED: 1,
+  RESOLVED_YES: 2,
+  RESOLVED_NO: 3,
+} as const;
 
 export function MarketCard({ market }: MarketCardProps) {
   const itemVariants = {
@@ -38,9 +46,35 @@ export function MarketCard({ market }: MarketCardProps) {
     },
   };
 
-  // Check if market is expired
+  // Check market status
   const now = new Date();
   const isExpired = market.resolvesOnDate < now;
+  const isResolved =
+    market.onChainStatus === MARKET_STATUS.RESOLVED_YES ||
+    market.onChainStatus === MARKET_STATUS.RESOLVED_NO;
+  const isOpen = market.onChainStatus === MARKET_STATUS.OPEN;
+
+  // Determine badge text and styling
+  const getBadgeContent = () => {
+    if (isResolved) {
+      return {
+        text: market.onChainStatus === MARKET_STATUS.RESOLVED_YES ? "Resolved: YES" : "Resolved: NO",
+        className: "bg-green-500/10 text-green-400 border-green-500/40",
+      };
+    }
+    if (isExpired) {
+      return {
+        text: "Expired",
+        className: "bg-destructive/10 text-destructive border-destructive/40",
+      };
+    }
+    return {
+      text: market.category,
+      className: "",
+    };
+  };
+
+  const badgeContent = getBadgeContent();
 
   return (
     <motion.div
@@ -55,7 +89,7 @@ export function MarketCard({ market }: MarketCardProps) {
         <Card
           className={cn(
             "h-full flex flex-col justify-between border-border/40 bg-card hover:border-primary/20 transition-all duration-300",
-            isExpired && "opacity-60 border-muted-foreground/20 hover:border-muted-foreground/30"
+            (isExpired || isResolved) && "opacity-75 border-muted-foreground/20 hover:border-muted-foreground/30"
           )}
         >
           <div>
@@ -64,10 +98,10 @@ export function MarketCard({ market }: MarketCardProps) {
                 <Badge
                   className={cn(
                     "text-xs font-semibold px-3 py-1",
-                    isExpired && "bg-destructive/10 text-destructive border-destructive/40"
+                    badgeContent.className
                   )}
                 >
-                  {isExpired ? "Expired" : market.category}
+                  {badgeContent.text}
                 </Badge>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <CalendarDays className="h-3.5 w-3.5" />
@@ -95,7 +129,7 @@ export function MarketCard({ market }: MarketCardProps) {
               </div>
 
               {/* Countdown Timer */}
-              {!isExpired && (
+              {!isExpired && !isResolved && (
                 <div className="p-3 bg-muted/40 rounded-lg border border-border/40">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                     <Clock className="h-3.5 w-3.5" />
@@ -110,8 +144,17 @@ export function MarketCard({ market }: MarketCardProps) {
                 </div>
               )}
 
+              {/* Resolved Message */}
+              {isResolved && (
+                <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <div className="text-xs text-green-400 font-medium">
+                    Market has been resolved: {market.onChainStatus === MARKET_STATUS.RESOLVED_YES ? "YES" : "NO"}
+                  </div>
+                </div>
+              )}
+
               {/* Expired Message */}
-              {isExpired && (
+              {isExpired && !isResolved && (
                 <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <div className="text-xs text-destructive font-medium">
                     Market has expired and is awaiting resolution
