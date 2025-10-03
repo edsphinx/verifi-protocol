@@ -14,6 +14,7 @@ import { OracleRegistry } from "@/components/status/OracleRegistry";
 import { DeployedModules } from "@/components/status/DeployedModules";
 import { TappIntegration } from "@/components/status/TappIntegration";
 import { AdminChecklist } from "@/components/status/AdminChecklist";
+import { AdminPanel } from "@/components/admin/AdminPanel";
 
 export function StatusView() {
   return (
@@ -30,6 +31,9 @@ export function StatusView() {
           </AlertDescription>
         </Alert>
       </div>
+
+      {/* Admin Panel */}
+      <AdminPanel />
 
       {/* Oracle Registry */}
       <Card>
