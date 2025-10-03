@@ -215,9 +215,13 @@ export function useCreatePool() {
         queryKey: ["pool-data", variables.marketId],
       });
 
-      // Invalidate market pools list
+      // Invalidate ALL pools queries
       queryClient.invalidateQueries({
-        queryKey: ["market-pools"],
+        queryKey: ["pools"], // Main pools list
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["market-pools"], // Market-specific pools
       });
     },
     onError: (error: Error) => {

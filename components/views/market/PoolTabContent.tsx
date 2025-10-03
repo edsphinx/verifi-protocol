@@ -26,11 +26,19 @@ export function PoolTabContent({
   const [poolExists, setPoolExists] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkPoolExists = async () => {
+  const checkPoolExists = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tapp/pools/by-market/${marketId}`);
+      // Add cache busting if forcing refresh
+      const url = forceRefresh
+        ? `/api/tapp/pools/by-market/${marketId}?t=${Date.now()}`
+        : `/api/tapp/pools/by-market/${marketId}`;
+
+      const response = await fetch(url, {
+        cache: forceRefresh ? 'no-cache' : 'default',
+      });
       setPoolExists(response.ok);
+      console.log(`[PoolTabContent] Pool exists check: ${response.ok}, forceRefresh: ${forceRefresh}`);
     } catch (error) {
       console.error("Error checking pool existence:", error);
       setPoolExists(false);
@@ -91,10 +99,12 @@ export function PoolTabContent({
             yesTokenAddress={yesTokenAddress}
             noTokenAddress={noTokenAddress}
             onPoolCreated={() => {
-              // Wait for indexing then recheck
+              console.log('[PoolTabContent] Pool created callback triggered');
+              // Force refresh immediately, then again after 2s for indexing
+              checkPoolExists(true);
               setTimeout(() => {
-                checkPoolExists();
-              }, 3000);
+                checkPoolExists(true);
+              }, 2000);
             }}
           />
 
