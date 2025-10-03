@@ -108,8 +108,9 @@ export function usePoolData(marketId: string) {
         return await fetchLivePoolData(marketId);
       }
     },
-    // Poll every 5 seconds in LIVE mode, no polling in DEMO
-    refetchInterval: isDemo ? false : 5000,
+    // NO auto-refetch - rely on manual invalidation after transactions
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     staleTime: isDemo ? Infinity : 0,
   });
 }
