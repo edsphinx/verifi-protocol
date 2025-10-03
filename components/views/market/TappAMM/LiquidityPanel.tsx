@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -22,22 +22,30 @@ import {
   useAddLiquidityPreview,
   useRemoveLiquidityPreview,
 } from "@/lib/tapp/hooks/use-liquidity";
+import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import { formatNumber, formatPercentage } from "@/lib/tapp/mock/pool-data";
 
 interface LiquidityPanelProps {
   marketId: string;
-  yesReserve: number;
-  noReserve: number;
-  tradingEnabled: boolean;
+  yesReserve?: number;
+  noReserve?: number;
+  tradingEnabled?: boolean;
 }
 
 export function LiquidityPanel({
   marketId,
-  yesReserve,
-  noReserve,
-  tradingEnabled,
+  yesReserve: initialYesReserve,
+  noReserve: initialNoReserve,
+  tradingEnabled: initialTradingEnabled,
 }: LiquidityPanelProps) {
+  // Fetch live pool data - this will auto-update when refetchQueries is called
+  const { data: poolData } = usePoolData(marketId);
+
+  // Use live data if available, fallback to initial props
+  const yesReserve = poolData?.yesReserve ?? initialYesReserve ?? 0;
+  const noReserve = poolData?.noReserve ?? initialNoReserve ?? 0;
+  const tradingEnabled = poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
   // Add liquidity state
   const [yesAmount, setYesAmount] = useState("");
   const [noAmount, setNoAmount] = useState("");

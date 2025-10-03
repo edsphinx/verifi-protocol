@@ -21,6 +21,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useSwap, useSwapPreview } from "@/lib/tapp/hooks/use-swap";
+import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import {
   formatNumber,
@@ -32,17 +33,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SwapInterfaceProps {
   marketId: string;
-  yesReserve: number;
-  noReserve: number;
-  tradingEnabled: boolean;
+  yesReserve?: number;
+  noReserve?: number;
+  tradingEnabled?: boolean;
 }
 
 export function SwapInterface({
   marketId,
-  yesReserve,
-  noReserve,
-  tradingEnabled,
+  yesReserve: initialYesReserve,
+  noReserve: initialNoReserve,
+  tradingEnabled: initialTradingEnabled,
 }: SwapInterfaceProps) {
+  // Fetch live pool data - this will auto-update when refetchQueries is called
+  const { data: poolData } = usePoolData(marketId);
+
+  // Use live data if available, fallback to initial props
+  const yesReserve = poolData?.yesReserve ?? initialYesReserve ?? 0;
+  const noReserve = poolData?.noReserve ?? initialNoReserve ?? 0;
+  const tradingEnabled = poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
+
   const [amountIn, setAmountIn] = useState("");
   const [yesToNo, setYesToNo] = useState(true);
   const [slippageTolerance, setSlippageTolerance] = useState(0.5); // 0.5%
@@ -105,6 +114,23 @@ export function SwapInterface({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Pool Liquidity Info */}
+        {(yesReserve > 0 || noReserve > 0) && (
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Pool Liquidity</div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">YES:</span>{" "}
+                <span className="font-semibold text-green-600">{formatNumber(yesReserve, 0)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">NO:</span>{" "}
+                <span className="font-semibold text-red-600">{formatNumber(noReserve, 0)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Trading Status Warning */}
         {!tradingEnabled && (
           <Alert variant="destructive">

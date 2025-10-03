@@ -25,14 +25,23 @@ import {
   calculatePoolPrice,
   calculateAPY,
 } from "@/lib/tapp/mock/pool-data";
+import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 
 interface PoolOverviewProps {
-  data: PoolData;
+  marketId: string;
+  data?: PoolData;
   isLoading?: boolean;
 }
 
-export function PoolOverview({ data, isLoading = false }: PoolOverviewProps) {
-  if (isLoading) {
+export function PoolOverview({ marketId, data: initialData, isLoading: initialLoading = false }: PoolOverviewProps) {
+  // Fetch live pool data - this will auto-update when refetchQueries is called
+  const { data: poolData, isLoading: isLoadingLive } = usePoolData(marketId);
+
+  // Use live data if available, fallback to initial props
+  const data = poolData ?? initialData;
+  const isLoading = isLoadingLive || initialLoading;
+
+  if (isLoading || !data) {
     return <PoolOverviewSkeleton />;
   }
 
