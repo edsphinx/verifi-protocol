@@ -93,17 +93,23 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            No liquidity pool exists for this market yet. Be the first to provide liquidity on Tapp Exchange!
+            No AMM pool exists for this market yet. Create one to enable automated trading.
           </p>
-          <Button variant="outline" className="w-full" asChild>
-            <a
-              href={`https://tapp.exchange/pool/create?market=${marketAddress}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Create Pool on Tapp
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </a>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              // Scroll to tabs and click "Add Liquidity" tab
+              const tabs = document.querySelector('[role="tablist"]');
+              const liquidityTab = document.querySelector('[value="liquidity"]') as HTMLButtonElement;
+              if (tabs && liquidityTab) {
+                tabs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => liquidityTab.click(), 500);
+              }
+            }}
+          >
+            Create Pool
+            <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
         </CardContent>
       </Card>
@@ -126,7 +132,7 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
               <Droplet className="h-3 w-3" />
               Total Liquidity
             </p>
-            <p className="text-2xl font-bold font-mono">
+            <p className="text-xl font-bold font-mono">
               {poolData.liquidity.toLocaleString(undefined, {
                 maximumFractionDigits: 2
               })} APT
@@ -138,7 +144,7 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
               <TrendingUp className="h-3 w-3" />
               24h Volume
             </p>
-            <p className="text-2xl font-bold font-mono">
+            <p className="text-xl font-bold font-mono">
               {poolData.volume24h.toLocaleString(undefined, {
                 maximumFractionDigits: 2
               })} APT

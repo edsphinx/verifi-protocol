@@ -22,7 +22,7 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
 
   return (
     <Card className="w-full overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 hover:border-primary/40 transition-all duration-300">
-      <div className="grid md:grid-cols-[1.2fr_1fr] gap-6">
+      <div className="grid md:grid-cols-[1.2fr_1fr] gap-4">
         {/* Left: Market Info */}
         <div className="p-6 md:p-8 flex flex-col justify-between">
           <div className="space-y-4">
@@ -37,7 +37,7 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             </div>
 
             <CardHeader className="p-0">
-              <CardTitle className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+              <CardTitle className="text-xl md:text-2xl font-semibold tracking-tight leading-tight">
                 {market.title}
               </CardTitle>
             </CardHeader>
@@ -95,7 +95,7 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">YES</span>
-                <span className="text-2xl font-bold font-mono text-green-400">
+                <span className="text-xl font-bold font-mono text-green-400">
                   {yesProbability}%
                 </span>
               </div>
@@ -111,7 +111,7 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">NO</span>
-                <span className="text-2xl font-bold font-mono text-red-400">
+                <span className="text-xl font-bold font-mono text-red-400">
                   {noProbability}%
                 </span>
               </div>

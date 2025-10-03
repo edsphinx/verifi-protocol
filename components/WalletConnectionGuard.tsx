@@ -38,11 +38,11 @@ export function WalletConnectionGuard({ children }: { children: React.ReactNode 
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <div className="relative">
-                <Wallet className="h-16 w-16 text-primary" />
-                <AlertCircle className="h-6 w-6 text-destructive absolute -top-1 -right-1" />
+                <Wallet className="h-12 w-12 text-primary" />
+                <AlertCircle className="h-5 w-5 text-destructive absolute -top-1 -right-1" />
               </div>
             </div>
-            <CardTitle className="text-2xl">Wallet Disconnected</CardTitle>
+            <CardTitle className="text-xl font-semibold">Wallet Disconnected</CardTitle>
             <CardDescription className="text-base">
               Your wallet connection was lost. Please reconnect to continue using VeriFi Protocol.
             </CardDescription>

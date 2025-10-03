@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ActionPanel } from "@/components/views/market/ActionPanel";
 import { PoolSection } from "@/components/tapp/PoolSection";
-import { SwapInterface } from "@/components/views/market/TappAMM/SwapInterface";
-import { LiquidityPanel } from "@/components/views/market/TappAMM/LiquidityPanel";
+import { SwapTabContent } from "@/components/views/market/SwapTabContent";
+import { PoolTabContent } from "@/components/views/market/PoolTabContent";
 import { TappPoolStats } from "@/components/TappPoolStats";
 import { TrendingUp, Users, BarChart3 } from "lucide-react";
 
@@ -53,7 +53,7 @@ export function MarketView({ marketId }: { marketId: string }) {
         <Badge className="text-xs font-semibold px-3 py-1">
           {staticMarketData.category}
         </Badge>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+        <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight">
           {staticMarketData.title}
         </h1>
 
@@ -91,7 +91,7 @@ export function MarketView({ marketId }: { marketId: string }) {
           </TabsContent>
 
           <TabsContent value="swap" className="mt-0">
-            <SwapInterface
+            <SwapTabContent
               marketId={marketId}
               yesReserve={details.poolYes}
               noReserve={details.poolNo}
@@ -100,8 +100,10 @@ export function MarketView({ marketId }: { marketId: string }) {
           </TabsContent>
 
           <TabsContent value="liquidity" className="mt-0">
-            <LiquidityPanel
+            <PoolTabContent
               marketId={marketId}
+              yesTokenAddress={details.yesTokenAddress}
+              noTokenAddress={details.noTokenAddress}
               yesReserve={details.poolYes}
               noReserve={details.poolNo}
               tradingEnabled={details.status === 0}
@@ -117,7 +119,7 @@ export function MarketView({ marketId }: { marketId: string }) {
           <h2 className="text-lg font-semibold">Market Details</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Tapp Pool Stats */}
           <TappPoolStats marketAddress={marketId} />
 
