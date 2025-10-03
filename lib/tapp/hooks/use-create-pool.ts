@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
 import { useTappMode } from "../context/TappModeContext";
+import { NETWORK } from "@/aptos/constants";
+import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 
 interface CreatePoolParams {
   marketId: string;
@@ -181,8 +183,15 @@ export function useCreatePool() {
       }
     },
     onSuccess: async (data, variables) => {
-      toast.success("AMM Pool created successfully!", {
-        description: `Pool address: ${data.poolAddress.slice(0, 10)}...`,
+      const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
+
+      toast.success("Pool created successfully!", {
+        description: `AMM pool ready for trading\n\nView transaction: ${truncateHash(data.txHash)}`,
+        action: {
+          label: "View TX",
+          onClick: () => window.open(explorerLink, "_blank"),
+        },
+        duration: 15000, // 15 seconds to give time to click
       });
 
       // Save pool to database
@@ -210,9 +219,16 @@ export function useCreatePool() {
         console.error("[useCreatePool] Error saving pool to database:", error);
       }
 
-      // Invalidate relevant queries
+      // Invalidate relevant queries - use partial matching to catch all modes
       queryClient.invalidateQueries({
         queryKey: ["pool-data", variables.marketId],
+        exact: false, // Match all queries with this prefix
+      });
+
+      // Also invalidate pool-exists query
+      queryClient.invalidateQueries({
+        queryKey: ["pool-exists", variables.marketId],
+        exact: false,
       });
 
       // Invalidate ALL pools queries

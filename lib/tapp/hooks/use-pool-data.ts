@@ -7,39 +7,69 @@ import { aptosClient } from "@/aptos/client";
 import { TAPP_HOOK_MODULE, TAPP_FUNCTIONS } from "../constants";
 
 /**
+ * Fetches user's liquidity positions for a specific pool
+ * Uses localStorage for persistence until we implement blockchain fetching
+ */
+async function fetchUserPositions(
+  poolAddress: string,
+  userAddress: string,
+  marketId: string
+): Promise<any[]> {
+  try {
+    console.log(`[fetchUserPositions] Fetching positions for user: ${userAddress}, pool: ${poolAddress}`);
+
+    // Load positions from localStorage
+    try {
+      const storageKey = `tapp_positions_${marketId}_${userAddress}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const positions = JSON.parse(stored);
+        console.log(`[fetchUserPositions] Loaded ${positions.length} positions from localStorage`);
+        return positions;
+      }
+    } catch (error) {
+      console.error('[fetchUserPositions] Failed to load from localStorage:', error);
+    }
+
+    // TODO: Implement proper blockchain fetching
+    // For now, return empty array if nothing in localStorage
+    console.log(`[fetchUserPositions] No positions found in localStorage`);
+    return [];
+
+  } catch (error) {
+    console.error("[fetchUserPositions] Error:", error);
+    return [];
+  }
+}
+
+/**
  * Fetches live pool data from the blockchain
  */
-async function fetchLivePoolData(marketId: string): Promise<PoolData> {
+async function fetchLivePoolData(marketId: string, userAddress?: string): Promise<PoolData> {
 
-  // Get market details to find YES/NO tokens
-  const market = await aptosClient().getAccountResource({
-    accountAddress: marketId,
-    resourceType: `${process.env.NEXT_PUBLIC_MODULE_ADDRESS}::verifi_protocol::Market`,
-  });
+  // First, get pool address from database
+  const poolDbResponse = await fetch(`/api/tapp/pools/by-market/${marketId}`);
 
-  const marketData = market.data as any;
-  const yesTokenAddr = marketData.yes_token_metadata.inner;
-  const noTokenAddr = marketData.no_token_metadata.inner;
+  if (!poolDbResponse.ok) {
+    throw new Error(
+      `Pool not found for market ${marketId}. Create a pool first.`,
+    );
+  }
 
-  // Calculate deterministic pool address using pool_seed
-  // In Tapp, pool address is derived from seed
-  // For now, we'll try to get it from a registry or use a known pattern
-  // TODO: Implement proper pool address derivation
-  const poolAddress = marketId; // Placeholder - needs proper implementation
+  const poolDb = await poolDbResponse.json();
+  const poolAddress = poolDb.poolAddress;
+
+  if (!poolAddress || poolAddress === 'unknown') {
+    throw new Error(
+      `Invalid pool address for market ${marketId}. Pool may not be properly indexed.`,
+    );
+  }
+
+  console.log(`[fetchLivePoolData] Using pool address: ${poolAddress} for market: ${marketId}`);
 
   try {
-    // Fetch pool reserves
-    const reserves = await aptosClient().view({
-      payload: {
-        function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_RESERVES}` as `${string}::${string}::${string}`,
-        typeArguments: [],
-        functionArguments: [poolAddress],
-      },
-    });
-
-    const [reserveYes, reserveNo] = reserves as [string, string];
-
-    // Fetch pool stats
+    // Fetch pool stats (includes reserves, fees, position count, trading status)
+    console.log(`[fetchLivePoolData] Fetching pool stats for: ${poolAddress}`);
     const stats = await aptosClient().view({
       payload: {
         function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.GET_POOL_STATS}` as `${string}::${string}::${string}`,
@@ -48,7 +78,8 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
       },
     });
 
-    const [, , feeYes, feeNo, positionCount, isTrading] = stats as [
+    console.log(`[fetchLivePoolData] Raw stats:`, stats);
+    const [reserveYes, reserveNo, feeYes, feeNo, positionCount, isTrading] = stats as [
       string,
       string,
       string,
@@ -56,6 +87,9 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
       string,
       boolean,
     ];
+
+    console.log(`[fetchLivePoolData] Reserves: YES=${reserveYes}, NO=${reserveNo}`);
+    console.log(`[fetchLivePoolData] Trading enabled: ${isTrading}`);
 
     // Fetch current fee
     const currentFeeResult = await aptosClient().view({
@@ -68,7 +102,13 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
 
     const currentFee = Number(currentFeeResult[0]);
 
-    return {
+    // Fetch user positions if user is connected
+    let positions = [];
+    if (userAddress) {
+      positions = await fetchUserPositions(poolAddress, userAddress, marketId);
+    }
+
+    const poolData = {
       poolAddress,
       marketAddress: marketId,
       yesReserve: Number(reserveYes),
@@ -80,13 +120,23 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
       tradingEnabled: isTrading,
       createdAt: 0, // TODO: From pool creation event
       lastUpdated: Date.now(),
-      positions: [], // TODO: Fetch actual positions
+      positions,
       priceHistory: [], // TODO: Fetch from indexer
     };
-  } catch (error) {
-    console.error("Error fetching live pool data:", error);
+
+    console.log('[fetchLivePoolData] Final pool data:', poolData);
+    return poolData;
+  } catch (error: any) {
+    console.error("[fetchLivePoolData] Error fetching live pool data:", error);
+    console.error("[fetchLivePoolData] Error message:", error?.message);
+    console.error("[fetchLivePoolData] Error details:", {
+      poolAddress,
+      marketId,
+      hookModule: TAPP_HOOK_MODULE,
+      error: error
+    });
     throw new Error(
-      `Pool not found for market ${marketId}. Make sure a pool has been created for this market.`,
+      `Pool not found for market ${marketId}. Error: ${error?.message || 'Unknown error'}`,
     );
   }
 }
@@ -94,23 +144,24 @@ async function fetchLivePoolData(marketId: string): Promise<PoolData> {
 /**
  * Hook to get pool data (mock or live based on mode)
  */
-export function usePoolData(marketId: string) {
+export function usePoolData(marketId: string, userAddress?: string) {
   const { isDemo } = useTappMode();
 
   return useQuery({
-    queryKey: ["pool-data", marketId, isDemo ? "demo" : "live"],
+    queryKey: ["pool-data", marketId, userAddress, isDemo ? "demo" : "live"],
     queryFn: async () => {
       if (isDemo) {
         // Return mock data in DEMO mode
         return generateMockPoolData(marketId);
       } else {
         // Fetch live data in LIVE mode
-        return await fetchLivePoolData(marketId);
+        return await fetchLivePoolData(marketId, userAddress);
       }
     },
-    // NO auto-refetch - rely on manual invalidation after transactions
+    // In live mode, allow refetch on mount to catch recent pool creation
+    // In demo mode, cache indefinitely
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: !isDemo, // Refetch on mount in live mode
     staleTime: isDemo ? Infinity : 0,
   });
 }

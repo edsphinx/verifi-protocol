@@ -13,8 +13,9 @@ export const BASIS_POINTS_DIVISOR = 10000;
 
 /**
  * Minimum liquidity to prevent division by zero
+ * This is locked forever in the pool to ensure liquidity can never be fully drained
  */
-export const MINIMUM_LIQUIDITY = 1000;
+export const MINIMUM_LIQUIDITY = 0.001; // Very small amount, equivalent to 10^5 in on-chain units (10^8 decimals)
 
 /**
  * Maximum slippage tolerance (in percentage)

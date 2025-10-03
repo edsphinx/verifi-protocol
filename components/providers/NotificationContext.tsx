@@ -53,10 +53,17 @@ export function NotificationProvider({
       }
 
       const response = await fetch(`/api/notifications?${params}`);
+
+      // Check if response is OK before parsing JSON
+      if (!response.ok) {
+        console.warn(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
+        return; // Exit early, don't crash
+      }
+
       const data = await response.json();
 
       // Check for new notifications to show toast
-      if (data.notifications.length > 0) {
+      if (data.notifications && data.notifications.length > 0) {
         const latestNotification = data.notifications[0];
         if (
           lastNotificationId &&

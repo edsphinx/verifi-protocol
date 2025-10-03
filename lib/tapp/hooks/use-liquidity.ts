@@ -57,13 +57,15 @@ function serializeAddLiquidityArgs(
   parts.push(new Uint8Array([0])); // None - no existing position
 
   // 3. Serialize amount_yes as u64 (little-endian)
+  // YES/NO tokens have 6 decimals, so multiply by 10^6
   const yesBytes = new ArrayBuffer(8);
-  new DataView(yesBytes).setBigUint64(0, BigInt(Math.floor(amountYes)), true);
+  new DataView(yesBytes).setBigUint64(0, BigInt(Math.floor(amountYes * 1_000_000)), true);
   parts.push(new Uint8Array(yesBytes));
 
   // 4. Serialize amount_no as u64 (little-endian)
+  // YES/NO tokens have 6 decimals, so multiply by 10^6
   const noBytes = new ArrayBuffer(8);
-  new DataView(noBytes).setBigUint64(0, BigInt(Math.floor(amountNo)), true);
+  new DataView(noBytes).setBigUint64(0, BigInt(Math.floor(amountNo * 1_000_000)), true);
   parts.push(new Uint8Array(noBytes));
 
   // 5. Serialize min_lp_tokens as u64 (little-endian)
@@ -113,7 +115,8 @@ async function executeAddLiquidity(
   console.log('[useAddLiquidity] Using pool address:', poolAddress);
 
   // Calculate minimum LP tokens (allow 0.5% slippage)
-  const minLpTokens = Math.floor(Math.sqrt(params.yesAmount * params.noAmount) * 0.995);
+  // LP tokens also have 6 decimals
+  const minLpTokens = Math.floor(Math.sqrt(params.yesAmount * params.noAmount) * 0.995 * 1_000_000);
 
   // Serialize add liquidity arguments
   const liquidityArgs = serializeAddLiquidityArgs(
@@ -248,21 +251,108 @@ export function useAddLiquidity() {
     },
     onSuccess: (data, variables) => {
       const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
-      const message = `Position: ${data.positionIdx}, LP Tokens: ${data.lpTokens.toFixed(2)}`;
 
       toast.success("Liquidity added successfully!", {
-        description: `${message}\n\nView transaction: ${truncateHash(data.txHash)}`,
+        description: `Added ${variables.yesAmount.toFixed(2)} YES + ${variables.noAmount.toFixed(2)} NO tokens\n\nView transaction: ${truncateHash(data.txHash)}`,
         action: {
           label: "View TX",
           onClick: () => window.open(explorerLink, "_blank"),
         },
-        duration: 10000,
+        duration: 15000, // 15 seconds to give time to click
       });
 
-      // Force refetch immediately after adding liquidity
-      queryClient.refetchQueries({
-        queryKey: ["pool-data", variables.marketId],
-      });
+      // Optimistically update the query cache with the new position
+      if (!isDemo && account?.address) {
+        const userAddress = account.address.toString();
+
+        // Update the query with userAddress included in the key
+        queryClient.setQueryData(
+          ["pool-data", variables.marketId, userAddress, "live"],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+
+            console.log('[useAddLiquidity] Optimistically updating cache with new position');
+            console.log('[useAddLiquidity] Old positions:', oldData.positions);
+
+            // Calculate new reserves (in on-chain format: multiply by 10^6)
+            const newYesReserve = oldData.yesReserve + (variables.yesAmount * 1_000_000);
+            const newNoReserve = oldData.noReserve + (variables.noAmount * 1_000_000);
+
+            // Calculate total LP supply in display format for UI consistency
+            const newTotalLpSupplyDisplay = Math.sqrt((newYesReserve / 1_000_000) * (newNoReserve / 1_000_000));
+
+            // Create a new position object from the transaction result
+            // Store lpTokens in display format to match how UI components expect it
+            const newPosition = {
+              positionId: data.positionIdx,
+              owner: userAddress,
+              lpTokens: data.lpTokens, // Keep in display format for UI
+              yesAmount: variables.yesAmount,
+              noAmount: variables.noAmount,
+              shareOfPool: (data.lpTokens / newTotalLpSupplyDisplay) * 100,
+              valueUSD: variables.yesAmount + variables.noAmount,
+              createdAt: Date.now(),
+            };
+
+            console.log('[useAddLiquidity] New position:', newPosition);
+
+            // Store position in localStorage for persistence across page reloads
+            try {
+              const storageKey = `tapp_positions_${variables.marketId}_${userAddress}`;
+              const existingPositions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+              existingPositions.push(newPosition);
+              localStorage.setItem(storageKey, JSON.stringify(existingPositions));
+              console.log('[useAddLiquidity] Saved position to localStorage');
+            } catch (error) {
+              console.error('[useAddLiquidity] Failed to save to localStorage:', error);
+            }
+
+            // Add the new position to the positions array and update reserves
+            const updatedData = {
+              ...oldData,
+              yesReserve: newYesReserve,
+              noReserve: newNoReserve,
+              totalLiquidity: newYesReserve + newNoReserve,
+              positions: [...(oldData.positions || []), newPosition],
+            };
+
+            console.log('[useAddLiquidity] Updated positions:', updatedData.positions);
+
+            return updatedData;
+          }
+        );
+      }
+
+      // Don't refetch immediately - let the optimistic update stay
+      // The user will see their position immediately
+      // We'll only refetch after a delay to get fresh reserves
+      setTimeout(() => {
+        if (!isDemo && account?.address) {
+          const userAddress = account.address.toString();
+          const currentData = queryClient.getQueryData(["pool-data", variables.marketId, userAddress, "live"]) as any;
+
+          // Refetch to get fresh reserves but preserve the optimistic positions
+          queryClient.refetchQueries({
+            queryKey: ["pool-data", variables.marketId, userAddress, "live"],
+            exact: true,
+          }).then(() => {
+            // After refetch, merge back the optimistic position if it's not in the fetched data
+            const newData = queryClient.getQueryData(["pool-data", variables.marketId, userAddress, "live"]) as any;
+            if (newData && currentData?.positions) {
+              // If the refetched data has empty positions, keep our optimistic ones
+              if (!newData.positions || newData.positions.length === 0) {
+                queryClient.setQueryData(
+                  ["pool-data", variables.marketId, userAddress, "live"],
+                  {
+                    ...newData,
+                    positions: currentData.positions,
+                  }
+                );
+              }
+            }
+          });
+        }
+      }, 2000);
     },
     onError: (error: Error) => {
       toast.error("Add liquidity failed", {
@@ -293,12 +383,20 @@ export function useRemoveLiquidity() {
       }
     },
     onSuccess: (data, variables) => {
+      const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
+
       toast.success("Liquidity removed successfully!", {
-        description: `Received: ${data.yesAmount.toFixed(2)} YES + ${data.noAmount.toFixed(2)} NO`,
+        description: `Received ${data.yesAmount.toFixed(2)} YES + ${data.noAmount.toFixed(2)} NO tokens\n\nView transaction: ${truncateHash(data.txHash)}`,
+        action: {
+          label: "View TX",
+          onClick: () => window.open(explorerLink, "_blank"),
+        },
+        duration: 15000, // 15 seconds to give time to click
       });
 
       queryClient.invalidateQueries({
         queryKey: ["pool-data", variables.marketId],
+        exact: false, // Match all queries with this prefix
       });
     },
     onError: (error: Error) => {

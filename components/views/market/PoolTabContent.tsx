@@ -20,8 +20,11 @@ export function PoolTabContent({
   yesTokenAddress,
   noTokenAddress,
 }: PoolTabContentProps) {
+  // ALL HOOKS MUST BE AT THE TOP - Rules of Hooks
   const [poolExists, setPoolExists] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { account } = useWallet();
+  const { data: poolData } = usePoolData(marketId);
 
   const checkPoolExists = async (forceRefresh = false) => {
     setIsLoading(true);
@@ -114,9 +117,6 @@ export function PoolTabContent({
   }
 
   // Pool exists, show add liquidity interface + user positions
-  const { account } = useWallet();
-  const { data: poolData } = usePoolData(marketId);
-
   // Filter positions for current user
   const userPositions = poolData?.positions?.filter(
     (p) => account?.address && p.owner.toLowerCase() === account.address.toString().toLowerCase()

@@ -53,13 +53,15 @@ function serializeSwapArgs(
   parts.push(new Uint8Array([yesToNo ? 1 : 0]));
 
   // 3. Serialize amount_in as u64 (little-endian)
+  // YES/NO tokens have 6 decimals, so multiply by 10^6
   const inBytes = new ArrayBuffer(8);
-  new DataView(inBytes).setBigUint64(0, BigInt(Math.floor(amountIn)), true);
+  new DataView(inBytes).setBigUint64(0, BigInt(Math.floor(amountIn * 1_000_000)), true);
   parts.push(new Uint8Array(inBytes));
 
   // 4. Serialize min_amount_out as u64 (little-endian)
+  // YES/NO tokens have 6 decimals, so multiply by 10^6
   const outBytes = new ArrayBuffer(8);
-  new DataView(outBytes).setBigUint64(0, BigInt(Math.floor(minAmountOut)), true);
+  new DataView(outBytes).setBigUint64(0, BigInt(Math.floor(minAmountOut * 1_000_000)), true);
   parts.push(new Uint8Array(outBytes));
 
   // Concatenate all parts
@@ -167,15 +169,15 @@ export function useSwap() {
     },
     onSuccess: (data, variables) => {
       const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
-      const message = `Amount out: ${data.amountOut.toFixed(4)} tokens`;
+      const direction = variables.yesToNo ? "YES → NO" : "NO → YES";
 
       toast.success("Swap successful!", {
-        description: `${message}\n\nView transaction: ${truncateHash(data.txHash)}`,
+        description: `Swapped ${direction}: received ${data.amountOut.toFixed(4)} tokens\n\nView transaction: ${truncateHash(data.txHash)}`,
         action: {
           label: "View TX",
           onClick: () => window.open(explorerLink, "_blank"),
         },
-        duration: 10000,
+        duration: 15000, // 15 seconds to give time to click
       });
 
       // Force refetch immediately after swap
