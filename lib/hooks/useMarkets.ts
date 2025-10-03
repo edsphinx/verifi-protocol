@@ -56,6 +56,18 @@ export function useMarkets() {
       try {
         const statusPromises = markets.map(async (market) => {
           try {
+            // Validate market ID is a valid hex address (0x followed by 64 hex chars)
+            const isValidAddress = /^0x[a-fA-F0-9]{64}$/.test(market.id);
+            if (!isValidAddress) {
+              console.warn(`[useMarkets] Invalid market ID format: ${market.id}, skipping on-chain check`);
+              const now = new Date();
+              const isExpired = market.resolvesOnDate < now;
+              return {
+                ...market,
+                onChainStatus: isExpired ? MARKET_STATUS.CLOSED : MARKET_STATUS.OPEN,
+              };
+            }
+
             const [status] = await aptosClient().view<[string]>({
               payload: {
                 function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state`,
