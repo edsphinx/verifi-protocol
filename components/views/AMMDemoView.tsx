@@ -47,25 +47,13 @@ export function AMMDemoView() {
       )}
 
       {/* Pool Overview */}
-      {poolData && <PoolOverview data={poolData} isLoading={isLoading} />}
+      <PoolOverview marketId={mockMarketId} data={poolData} isLoading={isLoading} />
 
       {/* Swap and Liquidity Panels */}
-      {poolData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SwapInterface
-            marketId={mockMarketId}
-            yesReserve={poolData.yesReserve}
-            noReserve={poolData.noReserve}
-            tradingEnabled={poolData.tradingEnabled}
-          />
-          <LiquidityPanel
-            marketId={mockMarketId}
-            yesReserve={poolData.yesReserve}
-            noReserve={poolData.noReserve}
-            tradingEnabled={poolData.tradingEnabled}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SwapInterface marketId={mockMarketId} />
+        <LiquidityPanel marketId={mockMarketId} />
+      </div>
 
       {/* Data Inspector (only in demo mode) */}
       {isDemo && poolData && (

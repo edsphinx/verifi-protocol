@@ -8,17 +8,9 @@ import { Button } from "@/components/ui/button";
 
 interface SwapTabContentProps {
   marketId: string;
-  yesReserve: number;
-  noReserve: number;
-  tradingEnabled: boolean;
 }
 
-export function SwapTabContent({
-  marketId,
-  yesReserve,
-  noReserve,
-  tradingEnabled,
-}: SwapTabContentProps) {
+export function SwapTabContent({ marketId }: SwapTabContentProps) {
   const [poolData, setPoolData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -148,12 +140,5 @@ export function SwapTabContent({
   }
 
   // Pool exists and has liquidity, show swap interface
-  return (
-    <SwapInterface
-      marketId={marketId}
-      yesReserve={yesReserve}
-      noReserve={noReserve}
-      tradingEnabled={tradingEnabled}
-    />
-  );
+  return <SwapInterface marketId={marketId} />;
 }

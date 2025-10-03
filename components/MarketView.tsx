@@ -91,12 +91,7 @@ export function MarketView({ marketId }: { marketId: string }) {
           </TabsContent>
 
           <TabsContent value="swap" className="mt-0">
-            <SwapTabContent
-              marketId={marketId}
-              yesReserve={details.poolYes}
-              noReserve={details.poolNo}
-              tradingEnabled={details.status === 0}
-            />
+            <SwapTabContent marketId={marketId} />
           </TabsContent>
 
           <TabsContent value="liquidity" className="mt-0">
@@ -104,9 +99,6 @@ export function MarketView({ marketId }: { marketId: string }) {
               marketId={marketId}
               yesTokenAddress={details.yesTokenAddress}
               noTokenAddress={details.noTokenAddress}
-              yesReserve={details.poolYes}
-              noReserve={details.poolNo}
-              tradingEnabled={details.status === 0}
             />
           </TabsContent>
         </Tabs>

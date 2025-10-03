@@ -2,26 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { LiquidityPanel } from "./TappAMM/LiquidityPanel";
+import { LiquidityPositions } from "./TappAMM/LiquidityPositions";
 import { CreatePoolButton } from "@/components/tapp/CreatePoolButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Droplet } from "lucide-react";
+import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 interface PoolTabContentProps {
   marketId: string;
   yesTokenAddress: string;
   noTokenAddress: string;
-  yesReserve: number;
-  noReserve: number;
-  tradingEnabled: boolean;
 }
 
 export function PoolTabContent({
   marketId,
   yesTokenAddress,
   noTokenAddress,
-  yesReserve,
-  noReserve,
-  tradingEnabled,
 }: PoolTabContentProps) {
   const [poolExists, setPoolExists] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,13 +113,29 @@ export function PoolTabContent({
     );
   }
 
-  // Pool exists, show add liquidity interface
+  // Pool exists, show add liquidity interface + user positions
+  const { account } = useWallet();
+  const { data: poolData } = usePoolData(marketId);
+
+  // Filter positions for current user
+  const userPositions = poolData?.positions?.filter(
+    (p) => account?.address && p.owner.toLowerCase() === account.address.toString().toLowerCase()
+  ) || [];
+
+  const totalLpSupply = Math.sqrt((poolData?.yesReserve || 0) * (poolData?.noReserve || 0));
+
   return (
-    <LiquidityPanel
-      marketId={marketId}
-      yesReserve={yesReserve}
-      noReserve={noReserve}
-      tradingEnabled={tradingEnabled}
-    />
+    <div className="space-y-6">
+      <LiquidityPanel marketId={marketId} />
+
+      {account && (
+        <LiquidityPositions
+          positions={userPositions}
+          totalLpSupply={totalLpSupply}
+          yesReserve={poolData?.yesReserve || 0}
+          noReserve={poolData?.noReserve || 0}
+        />
+      )}
+    </div>
   );
 }
