@@ -20,6 +20,7 @@
     "test:oracle-integration": "ts-node --project tsconfig.scripts.json scripts/move/test-oracle-integration.ts",
     "test:tapp-amm": "ts-node --project tsconfig.scripts.json scripts/move/test-tapp-amm.ts",
     "test:tapp-integration": "ts-node --project tsconfig.scripts.json scripts/move/test-tapp-integration.ts",
+    "test:redeem": "ts-node --project tsconfig.scripts.json scripts/move/test-redeem-flow.ts",
     "// === SETUP & CONFIGURATION ===": "",
     "setup:oracles": "ts-node --project tsconfig.scripts.json scripts/move/setup-register-oracles.ts",
     "setup:tapp-oracle": "ts-node --project tsconfig.scripts.json scripts/move/setup-register-tapp-oracle.ts",

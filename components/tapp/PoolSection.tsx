@@ -26,23 +26,27 @@ export function PoolSection({
   const [pool, setPool] = useState<TappPool | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPool = async () => {
-      try {
-        const response = await fetch(
-          `/api/tapp/pools/by-market/${marketAddress}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setPool(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch pool:", error);
-      } finally {
-        setIsLoading(false);
+  const fetchPool = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/tapp/pools/by-market/${marketAddress}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setPool(data);
+      } else {
+        setPool(null);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch pool:", error);
+      setPool(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPool();
   }, [marketAddress]);
 
@@ -71,11 +75,10 @@ export function PoolSection({
               yesTokenAddress={yesTokenAddress}
               noTokenAddress={noTokenAddress}
               onPoolCreated={() => {
-                // Refetch pool after creation
-                setIsLoading(true);
+                // Refetch pool after creation with delay for indexing
                 setTimeout(() => {
-                  setIsLoading(false);
-                }, 2000);
+                  fetchPool();
+                }, 3000);
               }}
             />
           </CardHeader>

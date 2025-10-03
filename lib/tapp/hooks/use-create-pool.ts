@@ -180,10 +180,35 @@ export function useCreatePool() {
         );
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       toast.success("AMM Pool created successfully!", {
         description: `Pool address: ${data.poolAddress.slice(0, 10)}...`,
       });
+
+      // Save pool to database
+      try {
+        const response = await fetch(
+          `/api/tapp/pools/by-market/${variables.marketId}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              poolAddress: data.poolAddress,
+              yesTokenAddress: variables.yesTokenAddress,
+              noTokenAddress: variables.noTokenAddress,
+              creatorAddress: account?.address?.toString() || data.poolAddress,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("[useCreatePool] Pool saved to database");
+        } else {
+          console.warn("[useCreatePool] Failed to save pool to database");
+        }
+      } catch (error) {
+        console.error("[useCreatePool] Error saving pool to database:", error);
+      }
 
       // Invalidate relevant queries
       queryClient.invalidateQueries({
