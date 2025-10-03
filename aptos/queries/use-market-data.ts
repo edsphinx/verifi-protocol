@@ -13,45 +13,25 @@ async function getFungibleAssetBalance({
   assetType: string;
 }) {
   try {
-    const _resource = await aptosClient().getAccountResource({
-      accountAddress: owner,
-      resourceType: `0x1::fungible_asset::FungibleStore`,
-      options: {
-        ledgerVersion: await aptosClient()
-          .getLedgerInfo()
-          .then((info) => BigInt(info.ledger_version)),
+    console.log(`[getFungibleAssetBalance] Fetching balance for owner: ${owner.toString()}, asset: ${assetType}`);
+
+    // Use the primary_fungible_store::balance view function
+    // Signature: balance<T: key>(account: address, metadata: Object<T>): u64
+    const balance = await aptosClient().view({
+      payload: {
+        function: "0x1::primary_fungible_store::balance" as `${string}::${string}::${string}`,
+        typeArguments: ["0x1::fungible_asset::Metadata"],
+        functionArguments: [owner.toString(), assetType],
       },
-      // Pass the asset type as a generic type argument
-      // Note: This feature might require the latest SDK versions or custom client setup.
-      // If this doesn't work out of the box, we might need a view function.
-      // For now, we assume this works as a placeholder for fetching FA balance.
     });
 
-    // Placeholder logic - a real implementation would parse the resource data
-    // to find the balance for the specific `assetType`.
-    // This part is complex without a direct SDK method, so we will simulate it.
-    // In a real app, a view function in your contract is the BEST way to get this.
-
-    // For the purpose of this MVP, let's return a mock value but show the structure.
-    console.log(`Simulating fetch for asset type: ${assetType}`);
-    if (assetType.includes("vYES")) return 50 * 10 ** 8; // 50 YES shares
-    if (assetType.includes("vNO")) return 10 * 10 ** 8; // 10 NO shares
-
-    return 0;
+    const balanceValue = Number(balance[0]);
+    console.log(`[getFungibleAssetBalance] Balance (raw): ${balanceValue}`);
+    return balanceValue; // Return raw value, will be converted in the component
   } catch (error) {
     // An error likely means the user doesn't have a FungibleStore for this asset yet, so balance is 0.
-    // We need to check if the error is an instance of a type that has a 'status' property.
-    // For now, we'll assume a generic error and check for a 404-like message if direct status isn't available.
-    if (error instanceof Error && (error as any).status === 404) {
-      return 0; // Return 0 if resource not found
-    } else {
-      console.error(
-        `Failed to fetch fungible asset balance for ${assetType}:`,
-        error,
-      );
-      // Re-throw the error if it's not a 404, so the query can handle it.
-      throw error;
-    }
+    console.log(`[getFungibleAssetBalance] Error (likely no balance):`, error);
+    return 0;
   }
 }
 

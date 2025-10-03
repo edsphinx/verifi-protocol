@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { aptosClient } from "@/aptos/client";
 import { NETWORK } from "@/aptos/constants";
+import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,36 +22,17 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [sellNoAmount, setSellNoAmount] = useState("");
   const { signAndSubmitTransaction, account } = useWallet();
 
-  const handleTransactionSuccess = (hash: string, message: string) => {
-    toast.info("Transaction submitted, waiting for confirmation...");
-    aptosClient()
-      .waitForTransaction({
-        transactionHash: hash,
-        options: {
-          timeoutSecs: 60,
-          waitForIndexer: true,
-        },
-      })
-      .then(() => {
-        toast.success("Transaction confirmed!", {
-          description: message,
-          action: {
-            label: "View on Explorer",
-            onClick: () =>
-              window.open(
-                `https://explorer.aptoslabs.com/txn/${hash}?network=${NETWORK.toLowerCase()}`,
-                "_blank",
-              ),
-          },
-        });
-      })
-      .catch((error) => {
-        console.error("Error waiting for transaction confirmation:", error);
-        toast.error("Confirmation Timed Out", {
-          description:
-            "Your transaction may have succeeded, but we could not confirm it in time. Please check an explorer.",
-        });
-      });
+  const handleTransactionSuccess = (hash: string, title: string, description: string) => {
+    const explorerLink = getTxExplorerLink(hash, NETWORK);
+
+    toast.success(title, {
+      description: `${description}\n\nView transaction: ${truncateHash(hash)}`,
+      action: {
+        label: "View TX",
+        onClick: () => window.open(explorerLink, "_blank"),
+      },
+      duration: 15000, // 15 seconds to give time to click
+    });
   };
 
   const handleTransactionError = (e: any) => {
@@ -63,16 +45,28 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
   const buyMutation = useMutation({
     mutationFn: getBuySharesPayload,
-    onSuccess: async (payload) => {
+    onSuccess: async (payload, variables) => {
       if (!account?.address) return;
       try {
         const { hash } = await signAndSubmitTransaction({
           sender: account.address,
           data: payload,
         });
+
+        // Wait for transaction confirmation
+        await aptosClient().waitForTransaction({
+          transactionHash: hash,
+          options: {
+            timeoutSecs: 60,
+            waitForIndexer: true,
+          },
+        });
+
+        const tokenType = variables.buysYesShares ? "YES" : "NO";
         handleTransactionSuccess(
           hash,
-          `Successfully bought ${buyAmount} shares.`,
+          "Shares purchased successfully!",
+          `Bought ${buyAmount} ${tokenType} tokens`,
         );
         setBuyAmount("");
       } catch (e) {
@@ -92,11 +86,22 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           sender: account.address,
           data: payload,
         });
+
+        // Wait for transaction confirmation
+        await aptosClient().waitForTransaction({
+          transactionHash: hash,
+          options: {
+            timeoutSecs: 60,
+            waitForIndexer: true,
+          },
+        });
+
         const tokenType = variables.sellsYesShares ? "YES" : "NO";
         const amount = variables.sellsYesShares ? sellYesAmount : sellNoAmount;
         handleTransactionSuccess(
           hash,
-          `Successfully sold ${amount} ${tokenType} shares.`,
+          "Shares sold successfully!",
+          `Sold ${amount} ${tokenType} tokens`,
         );
         if (variables.sellsYesShares) {
           setSellYesAmount("");
@@ -117,9 +122,29 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
       toast.error("Please enter a valid amount to buy.");
       return;
     }
+
+    const amountOctas = Math.floor(amountFloat * 10 ** 8);
+    const userAptBalanceOctas = dynamicData.userAptBalance;
+
+    console.log('[ActionPanel] Buy shares:', {
+      amountInput: buyAmount,
+      amountFloat,
+      amountOctas,
+      userAptBalance: userAptBalanceOctas,
+      userAptBalanceAPT: userAptBalanceOctas / 10 ** 8,
+      hasEnough: amountOctas <= userAptBalanceOctas,
+    });
+
+    if (amountOctas > userAptBalanceOctas) {
+      toast.error("Insufficient APT balance", {
+        description: `You need ${amountFloat} APT but only have ${(userAptBalanceOctas / 10 ** 8).toFixed(4)} APT`,
+      });
+      return;
+    }
+
     buyMutation.mutate({
       marketObjectAddress: marketId,
-      amountOctas: Math.floor(amountFloat * 10 ** 8),
+      amountOctas,
       buysYesShares,
     });
   };

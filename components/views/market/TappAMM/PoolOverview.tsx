@@ -35,7 +35,8 @@ interface PoolOverviewProps {
 
 export function PoolOverview({ marketId, data: initialData, isLoading: initialLoading = false }: PoolOverviewProps) {
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  const { data: poolData, isLoading: isLoadingLive } = usePoolData(marketId);
+  // Note: PoolOverview doesn't need user-specific data, so we pass undefined
+  const { data: poolData, isLoading: isLoadingLive } = usePoolData(marketId, undefined);
 
   // Use live data if available, fallback to initial props
   const data = poolData ?? initialData;
@@ -45,14 +46,20 @@ export function PoolOverview({ marketId, data: initialData, isLoading: initialLo
     return <PoolOverviewSkeleton />;
   }
 
-  const poolPrice = calculatePoolPrice(data.yesReserve, data.noReserve);
+  // Convert reserves from on-chain format (10^6) to display format
+  // Only convert if data is from live blockchain (poolData), not mock data (initialData)
+  const yesReserve = poolData ? data.yesReserve / 1_000_000 : data.yesReserve;
+  const noReserve = poolData ? data.noReserve / 1_000_000 : data.noReserve;
+  const totalLiquidity = yesReserve + noReserve;
+
+  const poolPrice = calculatePoolPrice(yesReserve, noReserve);
   const apy = calculateAPY(
     data.volume24h,
-    data.totalLiquidity,
+    totalLiquidity,
     data.currentFee / 10000,
   );
-  const yesPercentage = (data.yesReserve / data.totalLiquidity) * 100;
-  const noPercentage = (data.noReserve / data.totalLiquidity) * 100;
+  const yesPercentage = (yesReserve / totalLiquidity) * 100;
+  const noPercentage = (noReserve / totalLiquidity) * 100;
 
   return (
     <Card>
@@ -90,7 +97,7 @@ export function PoolOverview({ marketId, data: initialData, isLoading: initialLo
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">YES Reserve</span>
                 <span className="font-medium">
-                  {formatNumber(data.yesReserve, 0)} (
+                  {formatNumber(yesReserve, 0)} (
                   {formatPercentage(yesPercentage, 1)})
                 </span>
               </div>
@@ -107,7 +114,7 @@ export function PoolOverview({ marketId, data: initialData, isLoading: initialLo
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">NO Reserve</span>
                 <span className="font-medium">
-                  {formatNumber(data.noReserve, 0)} (
+                  {formatNumber(noReserve, 0)} (
                   {formatPercentage(noPercentage, 1)})
                 </span>
               </div>
@@ -132,7 +139,7 @@ export function PoolOverview({ marketId, data: initialData, isLoading: initialLo
               <span>Total Liquidity</span>
             </div>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalLiquidity)}
+              {formatCurrency(totalLiquidity)}
             </p>
           </div>
 

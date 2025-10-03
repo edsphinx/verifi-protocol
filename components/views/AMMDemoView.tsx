@@ -27,7 +27,7 @@ export function AMMDemoView() {
     isLoading,
     isError,
     error,
-  } = usePoolData(mockMarketId);
+  } = usePoolData(mockMarketId, undefined);
 
   return (
     <div className="space-y-6">

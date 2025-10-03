@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { AlertTriangle, Droplets, Info, Minus, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useMarketData } from "@/aptos/queries/use-market-data";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,25 +15,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Droplets, Plus, Minus, Info, AlertTriangle } from "lucide-react";
+import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import {
-  useAddLiquidity,
-  useRemoveLiquidity,
   calculateAddLiquidityPreview,
   calculateRemoveLiquidityPreview,
+  useAddLiquidity,
+  useRemoveLiquidity,
 } from "@/lib/tapp/hooks/use-liquidity";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
-import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import { formatNumber, formatPercentage } from "@/lib/tapp/mock/pool-data";
 
 interface LiquidityPanelProps {
   marketId: string;
+  yesTokenAddress: string;
+  noTokenAddress: string;
   yesReserve?: number;
   noReserve?: number;
   tradingEnabled?: boolean;
@@ -35,17 +39,36 @@ interface LiquidityPanelProps {
 
 export function LiquidityPanel({
   marketId,
+  yesTokenAddress,
+  noTokenAddress,
   yesReserve: initialYesReserve,
   noReserve: initialNoReserve,
   tradingEnabled: initialTradingEnabled,
 }: LiquidityPanelProps) {
+  const { account } = useWallet();
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  const { data: poolData } = usePoolData(marketId);
+  const { data: poolData } = usePoolData(marketId, account?.address.toString());
+
+  // Fetch user's token balances
+  const { data: marketData } = useMarketData({
+    id: marketId,
+    yesToken: yesTokenAddress,
+    noToken: noTokenAddress,
+  });
 
   // Use live data if available, fallback to initial props
-  const yesReserve = poolData?.yesReserve ?? initialYesReserve ?? 0;
-  const noReserve = poolData?.noReserve ?? initialNoReserve ?? 0;
-  const tradingEnabled = poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
+  // Reserves from poolData are in on-chain format (10^6), convert to display format
+  const yesReserveOnChain = poolData?.yesReserve ?? initialYesReserve ?? 0;
+  const noReserveOnChain = poolData?.noReserve ?? initialNoReserve ?? 0;
+  const yesReserve = poolData ? yesReserveOnChain / 1_000_000 : yesReserveOnChain;
+  const noReserve = poolData ? noReserveOnChain / 1_000_000 : noReserveOnChain;
+  const tradingEnabled =
+    poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
+
+  // User balances (divide by 10^6 to convert from on-chain format - YES/NO tokens have 6 decimals)
+  const userYesBalance = (marketData?.yesBalance || 0) / 10 ** 6;
+  const userNoBalance = (marketData?.noBalance || 0) / 10 ** 6;
+
   // Add liquidity state
   const [yesAmount, setYesAmount] = useState("");
   const [noAmount, setNoAmount] = useState("");
@@ -111,6 +134,7 @@ export function LiquidityPanel({
 
   const handleBalanceRatio = () => {
     if (!yesAmount && !noAmount) return;
+    if (yesReserve === 0 || noReserve === 0) return; // Can't balance if pool is empty
 
     const ratio = yesReserve / noReserve;
 
@@ -146,7 +170,10 @@ export function LiquidityPanel({
               <Plus className="h-4 w-4 mr-2" />
               Add
             </TabsTrigger>
-            <TabsTrigger value="remove">
+            <TabsTrigger
+              value="remove"
+              disabled={yesReserve === 0 || noReserve === 0}
+            >
               <Minus className="h-4 w-4 mr-2" />
               Remove
             </TabsTrigger>
@@ -163,108 +190,226 @@ export function LiquidityPanel({
               </Alert>
             )}
 
-            {/* YES Token Input */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="yes-amount">YES Tokens</Label>
-                <span className="text-xs text-muted-foreground">
-                  Reserve: {formatNumber(yesReserve, 0)}
-                </span>
-              </div>
-              <div className="relative">
-                <Input
-                  id="yes-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={yesAmount}
-                  onChange={(e) => setYesAmount(e.target.value)}
-                  className="pr-20"
-                  disabled={!tradingEnabled || addLiquidityMutation.isPending}
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Badge variant="default">YES</Badge>
-                </div>
-              </div>
+            {/* First Liquidity Provider - Simplified Interface */}
+            {yesReserve === 0 || noReserve === 0 ? (
+              <div className="space-y-4">
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    You're the first liquidity provider! Add equal amounts of
+                    YES and NO tokens to initialize the pool.
+                  </AlertDescription>
+                </Alert>
 
-              {/* Quick Amount Buttons for YES */}
-              <div className="flex items-center gap-2">
-                {[10, 25, 50].map((percentage) => (
-                  <Button
-                    key={`yes-${percentage}`}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const amount = (yesReserve * percentage) / 100;
-                      setYesAmount(amount.toFixed(2));
-                      // Auto-calculate NO amount
-                      const ratio = yesReserve / noReserve;
-                      setNoAmount((amount / ratio).toFixed(2));
+                {/* Single unified input */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="unified-amount">Amount (per token)</Label>
+                    <div className="text-xs text-muted-foreground">
+                      YES: {account ? formatNumber(userYesBalance, 2) : "0.00"}{" "}
+                      | NO: {account ? formatNumber(userNoBalance, 2) : "0.00"}
+                    </div>
+                  </div>
+                  <Input
+                    id="unified-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={yesAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setYesAmount(value);
+                      setNoAmount(value); // Keep them equal
                     }}
                     disabled={!tradingEnabled || addLiquidityMutation.isPending}
-                    className="flex-1 text-xs"
-                  >
-                    {percentage}%
-                  </Button>
-                ))}
-              </div>
-            </div>
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    You'll deposit {yesAmount || "0"} YES + {noAmount || "0"} NO
+                    tokens
+                  </p>
+                </div>
 
-            {/* NO Token Input */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="no-amount">NO Tokens</Label>
-                <span className="text-xs text-muted-foreground">
-                  Reserve: {formatNumber(noReserve, 0)}
-                </span>
-              </div>
-              <div className="relative">
-                <Input
-                  id="no-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={noAmount}
-                  onChange={(e) => setNoAmount(e.target.value)}
-                  className="pr-20"
-                  disabled={!tradingEnabled || addLiquidityMutation.isPending}
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Badge variant="secondary">NO</Badge>
+                {/* Quick Amount Buttons */}
+                <div className="flex items-center gap-2">
+                  {[25, 50, 100].map((percentage) => (
+                    <Button
+                      key={`unified-${percentage}`}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Use the minimum of the two balances to ensure user has enough of both
+                        const minBalance = Math.min(
+                          userYesBalance,
+                          userNoBalance,
+                        );
+                        const amount = (minBalance * percentage) / 100;
+                        setYesAmount(amount.toFixed(4));
+                        setNoAmount(amount.toFixed(4));
+                      }}
+                      disabled={
+                        !tradingEnabled ||
+                        addLiquidityMutation.isPending ||
+                        !account
+                      }
+                      className="flex-1"
+                    >
+                      {percentage}%
+                    </Button>
+                  ))}
                 </div>
               </div>
+            ) : (
+              /* Existing Liquidity - Full Interface */
+              <>
+                {/* YES Token Input */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="yes-amount">YES Tokens</Label>
+                    <span className="text-xs text-muted-foreground">
+                      Balance:{" "}
+                      {account ? formatNumber(userYesBalance, 2) : "0.00"}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="yes-amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={yesAmount}
+                      onChange={(e) => setYesAmount(e.target.value)}
+                      className="pr-20"
+                      disabled={
+                        !tradingEnabled || addLiquidityMutation.isPending
+                      }
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Badge variant="default">YES</Badge>
+                    </div>
+                  </div>
 
-              {/* Quick Amount Buttons for NO */}
-              <div className="flex items-center gap-2">
-                {[10, 25, 50].map((percentage) => (
-                  <Button
-                    key={`no-${percentage}`}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const amount = (noReserve * percentage) / 100;
-                      setNoAmount(amount.toFixed(2));
-                      // Auto-calculate YES amount
-                      const ratio = yesReserve / noReserve;
-                      setYesAmount((amount * ratio).toFixed(2));
-                    }}
-                    disabled={!tradingEnabled || addLiquidityMutation.isPending}
-                    className="flex-1 text-xs"
-                  >
-                    {percentage}%
-                  </Button>
-                ))}
-              </div>
-            </div>
+                  {/* Quick Amount Buttons for YES */}
+                  <div className="flex items-center gap-2">
+                    {[25, 50, 100].map((percentage) => (
+                      <Button
+                        key={`yes-${percentage}`}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const ratio = yesReserve / noReserve;
 
-            {/* Balance Ratio Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBalanceRatio}
-              disabled={!tradingEnabled}
-              className="w-full"
-            >
-              Auto-balance to pool ratio
-            </Button>
+                          // Calculate YES amount from percentage
+                          const yesFromBalance =
+                            (userYesBalance * percentage) / 100;
+
+                          // Calculate required NO amount to maintain ratio
+                          const noRequired = yesFromBalance / ratio;
+
+                          // Check if user has enough NO tokens
+                          if (noRequired <= userNoBalance) {
+                            // User has enough NO tokens
+                            setYesAmount(yesFromBalance.toFixed(4));
+                            setNoAmount(noRequired.toFixed(4));
+                          } else {
+                            // User doesn't have enough NO tokens, limit by NO balance
+                            const maxNo = (userNoBalance * percentage) / 100;
+                            const maxYes = maxNo * ratio;
+                            setYesAmount(maxYes.toFixed(4));
+                            setNoAmount(maxNo.toFixed(4));
+                          }
+                        }}
+                        disabled={
+                          !tradingEnabled ||
+                          addLiquidityMutation.isPending ||
+                          !account
+                        }
+                        className="flex-1 text-xs"
+                      >
+                        {percentage}%
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* NO Token Input */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="no-amount">NO Tokens</Label>
+                    <span className="text-xs text-muted-foreground">
+                      Balance:{" "}
+                      {account ? formatNumber(userNoBalance, 2) : "0.00"}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="no-amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={noAmount}
+                      onChange={(e) => setNoAmount(e.target.value)}
+                      className="pr-20"
+                      disabled={
+                        !tradingEnabled || addLiquidityMutation.isPending
+                      }
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Badge variant="secondary">NO</Badge>
+                    </div>
+                  </div>
+
+                  {/* Quick Amount Buttons for NO */}
+                  <div className="flex items-center gap-2">
+                    {[25, 50, 100].map((percentage) => (
+                      <Button
+                        key={`no-${percentage}`}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const ratio = yesReserve / noReserve;
+
+                          // Calculate NO amount from percentage
+                          const noFromBalance =
+                            (userNoBalance * percentage) / 100;
+
+                          // Calculate required YES amount to maintain ratio
+                          const yesRequired = noFromBalance * ratio;
+
+                          // Check if user has enough YES tokens
+                          if (yesRequired <= userYesBalance) {
+                            // User has enough YES tokens
+                            setNoAmount(noFromBalance.toFixed(4));
+                            setYesAmount(yesRequired.toFixed(4));
+                          } else {
+                            // User doesn't have enough YES tokens, limit by YES balance
+                            const maxYes = (userYesBalance * percentage) / 100;
+                            const maxNo = maxYes / ratio;
+                            setYesAmount(maxYes.toFixed(4));
+                            setNoAmount(maxNo.toFixed(4));
+                          }
+                        }}
+                        disabled={
+                          !tradingEnabled ||
+                          addLiquidityMutation.isPending ||
+                          !account
+                        }
+                        className="flex-1 text-xs"
+                      >
+                        {percentage}%
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Balance Ratio Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBalanceRatio}
+                  disabled={!tradingEnabled}
+                  className="w-full"
+                >
+                  Auto-balance to pool ratio
+                </Button>
+              </>
+            )}
 
             <Separator />
 

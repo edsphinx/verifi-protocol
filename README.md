@@ -9,7 +9,7 @@ VeriFi is a decentralized derivatives protocol that empowers anyone to create pr
 
 ---
 
-##  The Vision
+## The Vision
 
 Imagine a financial ecosystem where **any on-chain truth** can become a liquid, tradable market. Where creating financial instruments isn't restricted to experts, but open to the entire community. That's VeriFi Protocol.
 
@@ -105,14 +105,22 @@ graph TB
 
 **VeriFi is the first prediction market to implement a custom Tapp hook + integrated AMM UI**
 
-We've developed a complete AMM solution for YES/NO token trading:
+#### Modular DeFi Integration
+
+VeriFi integrates with **[Tapp.Exchange](https://tapp.exchange)**, a modular AMM protocol on Aptos that enables custom trading logic through a hook system. This integration demonstrates how VeriFi composes with the broader Aptos DeFi ecosystem.
+
+**Integration Architecture:**
+- **Core AMM**: Uses Tapp's mini-AMM implementation from [`tapp-exchange/hook-documentation`](https://github.com/tapp-exchange/hook-documentation)
+- **Custom Hook**: `contract/sources/tapp_prediction_hook.move` - Our prediction market-specific logic
+- **Tapp Dependencies**: `contract/test-deps/` - Deployed Tapp contracts for local testing
+- **Open Source Contribution**: [Pull Request #3](https://github.com/tapp-exchange/hook-documentation/pull/3) submitted to Tapp's official repo
 
 ####  Smart Contract Hook (`tapp_prediction_hook.move`)
 -  **Full Hook Interface**: Implements create_pool, add_liquidity, remove_liquidity, swap, collect_fee
 -  **Dynamic Fees**: 0.3% base fee, 0.5% during high volatility (< 1h to resolution)
 -  **Auto-disable Trading**: Pools stop trading when market resolves
 -  **NFT-based Positions**: Liquidity providers receive Tapp position NFTs
--  **Local Tests**: Integration tested with 6/7 steps successful
+-  **Market-Aware**: Directly queries VeriFi markets to validate tokens and disable trading on resolution
 
 ####  Integrated AMM UI (Production Ready)
 -  **Pool Creation**: One-click pool deployment from market page
@@ -123,14 +131,17 @@ We've developed a complete AMM solution for YES/NO token trading:
 -  **React Query Optimistic Updates**: Instant UI updates after transactions
 
 **Current Status:**
-- ✅ **UI/Frontend**: Fully functional on testnet with complete AMM flow
-- ⏳ **Hook Deployment**: Submitted for review with Tapp team per [official process](https://github.com/tapp-exchange/hook-documentation#submission-process)
+- **UI/Frontend**: Fully functional on testnet with complete AMM flow
+- **Hook Implementation**: Custom prediction market hook with dynamic fees
+- **Open Source PR**: Submitted to [Tapp's hook documentation](https://github.com/tapp-exchange/hook-documentation/pull/3)
+- **Hook Deployment**: Under review per [official process](https://github.com/tapp-exchange/hook-documentation#submission-process)
 
 **Why This Matters:**
 - **Composability**: YES/NO tokens tradable on any Tapp-compatible DEX
 - **Liquidity**: LPs earn fees on both outcome sides
 - **Best UX**: Seamless integration directly in market pages
 - **Innovation**: First hook to bring prediction markets to Tapp ecosystem
+- **Modular Design**: Demonstrates how prediction markets integrate with existing DeFi infrastructure
 
 See [TAPP_INTEGRATION_COMPLETE.md](./TAPP_INTEGRATION_COMPLETE.md) for technical implementation details.
 
@@ -190,6 +201,38 @@ pnpm test:full-flow
 
 ---
 
+## Open Source Contribution: Aptos Move Boilerplate
+
+During the development of VeriFi, we encountered significant challenges with outdated Aptos development tooling. The official boilerplates were not updated for Next.js 15, React 19, or the latest Aptos SDK changes, leading to weeks of debugging and configuration issues.
+
+**To help the community, we created an open-source, production-ready boilerplate:**
+
+### [aptos-move-boilerplate-nextjs15](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15)
+
+**Features:**
+- **Next.js 15 + React 19** - Latest framework versions with proper TypeScript configuration
+- **Aptos SDK v2** - Updated wallet adapter and client setup
+- **Auto-generated ABIs** - Scripts to generate TypeScript types from deployed contracts
+- **Organized Structure** - Best practices for aptos/, components/, and contract/ folders
+- **Move Development** - Configured Move.toml with proper named addresses
+- **Testing Scripts** - E2E test templates for common flows
+- **Environment Setup** - Complete .env configuration guide
+
+**Why We Built This:**
+After spending weeks fixing compatibility issues, we wanted to save other developers from the same frustration. This boilerplate embodies the lessons learned from building a production Aptos application.
+
+**We invite developers to use this boilerplate to build modern, full-stack Aptos applications without the setup headaches.**
+
+```bash
+# Quick start with the boilerplate
+git clone https://github.com/edsphinx/aptos-move-boilerplate-nextjs15
+cd aptos-move-boilerplate-nextjs15
+pnpm install
+pnpm dev
+```
+
+---
+
 ##  Documentation
 
 - [Architecture Overview](./ARCHITECTURE.md)
@@ -212,30 +255,32 @@ pnpm test:full-flow
 
 **Key Differentiators**:
 1. **First oracle-less prediction market on Aptos** - Programmatic resolution eliminates trust assumptions
-2. **First prediction market with Tapp AMM integration** - Full UI/UX for swap and liquidity provision
+2. **First prediction market with Tapp AMM integration** - Full UI/UX for swap and liquidity provision with custom hook
 3. **AI-powered market creation** - Natural language input with Claude validation and smart parameter extraction
 4. **Production-ready architecture** - Comprehensive testing, proper error handling, event-driven indexing
 5. **Best-in-class UX** - Real-time updates, transaction explorer links, liquidity position tracking
 6. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
+7. **Open Source Contribution** - Created modern [Aptos boilerplate](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15) for Next.js 15 + React 19
+8. **Modular DeFi Integration** - [Contributed custom hook](https://github.com/tapp-exchange/hook-documentation/pull/3) to Tapp.Exchange ecosystem
 
 ---
 
 ##  Roadmap
 
-### Phase 1: Foundation (✅ Complete)
+### Phase 1: Foundation (Complete)
 - Core protocol implementation
 - Primary market trading
 - Basic oracle registry
 - AI-powered market creation
 - Full Tapp AMM integration (UI)
 
-### Phase 2: Enhanced Trading (🚧 In Progress)
+### Phase 2: Enhanced Trading (In Progress)
 - Tapp hook testnet deployment
 - Advanced portfolio analytics
 - Multi-oracle market conditions
 - Cross-DEX liquidity aggregation
 
-### Phase 3: Ecosystem Growth (📋 Planned)
+### Phase 3: Ecosystem Growth (Planned)
 - Multi-language AI support (Spanish, Chinese)
 - Cross-protocol oracle integrations (Thala, PancakeSwap, etc.)
 - Governance token and DAO
@@ -268,4 +313,4 @@ MIT License - see [LICENSE](./LICENSE) for details
 
 ---
 
-<p align="center">Built with ❤️ in Honduras and deployed on Aptos Testnet</p>
+<p align="center">Built in Honduras and deployed on Aptos Testnet</p>

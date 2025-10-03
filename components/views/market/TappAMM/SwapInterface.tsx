@@ -45,11 +45,15 @@ export function SwapInterface({
   tradingEnabled: initialTradingEnabled,
 }: SwapInterfaceProps) {
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  const { data: poolData } = usePoolData(marketId);
+  // Note: SwapInterface doesn't need user-specific data, so we pass undefined
+  const { data: poolData } = usePoolData(marketId, undefined);
 
   // Use live data if available, fallback to initial props
-  const yesReserve = poolData?.yesReserve ?? initialYesReserve ?? 0;
-  const noReserve = poolData?.noReserve ?? initialNoReserve ?? 0;
+  // Reserves come in on-chain format (with 10^6 multiplier), convert to display format
+  const yesReserveOnChain = poolData?.yesReserve ?? initialYesReserve ?? 0;
+  const noReserveOnChain = poolData?.noReserve ?? initialNoReserve ?? 0;
+  const yesReserve = yesReserveOnChain / 1_000_000;
+  const noReserve = noReserveOnChain / 1_000_000;
   const tradingEnabled = poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
 
   const [amountIn, setAmountIn] = useState("");
@@ -60,6 +64,7 @@ export function SwapInterface({
   const swapMutation = useSwap();
 
   // Calculate swap preview (using regular function, not hook)
+  // All values are in display format (human-readable)
   const amountInNum = parseFloat(amountIn) || 0;
   const preview = calculateSwapPreview(
     marketId,

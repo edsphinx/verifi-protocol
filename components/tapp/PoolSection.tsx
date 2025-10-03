@@ -9,8 +9,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreatePoolButton } from "./CreatePoolButton";
-import { PoolStats } from "./PoolStats";
-import type { TappPool } from "@/lib/interfaces";
+import { PoolOverview } from "@/components/views/market/TappAMM/PoolOverview";
 
 interface PoolSectionProps {
   marketAddress: string;
@@ -23,32 +22,30 @@ export function PoolSection({
   yesTokenAddress,
   noTokenAddress,
 }: PoolSectionProps) {
-  const [pool, setPool] = useState<TappPool | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [poolExists, setPoolExists] = useState<boolean | null>(null);
+  const [isCheckingPool, setIsCheckingPool] = useState(true);
 
-  const fetchPool = async () => {
-    setIsLoading(true);
+  const checkPoolExists = async () => {
+    setIsCheckingPool(true);
     try {
       const response = await fetch(
         `/api/tapp/pools/by-market/${marketAddress}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setPool(data);
-      } else {
-        setPool(null);
-      }
+      setPoolExists(response.ok);
+      console.log('[PoolSection] Pool exists check:', response.ok, 'for market:', marketAddress);
     } catch (error) {
-      console.error("Failed to fetch pool:", error);
-      setPool(null);
+      console.error("[PoolSection] Failed to check pool existence:", error);
+      setPoolExists(false);
     } finally {
-      setIsLoading(false);
+      setIsCheckingPool(false);
     }
   };
 
   useEffect(() => {
-    fetchPool();
+    checkPoolExists();
   }, [marketAddress]);
+
+  const isLoading = isCheckingPool;
 
   if (isLoading) {
     return (
@@ -63,7 +60,7 @@ export function PoolSection({
     );
   }
 
-  if (!pool) {
+  if (poolExists === false) {
     // Only show create button if token addresses are available
     if (yesTokenAddress && noTokenAddress) {
       return (
@@ -77,7 +74,7 @@ export function PoolSection({
               onPoolCreated={() => {
                 // Refetch pool after creation with delay for indexing
                 setTimeout(() => {
-                  fetchPool();
+                  checkPoolExists();
                 }, 3000);
               }}
             />
@@ -96,12 +93,11 @@ export function PoolSection({
     return null;
   }
 
+  // Pool exists, show live data using PoolOverview component
+  // PoolOverview handles its own data fetching internally
+  console.log('[PoolSection] Rendering PoolOverview for market:', marketAddress);
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">AMM Liquidity Pool</h2>
-      </div>
-      <PoolStats pool={pool} />
-    </div>
+    <PoolOverview marketId={marketAddress} />
   );
 }

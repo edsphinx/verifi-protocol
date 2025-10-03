@@ -1,40 +1,49 @@
 "use client";
 
+import { AlertCircle, ArrowLeftRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { SwapInterface } from "./TappAMM/SwapInterface";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
+import { SwapInterface } from "./TappAMM/SwapInterface";
 
 interface SwapTabContentProps {
   marketId: string;
+  onNavigateToLiquidity?: () => void;
 }
 
-export function SwapTabContent({ marketId }: SwapTabContentProps) {
-  const [poolData, setPoolData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function SwapTabContent({
+  marketId,
+  onNavigateToLiquidity,
+}: SwapTabContentProps) {
+  const [poolExists, setPoolExists] = useState<boolean | null>(null);
+  const [isCheckingPool, setIsCheckingPool] = useState(true);
 
-  const fetchPoolData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/tapp/pools/by-market/${marketId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPoolData(data);
-      } else {
-        setPoolData(null);
-      }
-    } catch (error) {
-      console.error("Error fetching pool data:", error);
-      setPoolData(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use the pool data hook to get live data from blockchain
+  const { data: poolData, isLoading: isLoadingPoolData } = usePoolData(
+    marketId,
+    undefined,
+  );
 
+  // Check if pool exists in database
   useEffect(() => {
-    fetchPoolData();
+    const checkPoolExists = async () => {
+      setIsCheckingPool(true);
+      try {
+        const response = await fetch(`/api/tapp/pools/by-market/${marketId}`);
+        setPoolExists(response.ok);
+      } catch (error) {
+        console.error("Error checking pool existence:", error);
+        setPoolExists(false);
+      } finally {
+        setIsCheckingPool(false);
+      }
+    };
+
+    checkPoolExists();
   }, [marketId]);
+
+  const isLoading = isCheckingPool || isLoadingPoolData;
 
   if (isLoading) {
     return (
@@ -46,8 +55,8 @@ export function SwapTabContent({ marketId }: SwapTabContentProps) {
     );
   }
 
-  // If pool doesn't exist, show create pool message
-  if (!poolData) {
+  // If pool doesn't exist in database, show create pool message
+  if (poolExists === false) {
     return (
       <Card className="border-dashed border-2">
         <CardHeader className="text-center">
@@ -69,22 +78,15 @@ export function SwapTabContent({ marketId }: SwapTabContentProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Pool Not Found</p>
                   <p className="text-xs text-muted-foreground">
-                    Go to the "Add Liquidity" tab to create an AMM pool for this market
+                    Go to the "Add Liquidity" tab to create an AMM pool for this
+                    market
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => {
-              const liquidityTab = document.querySelector('[value="liquidity"]') as HTMLButtonElement;
-              if (liquidityTab) {
-                liquidityTab.click();
-              }
-            }}
-          >
+          <Button variant="outline" onClick={onNavigateToLiquidity}>
             Go to Add Liquidity
           </Button>
         </CardContent>
@@ -92,8 +94,18 @@ export function SwapTabContent({ marketId }: SwapTabContentProps) {
     );
   }
 
-  // Check if pool has liquidity
-  const hasLiquidity = poolData.totalLiquidity > 0;
+  // Check if pool has liquidity (use live blockchain data)
+  // poolData comes from usePoolData which fetches reserves from blockchain
+  const yesReserve = poolData?.yesReserve ?? 0;
+  const noReserve = poolData?.noReserve ?? 0;
+  const hasLiquidity = yesReserve > 0 && noReserve > 0;
+
+  console.log("[SwapTabContent] Pool data:", {
+    yesReserve,
+    noReserve,
+    hasLiquidity,
+    poolData,
+  });
 
   if (!hasLiquidity) {
     return (
@@ -124,16 +136,7 @@ export function SwapTabContent({ marketId }: SwapTabContentProps) {
             </div>
           </div>
 
-          <Button
-            onClick={() => {
-              const liquidityTab = document.querySelector('[value="liquidity"]') as HTMLButtonElement;
-              if (liquidityTab) {
-                liquidityTab.click();
-              }
-            }}
-          >
-            Add Liquidity
-          </Button>
+          <Button onClick={onNavigateToLiquidity}>Add Liquidity</Button>
         </CardContent>
       </Card>
     );

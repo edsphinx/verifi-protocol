@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { TrendingUp, Users, BarChart3 } from "lucide-react";
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
+  const [activeTab, setActiveTab] = useState("primary");
   const {
     data: marketDetails,
     isLoading,
@@ -79,7 +81,7 @@ export function MarketView({ marketId }: { marketId: string }) {
 
       {/* Main Trading Interface - Centered and Prominent */}
       <div className="max-w-2xl mx-auto">
-        <Tabs defaultValue="primary" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="primary">Trade</TabsTrigger>
             <TabsTrigger value="swap">AMM Swap</TabsTrigger>
@@ -91,7 +93,7 @@ export function MarketView({ marketId }: { marketId: string }) {
           </TabsContent>
 
           <TabsContent value="swap" className="mt-0">
-            <SwapTabContent marketId={marketId} />
+            <SwapTabContent marketId={marketId} onNavigateToLiquidity={() => setActiveTab("liquidity")} />
           </TabsContent>
 
           <TabsContent value="liquidity" className="mt-0">

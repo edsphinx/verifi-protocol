@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LiquidityPanel } from "./TappAMM/LiquidityPanel";
-import { LiquidityPositions } from "./TappAMM/LiquidityPositions";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { Droplet, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
 import { CreatePoolButton } from "@/components/tapp/CreatePoolButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Droplet } from "lucide-react";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { LiquidityPanel } from "./TappAMM/LiquidityPanel";
+import { LiquidityPositions } from "./TappAMM/LiquidityPositions";
 
 interface PoolTabContentProps {
   marketId: string;
@@ -24,9 +24,9 @@ export function PoolTabContent({
   const [poolExists, setPoolExists] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { account } = useWallet();
-  const { data: poolData } = usePoolData(marketId);
+  const { data: poolData } = usePoolData(marketId, account?.address.toString());
 
-  const checkPoolExists = async (forceRefresh = false) => {
+  const checkPoolExists = useCallback(async (forceRefresh = false) => {
     setIsLoading(true);
     try {
       // Add cache busting if forcing refresh
@@ -35,21 +35,23 @@ export function PoolTabContent({
         : `/api/tapp/pools/by-market/${marketId}`;
 
       const response = await fetch(url, {
-        cache: forceRefresh ? 'no-cache' : 'default',
+        cache: forceRefresh ? "no-cache" : "default",
       });
       setPoolExists(response.ok);
-      console.log(`[PoolTabContent] Pool exists check: ${response.ok}, forceRefresh: ${forceRefresh}`);
+      console.log(
+        `[PoolTabContent] Pool exists check: ${response.ok}, forceRefresh: ${forceRefresh}`,
+      );
     } catch (error) {
       console.error("Error checking pool existence:", error);
       setPoolExists(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [marketId]);
 
   useEffect(() => {
     checkPoolExists();
-  }, [marketId]);
+  }, [checkPoolExists]);
 
   if (isLoading) {
     return (
@@ -73,7 +75,8 @@ export function PoolTabContent({
           </div>
           <CardTitle className="text-lg">AMM Pool Not Created</CardTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            Create a liquidity pool to enable automated market making for this market
+            Create a liquidity pool to enable automated market making for this
+            market
           </p>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
@@ -99,7 +102,7 @@ export function PoolTabContent({
             yesTokenAddress={yesTokenAddress}
             noTokenAddress={noTokenAddress}
             onPoolCreated={() => {
-              console.log('[PoolTabContent] Pool created callback triggered');
+              console.log("[PoolTabContent] Pool created callback triggered");
               // Force refresh immediately, then again after 2s for indexing
               checkPoolExists(true);
               setTimeout(() => {
@@ -109,7 +112,8 @@ export function PoolTabContent({
           />
 
           <p className="text-xs text-muted-foreground text-center max-w-md">
-            Once created, you and others will be able to add liquidity and earn fees from trades
+            Once created, you and others will be able to add liquidity and earn
+            fees from trades
           </p>
         </CardContent>
       </Card>
@@ -118,22 +122,39 @@ export function PoolTabContent({
 
   // Pool exists, show add liquidity interface + user positions
   // Filter positions for current user
-  const userPositions = poolData?.positions?.filter(
-    (p) => account?.address && p.owner.toLowerCase() === account.address.toString().toLowerCase()
-  ) || [];
+  console.log('[PoolTabContent] poolData:', poolData);
+  console.log('[PoolTabContent] account?.address:', account?.address?.toString());
+  console.log('[PoolTabContent] poolData?.positions:', poolData?.positions);
 
-  const totalLpSupply = Math.sqrt((poolData?.yesReserve || 0) * (poolData?.noReserve || 0));
+  const userPositions =
+    poolData?.positions?.filter(
+      (p) =>
+        account?.address &&
+        p.owner.toLowerCase() === account.address.toString().toLowerCase(),
+    ) || [];
+
+  console.log('[PoolTabContent] userPositions after filter:', userPositions);
+
+  // Convert reserves to display format (divide by 10^6) before calculating LP supply
+  // This ensures consistency with how positions store lpTokens in display format
+  const yesReserveDisplay = (poolData?.yesReserve || 0) / 1_000_000;
+  const noReserveDisplay = (poolData?.noReserve || 0) / 1_000_000;
+  const totalLpSupply = Math.sqrt(yesReserveDisplay * noReserveDisplay);
 
   return (
     <div className="space-y-6">
-      <LiquidityPanel marketId={marketId} />
+      <LiquidityPanel
+        marketId={marketId}
+        yesTokenAddress={yesTokenAddress}
+        noTokenAddress={noTokenAddress}
+      />
 
       {account && (
         <LiquidityPositions
           positions={userPositions}
           totalLpSupply={totalLpSupply}
-          yesReserve={poolData?.yesReserve || 0}
-          noReserve={poolData?.noReserve || 0}
+          yesReserve={yesReserveDisplay}
+          noReserve={noReserveDisplay}
         />
       )}
     </div>
