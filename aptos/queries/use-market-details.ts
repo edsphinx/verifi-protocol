@@ -69,6 +69,7 @@ export function useMarketDetails(marketObjectAddress: string) {
       };
     },
     enabled: !!accountAddress && !!marketObjectAddress,
-    refetchInterval: 5000, // Refetch data every 5 seconds
+    staleTime: 10000, // Consider data fresh for 10s
+    // Removed refetchInterval - user can manually refresh or it refetches on window focus
   });
 }

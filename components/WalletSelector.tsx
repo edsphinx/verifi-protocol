@@ -74,8 +74,7 @@ export function WalletSelector() {
         >
           <div className="h-2 w-2 rounded-full bg-green-400" />
           {account?.ansName ||
-            truncateAddress(account?.address?.toString()) ||
-            "Unknown"}
+            (account?.address ? truncateAddress(account.address.toString()) : "Unknown")}
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>

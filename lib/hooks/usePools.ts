@@ -30,6 +30,7 @@ export function usePools() {
         return [];
       }
     },
-    refetchInterval: 10000, // Refetch every 10 seconds to show new pools
+    staleTime: 30000, // Consider data fresh for 30s
+    // Removed refetchInterval
   });
 }

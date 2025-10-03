@@ -36,7 +36,8 @@ export function useMarkets() {
   } = useQuery({
     queryKey: ["activeMarkets"],
     queryFn: getActiveMarketsFromApi,
-    refetchInterval: 10000, // Actualiza los datos cada 10 segundos
+    staleTime: 30000, // Consider data fresh for 30s
+    // Removed refetchInterval to prevent constant re-renders
   });
 
   const [marketsWithStatus, setMarketsWithStatus] = useState<MarketWithStatus[]>([]);

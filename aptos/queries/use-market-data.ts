@@ -91,6 +91,7 @@ export function useMarketData(market: {
       };
     },
     enabled: !!accountAddress, // Only run the query if the user is connected
-    refetchInterval: 10000, // Refetch every 10 seconds
+    staleTime: 15000, // Consider data fresh for 15s
+    // Removed refetchInterval
   });
 }

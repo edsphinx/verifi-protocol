@@ -28,6 +28,7 @@ export function useUserActivities(userAddress?: string, limit = 50) {
       return response.json() as Promise<ActivitiesResponse>;
     },
     enabled: !!userAddress,
-    refetchInterval: 10000, // Refetch every 10s to get new activities
+    staleTime: 30000, // Consider data fresh for 30s
+    // Removed refetchInterval
   });
 }

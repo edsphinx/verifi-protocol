@@ -95,6 +95,7 @@ export function useUserPositions(userAddress?: string) {
       return fetchUserPositions(userAddress);
     },
     enabled: !!userAddress,
-    refetchInterval: 30000, // Refetch every 30s
+    staleTime: 60000, // Consider data fresh for 60s
+    // Removed refetchInterval - refetches on window focus or manual invalidation
   });
 }
