@@ -58,11 +58,11 @@ model Activity {
   txHash        String   @unique @map("tx_hash")
   marketAddress String   @map("market_address")
   userAddress   String   @map("user_address")
-  action        String   // "BUY", "SELL", "LIQUIDITY_ADD", "LIQUIDITY_REMOVE", "SWAP"
-  outcome       String?  // "YES" or "NO" (optional for liquidity)
-  amount        Float    // Amount in shares or liquidity
-  price         Float?   // Price at execution (for trades/swaps)
-  totalValue    Float?   // Total value in APT
+  action        String
+  outcome       String?
+  amount        Float
+  price         Float?
+  totalValue    Float?
   timestamp     DateTime @default(now())
 
   // Relations

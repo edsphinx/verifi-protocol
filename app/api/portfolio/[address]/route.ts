@@ -19,7 +19,7 @@ export async function GET(
     }
 
     // Get user positions from database
-    let positions = await prisma.userPosition.findMany({
+    const dbPositions = await prisma.userPosition.findMany({
       where: {
         userAddress: address,
         status: { in: ['OPEN', 'RESOLVED'] },
@@ -29,81 +29,97 @@ export async function GET(
       },
     });
 
-    // If no positions in DB, calculate from activities
-    if (positions.length === 0) {
-      // Get user's trading activities
-      const activities = await prisma.activity.findMany({
-        where: {
-          userAddress: address,
-          action: { in: ['BUY', 'SELL'] },
-        },
-        orderBy: { timestamp: 'asc' },
-        include: {
-          market: true,
-        },
-      });
+    // Use DB positions if available, otherwise calculate from activities
+    let positions: any[] = [];
 
-      // Group by market + outcome
-      const positionMap = new Map<string, any>();
-
-      for (const activity of activities) {
-        if (!activity.market) continue;
-
-        const key = `${activity.marketAddress}-${activity.outcome}`;
-
-        if (!positionMap.has(key)) {
-          positionMap.set(key, {
-            marketAddress: activity.marketAddress,
-            market: activity.market,
-            outcome: activity.outcome,
-            sharesOwned: 0,
-            totalInvested: 0,
-            trades: [],
-          });
-        }
-
-        const position = positionMap.get(key);
-
-        if (activity.action === 'BUY') {
-          position.sharesOwned += activity.amount;
-          position.totalInvested += activity.totalValue || 0;
-        } else if (activity.action === 'SELL') {
-          position.sharesOwned -= activity.amount;
-        }
-
-        position.trades.push(activity);
-      }
-
-      // Convert to position format
-      const convertedPositions: PortfolioPosition[] = Array.from(positionMap.values())
-        .filter((p) => p.sharesOwned > 0)
-        .map((p) => {
-          const avgEntryPrice =
-            p.sharesOwned > 0 ? p.totalInvested / p.sharesOwned : 0;
-          const currentPrice =
-            p.outcome === 'YES' ? p.market.yesPrice : p.market.noPrice;
-          const currentValue = p.sharesOwned * currentPrice;
-          const unrealizedPnL = currentValue - p.totalInvested;
-          const unrealizedPnLPct =
-            p.totalInvested > 0 ? (unrealizedPnL / p.totalInvested) * 100 : 0;
-
-          return {
-            marketAddress: p.marketAddress,
-            marketDescription: p.market.description,
-            outcome: p.outcome,
-            sharesOwned: p.sharesOwned,
-            avgEntryPrice,
-            totalInvested: p.totalInvested,
-            currentPrice,
-            currentValue,
-            unrealizedPnL,
-            unrealizedPnLPct,
-            status: p.market.status === 'active' ? 'OPEN' : 'RESOLVED',
-          };
+    if (dbPositions.length > 0) {
+      // Use positions from database (already calculated)
+      positions = dbPositions.map((p) => ({
+        marketAddress: p.marketAddress,
+        market: p.market,
+        outcome: p.outcome,
+        sharesOwned: p.sharesOwned,
+        totalInvested: p.totalInvested,
+        avgEntryPrice: p.avgEntryPrice,
+        currentPrice: p.currentPrice,
+        currentValue: p.currentValue,
+        unrealizedPnL: p.unrealizedPnL,
+        unrealizedPnLPct: p.unrealizedPnLPct,
+        status: p.status,
+      }));
+    } else {
+      // Calculate from activities if no positions in DB
+        // Get user's trading activities
+        const activities = await prisma.activity.findMany({
+          where: {
+            userAddress: address,
+            action: { in: ['BUY', 'SELL'] },
+          },
+          orderBy: { timestamp: 'asc' },
+          include: {
+            market: true,
+          },
         });
 
-      positions = convertedPositions as any;
-    }
+        // Group by market + outcome
+        const positionMap = new Map<string, any>();
+
+        for (const activity of activities) {
+          if (!activity.market) continue;
+
+          const key = `${activity.marketAddress}-${activity.outcome}`;
+
+          if (!positionMap.has(key)) {
+            positionMap.set(key, {
+              marketAddress: activity.marketAddress,
+              market: activity.market,
+              outcome: activity.outcome,
+              sharesOwned: 0,
+              totalInvested: 0,
+              trades: [],
+            });
+          }
+
+          const position = positionMap.get(key);
+
+          if (activity.action === 'BUY') {
+            position.sharesOwned += activity.amount;
+            position.totalInvested += activity.totalValue || 0;
+          } else if (activity.action === 'SELL') {
+            position.sharesOwned -= activity.amount;
+          }
+
+          position.trades.push(activity);
+        }
+
+        // Convert to position format
+        positions = Array.from(positionMap.values())
+          .filter((p) => p.sharesOwned > 0)
+          .map((p) => {
+            const avgEntryPrice =
+              p.sharesOwned > 0 ? p.totalInvested / p.sharesOwned : 0;
+            const currentPrice =
+              p.outcome === 'YES' ? (p.market.yesPrice || 0.5) : (p.market.noPrice || 0.5);
+            const currentValue = p.sharesOwned * currentPrice;
+            const unrealizedPnL = currentValue - p.totalInvested;
+            const unrealizedPnLPct =
+              p.totalInvested > 0 ? (unrealizedPnL / p.totalInvested) * 100 : 0;
+
+            return {
+              marketAddress: p.marketAddress,
+              market: p.market,
+              outcome: p.outcome,
+              sharesOwned: p.sharesOwned,
+              avgEntryPrice,
+              totalInvested: p.totalInvested,
+              currentPrice,
+              currentValue,
+              unrealizedPnL,
+              unrealizedPnLPct,
+              status: p.market.status === 'active' ? 'OPEN' : 'RESOLVED',
+            };
+          });
+      }
 
     // Calculate portfolio totals
     const totalValue = positions.reduce((sum, p) => sum + p.currentValue, 0);

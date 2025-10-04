@@ -26,6 +26,36 @@ export async function GET(
         `[API /api/tapp/pools/by-market] ✅ Pool found in DB:`,
         pool.poolAddress.substring(0, 10) + "...",
       );
+
+      // Fetch live reserves from on-chain
+      try {
+        const poolInfo = await aptosClient().view<any>({
+          payload: {
+            function: `${TAPP_PROTOCOL_ADDRESS}::router::get_pool_info`,
+            functionArguments: [marketAddress],
+          },
+        });
+
+        if (poolInfo && poolInfo.length > 0) {
+          // poolInfo structure: [reserve_x, reserve_y, lp_supply, trading_enabled]
+          const [yesReserve, noReserve, lpSupply, tradingEnabled] = poolInfo;
+
+          return NextResponse.json({
+            ...pool,
+            yesReserve: parseInt(yesReserve as string, 10),
+            noReserve: parseInt(noReserve as string, 10),
+            lpSupply: parseInt(lpSupply as string, 10),
+            tradingEnabled: tradingEnabled as boolean,
+          });
+        }
+      } catch (error) {
+        console.log(
+          `[API /api/tapp/pools/by-market] ⚠️  Could not fetch on-chain reserves:`,
+          error
+        );
+      }
+
+      // Return DB data even if on-chain fetch fails
       return NextResponse.json(pool);
     }
 
