@@ -2,8 +2,9 @@
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { aptosClient } from "@/aptos/client";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
@@ -12,11 +13,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, ArrowLeftRight } from "lucide-react";
 import { getBuySharesPayload, getSellSharesPayload } from "@/lib/api/market";
 import type { ActionPanelProps } from "@/lib/types";
+import { recordActivity } from "@/lib/services/activity-client.service";
+import { calculateMarketPsychology } from "@/lib/services/market-psychology.service";
+import { cn } from "@/lib/utils";
+import { getAnimationConfig, type AnimationStyle } from "@/lib/animations/panel-transitions";
+
+type TradeMode = "buy" | "sell";
+
+// Change this to try different animations:
+// "smooth-3d-flip" | "magnetic-slide" | "scale-morph" | "dissolve-zoom" | "card-flip" | "cube-rotate" | "elastic-bounce" | "ultra-degen"
+const ANIMATION_STYLE: AnimationStyle = "ultra-degen"; // 🚀💎🙌 MAXIMUM DEGEN MODE
 
 export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
+  const [tradeMode, setTradeMode] = useState<TradeMode>("buy");
   const [buyAmount, setBuyAmount] = useState("");
   const [sellYesAmount, setSellYesAmount] = useState("");
   const [sellNoAmount, setSellNoAmount] = useState("");
@@ -36,7 +48,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
         label: "View TX",
         onClick: () => window.open(explorerLink, "_blank"),
       },
-      duration: 15000, // 15 seconds to give time to click
+      duration: 15000,
     });
   };
 
@@ -58,7 +70,6 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           data: payload,
         });
 
-        // Wait for transaction confirmation
         await aptosClient().waitForTransaction({
           transactionHash: hash,
           options: {
@@ -73,11 +84,22 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           "Shares purchased successfully!",
           `Bought ${buyAmount} ${tokenType} tokens`,
         );
+
+        await recordActivity({
+          txHash: hash,
+          marketAddress: marketId,
+          userAddress: account.address.toString(),
+          action: "BUY",
+          outcome: tokenType,
+          amount: parseFloat(buyAmount),
+          price: null,
+          totalValue: parseFloat(buyAmount),
+        });
+
         setBuyAmount("");
 
-        // Invalidate market details to refresh balances
         queryClient.invalidateQueries({
-          queryKey: ["market-details", marketId],
+          queryKey: ["marketDetails"],
         });
       } catch (e) {
         handleTransactionError(e);
@@ -97,7 +119,6 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           data: payload,
         });
 
-        // Wait for transaction confirmation
         await aptosClient().waitForTransaction({
           transactionHash: hash,
           options: {
@@ -113,15 +134,26 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           "Shares sold successfully!",
           `Sold ${amount} ${tokenType} tokens`,
         );
+
+        await recordActivity({
+          txHash: hash,
+          marketAddress: marketId,
+          userAddress: account.address.toString(),
+          action: "SELL",
+          outcome: tokenType,
+          amount: parseFloat(amount),
+          price: null,
+          totalValue: parseFloat(amount),
+        });
+
         if (variables.sellsYesShares) {
           setSellYesAmount("");
         } else {
           setSellNoAmount("");
         }
 
-        // Invalidate market details to refresh balances
         queryClient.invalidateQueries({
-          queryKey: ["market-details", marketId],
+          queryKey: ["marketDetails"],
         });
       } catch (e) {
         handleTransactionError(e);
@@ -140,15 +172,6 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
     const amountOctas = Math.floor(amountFloat * 10 ** 8);
     const userAptBalanceOctas = dynamicData.userAptBalance;
-
-    console.log("[ActionPanel] Buy shares:", {
-      amountInput: buyAmount,
-      amountFloat,
-      amountOctas,
-      userAptBalance: userAptBalanceOctas,
-      userAptBalanceAPT: userAptBalanceOctas / 10 ** 8,
-      hasEnough: amountOctas <= userAptBalanceOctas,
-    });
 
     if (amountOctas > userAptBalanceOctas) {
       toast.error("Insufficient APT balance", {
@@ -184,219 +207,299 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const userYesBalance = (dynamicData.userYesBalance / 10 ** 6).toFixed(2);
   const userNoBalance = (dynamicData.userNoBalance / 10 ** 6).toFixed(2);
 
+  const psychology = useMemo(
+    () => calculateMarketPsychology(dynamicData),
+    [dynamicData]
+  );
+
+  const primaryIsYes = psychology.primaryOutcome.name === "YES";
+
+  // Get selected animation configuration
+  const animationConfig = getAnimationConfig(ANIMATION_STYLE);
+
   return (
-    <div className="space-y-6">
-      {/* User Balances Card */}
-      <Card className="border-primary/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Wallet className="h-4 w-4" />
-            Your Balances
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-3 bg-muted/40 rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">APT</div>
-              <div className="font-mono font-bold text-sm">
-                {userAptBalance}
-              </div>
+    <div className="space-y-3">
+      {/* Compact Balances Strip with Mode Toggle */}
+      <div className="flex items-center justify-between p-2.5 bg-gradient-to-r from-background via-primary/5 to-background rounded-lg border border-primary/20 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="font-medium">Holdings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="text-center">
+              <div className="text-[9px] text-muted-foreground/70 uppercase tracking-wider font-medium">APT</div>
+              <div className="font-mono font-bold text-sm">{userAptBalance}</div>
             </div>
-            <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-              <div className="text-xs text-green-400/70 mb-1">YES</div>
-              <div className="font-mono font-bold text-sm text-green-400">
-                {userYesBalance}
-              </div>
+            <Separator orientation="vertical" className="h-5" />
+            <div className="text-center">
+              <div className="text-[9px] text-green-400/80 uppercase tracking-wider font-medium">YES</div>
+              <div className="font-mono font-bold text-sm text-green-400">{userYesBalance}</div>
             </div>
-            <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-              <div className="text-xs text-red-400/70 mb-1">NO</div>
-              <div className="font-mono font-bold text-sm text-red-400">
-                {userNoBalance}
-              </div>
+            <Separator orientation="vertical" className="h-5" />
+            <div className="text-center">
+              <div className="text-[9px] text-red-400/80 uppercase tracking-wider font-medium">NO</div>
+              <div className="font-mono font-bold text-sm text-red-400">{userNoBalance}</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Buy Section */}
-      <Card className="border-primary/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="h-4 w-4 text-green-400" />
-            Buy Shares
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="buy-amount">Amount (in APT)</Label>
-            <Input
-              id="buy-amount"
-              type="number"
-              placeholder="0.0"
-              value={buyAmount}
-              onChange={(e) => setBuyAmount(e.target.value)}
-              disabled={isProcessing}
-            />
+        {/* Trade Mode Toggle Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setTradeMode(tradeMode === "buy" ? "sell" : "buy")}
+          disabled={isProcessing}
+          className={cn(
+            "h-8 px-3 text-xs font-bold transition-all relative overflow-hidden group",
+            tradeMode === "buy"
+              ? "border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
+              : "border-green-500/30 hover:border-green-500/50 text-green-400 hover:text-green-300"
+          )}
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
+          <span>{tradeMode === "buy" ? "Switch to SELL" : "Switch to BUY"}</span>
+        </Button>
+      </div>
 
-            {/* Quick Amount Buttons */}
-            <div className="flex items-center gap-2">
-              {[25, 50, 75].map((percentage) => (
-                <Button
-                  key={percentage}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const amount =
-                      (parseFloat(userAptBalance) * percentage) / 100;
-                    setBuyAmount(amount.toFixed(4));
-                  }}
-                  disabled={isProcessing}
-                  className="flex-1 text-xs"
-                >
-                  {percentage}%
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBuyAmount(userAptBalance)}
-                disabled={isProcessing}
-                className="flex-1 text-xs font-semibold"
-              >
-                MAX
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={() => handleBuyShares(true)}
-              disabled={isProcessing}
-              className="bg-green-600 hover:bg-green-700"
+      {/* Dynamic Trading Panels - Satisfying Animations */}
+      <div className="relative min-h-[400px]" style={animationConfig.containerStyle}>
+        <AnimatePresence mode="wait">
+          {tradeMode === "buy" ? (
+            <motion.div
+              key="buy"
+              initial={animationConfig.initial}
+              animate={animationConfig.animate}
+              exit={animationConfig.exit}
+              transition={animationConfig.transition}
+              style={{ transformStyle: "preserve-3d" }}
+              className="absolute inset-0"
             >
-              {buyMutation.isPending ? "Processing..." : "Buy YES"}
-            </Button>
-            <Button
-              onClick={() => handleBuyShares(false)}
-              disabled={isProcessing}
-              className="bg-red-600 hover:bg-red-700"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* BUY YES Card */}
+                <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 via-background to-background shadow-lg hover:shadow-green-500/10 transition-all duration-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      <span className="text-green-400 font-bold">Buy YES</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="buy-yes-amount">Amount (in APT)</Label>
+                      <Input
+                        id="buy-yes-amount"
+                        type="number"
+                        placeholder="0.0"
+                        value={buyAmount}
+                        onChange={(e) => setBuyAmount(e.target.value)}
+                        disabled={isProcessing}
+                      />
+                      <div className="flex items-center gap-2">
+                        {[25, 50, 75].map((percentage) => (
+                          <Button
+                            key={percentage}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                              setBuyAmount(amount.toFixed(4));
+                            }}
+                            disabled={isProcessing}
+                            className="flex-1 text-xs"
+                          >
+                            {percentage}%
+                          </Button>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBuyAmount(userAptBalance)}
+                          disabled={isProcessing}
+                          className="flex-1 text-xs font-semibold"
+                        >
+                          ALL IN
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleBuyShares(true)}
+                      disabled={isProcessing}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      {buyMutation.isPending ? "Processing..." : "BUY YES"}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* BUY NO Card */}
+                <Card className="border-red-500/30 bg-gradient-to-br from-red-500/5 via-background to-background shadow-lg hover:shadow-red-500/10 transition-all duration-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingDown className="h-4 w-4 text-red-400" />
+                      <span className="text-red-400 font-bold">Buy NO</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="buy-no-amount">Amount (in APT)</Label>
+                      <Input
+                        id="buy-no-amount"
+                        type="number"
+                        placeholder="0.0"
+                        value={buyAmount}
+                        onChange={(e) => setBuyAmount(e.target.value)}
+                        disabled={isProcessing}
+                      />
+                      <div className="flex items-center gap-2">
+                        {[25, 50, 75].map((percentage) => (
+                          <Button
+                            key={percentage}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                              setBuyAmount(amount.toFixed(4));
+                            }}
+                            disabled={isProcessing}
+                            className="flex-1 text-xs"
+                          >
+                            {percentage}%
+                          </Button>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBuyAmount(userAptBalance)}
+                          disabled={isProcessing}
+                          className="flex-1 text-xs font-semibold"
+                        >
+                          ALL IN
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleBuyShares(false)}
+                      disabled={isProcessing}
+                      className="w-full bg-red-600 hover:bg-red-700"
+                    >
+                      {buyMutation.isPending ? "Processing..." : "BUY NO"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="sell"
+              initial={animationConfig.initial}
+              animate={animationConfig.animate}
+              exit={animationConfig.exit}
+              transition={animationConfig.transition}
+              style={{ transformStyle: "preserve-3d" }}
+              className="absolute inset-0"
             >
-              {buyMutation.isPending ? "Processing..." : "Buy NO"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* SELL YES Card */}
+                <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 via-background to-background shadow-lg hover:shadow-green-500/10 transition-all duration-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      <span className="text-green-400 font-bold">Sell YES</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sell-yes-amount">Amount (in YES)</Label>
+                      <Input
+                        id="sell-yes-amount"
+                        type="number"
+                        placeholder="0.0"
+                        value={sellYesAmount}
+                        onChange={(e) => setSellYesAmount(e.target.value)}
+                        disabled={isProcessing || dynamicData.userYesBalance === 0}
+                      />
+                      <div className="flex items-center gap-2">
+                        {[50, 100].map((percentage) => (
+                          <Button
+                            key={`yes-${percentage}`}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const amount = (parseFloat(userYesBalance) * percentage) / 100;
+                              setSellYesAmount(amount.toFixed(2));
+                            }}
+                            disabled={isProcessing || dynamicData.userYesBalance === 0}
+                            className="flex-1 text-xs"
+                          >
+                            {percentage === 100 ? "MAX" : `${percentage}%`}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleSellShares(true)}
+                      disabled={isProcessing || dynamicData.userYesBalance === 0}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      {sellMutation.isPending ? "Processing..." : "SELL YES"}
+                    </Button>
+                  </CardContent>
+                </Card>
 
-      {/* Sell Section */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingDown className="h-4 w-4 text-red-400" />
-            Sell Shares
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Sell YES */}
-            <div className="space-y-3 p-4 bg-green-500/5 rounded-lg border border-green-500/20">
-              <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">
-                  Sell YES Shares
-                </div>
-                <div className="text-sm font-mono font-semibold text-green-400">
-                  Balance: {userYesBalance}
-                </div>
+                {/* SELL NO Card */}
+                <Card className="border-red-500/30 bg-gradient-to-br from-red-500/5 via-background to-background shadow-lg hover:shadow-red-500/10 transition-all duration-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingDown className="h-4 w-4 text-red-400" />
+                      <span className="text-red-400 font-bold">Sell NO</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sell-no-amount">Amount (in NO)</Label>
+                      <Input
+                        id="sell-no-amount"
+                        type="number"
+                        placeholder="0.0"
+                        value={sellNoAmount}
+                        onChange={(e) => setSellNoAmount(e.target.value)}
+                        disabled={isProcessing || dynamicData.userNoBalance === 0}
+                      />
+                      <div className="flex items-center gap-2">
+                        {[50, 100].map((percentage) => (
+                          <Button
+                            key={`no-${percentage}`}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const amount = (parseFloat(userNoBalance) * percentage) / 100;
+                              setSellNoAmount(amount.toFixed(2));
+                            }}
+                            disabled={isProcessing || dynamicData.userNoBalance === 0}
+                            className="flex-1 text-xs"
+                          >
+                            {percentage === 100 ? "MAX" : `${percentage}%`}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleSellShares(false)}
+                      disabled={isProcessing || dynamicData.userNoBalance === 0}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      {sellMutation.isPending ? "Processing..." : "SELL NO"}
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-
-              <Input
-                type="number"
-                placeholder="0.0"
-                value={sellYesAmount}
-                onChange={(e) => setSellYesAmount(e.target.value)}
-                disabled={isProcessing || dynamicData.userYesBalance === 0}
-              />
-
-              <div className="flex items-center gap-2">
-                {[50, 100].map((percentage) => (
-                  <Button
-                    key={`yes-${percentage}`}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const amount =
-                        (parseFloat(userYesBalance) * percentage) / 100;
-                      setSellYesAmount(amount.toFixed(2));
-                    }}
-                    disabled={isProcessing || dynamicData.userYesBalance === 0}
-                    className="flex-1 text-xs"
-                  >
-                    {percentage}%
-                  </Button>
-                ))}
-              </div>
-
-              <Button
-                variant="destructive"
-                onClick={() => handleSellShares(true)}
-                disabled={isProcessing || dynamicData.userYesBalance === 0}
-                className="w-full"
-                size="sm"
-              >
-                {sellMutation.isPending ? "Processing..." : "Sell YES"}
-              </Button>
-            </div>
-
-            {/* Sell NO */}
-            <div className="space-y-3 p-4 bg-red-500/5 rounded-lg border border-red-500/20">
-              <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">
-                  Sell NO Shares
-                </div>
-                <div className="text-sm font-mono font-semibold text-red-400">
-                  Balance: {userNoBalance}
-                </div>
-              </div>
-
-              <Input
-                type="number"
-                placeholder="0.0"
-                value={sellNoAmount}
-                onChange={(e) => setSellNoAmount(e.target.value)}
-                disabled={isProcessing || dynamicData.userNoBalance === 0}
-              />
-
-              <div className="flex items-center gap-2">
-                {[50, 100].map((percentage) => (
-                  <Button
-                    key={`no-${percentage}`}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const amount =
-                        (parseFloat(userNoBalance) * percentage) / 100;
-                      setSellNoAmount(amount.toFixed(2));
-                    }}
-                    disabled={isProcessing || dynamicData.userNoBalance === 0}
-                    className="flex-1 text-xs"
-                  >
-                    {percentage}%
-                  </Button>
-                ))}
-              </div>
-
-              <Button
-                variant="destructive"
-                onClick={() => handleSellShares(false)}
-                disabled={isProcessing || dynamicData.userNoBalance === 0}
-                className="w-full"
-                size="sm"
-              >
-                {sellMutation.isPending ? "Processing..." : "Sell NO"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
