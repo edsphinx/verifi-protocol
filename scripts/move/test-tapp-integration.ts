@@ -21,6 +21,7 @@ import {
   isUserTransactionResponse,
   type Network,
   AccountAddress,
+  Serializer,
 } from "@aptos-labs/ts-sdk";
 import { networkName, nodeUrl } from "./_config";
 import {
@@ -28,6 +29,7 @@ import {
   marketCreatorAccount,
   trader1Account,
   trader2Account,
+  trader3Account,
   logAllAccounts,
 } from "./_test-accounts";
 
@@ -37,7 +39,7 @@ const TAPP_ADDRESS =
 
 // Tapp constants
 const HOOK_PREDICTION = 4;
-const BASE_FEE = 3000; // 0.3% (fee is in basis points: 3000 = 0.3%)
+const BASE_FEE = 3000n; // 0.3% (fee is in basis points: 3000 = 0.3%) - BigInt for u64
 
 /**
  * Helper to serialize create_pool arguments for Tapp
@@ -50,135 +52,66 @@ function serializeCreatePoolArgs(
   hookType: number,
   yesTokenAddr: string,
   noTokenAddr: string,
-  fee: number,
+  fee: bigint,
 ): Uint8Array {
-  // In Aptos TS SDK v5, we pass raw bytes as Uint8Array
-  // BCS format: [hook_type (u8), assets_length (uleb128), asset1 (32 bytes), asset2 (32 bytes), fee (u64)]
+  const serializer = new Serializer();
+  serializer.serializeU8(hookType);
 
-  const parts: Uint8Array[] = [];
+  // Vector of addresses for router
+  const addresses = [
+    AccountAddress.from(yesTokenAddr),
+    AccountAddress.from(noTokenAddr),
+  ];
+  serializer.serializeVector(addresses);
 
-  // 1. Serialize hook_type as u8
-  parts.push(new Uint8Array([hookType]));
-
-  // 2. Serialize vector<address> length as uleb128 (2 items)
-  parts.push(new Uint8Array([2])); // length = 2
-
-  // 3. Serialize first address (YES token) - 32 bytes
-  parts.push(AccountAddress.from(yesTokenAddr).toUint8Array());
-
-  // 4. Serialize second address (NO token) - 32 bytes
-  parts.push(AccountAddress.from(noTokenAddr).toUint8Array());
-
-  // 5. Serialize fee as u64 (little-endian, 8 bytes)
-  const feeBytes = new ArrayBuffer(8);
-  const feeView = new DataView(feeBytes);
-  feeView.setBigUint64(0, BigInt(fee), true); // little-endian
-  parts.push(new Uint8Array(feeBytes));
-
-  // Concatenate all parts
-  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  serializer.serializeU64(fee);
+  return serializer.toUint8Array();
 }
 
 /**
  * Helper to serialize add_liquidity arguments for Tapp
- * Format from fixtures.move:
- * - pool_addr: address
- * - position_addr: Option<address>
- * - amount_yes: u64
- * - amount_no: u64
- * - min_lp_tokens: u64
+ * Format: pool_addr + Option<address> + [yes_amount, no_amount] for hook
  */
 function serializeAddLiquidityArgs(
   poolAddr: string,
-  amountYes: number,
-  amountNo: number,
-  minLpTokens: number,
+  amountYes: bigint,
+  amountNo: bigint,
 ): Uint8Array {
-  const parts: Uint8Array[] = [];
+  const serializer = new Serializer();
 
-  // 1. Serialize pool address (32 bytes)
-  parts.push(AccountAddress.from(poolAddr).toUint8Array());
+  // Arguments for router
+  serializer.serializeFixedBytes(AccountAddress.from(poolAddr).toUint8Array());
+  serializer.serializeBool(false); // Option<address> = None
 
-  // 2. Serialize Option<address> = None (0 = None, 1 = Some)
-  parts.push(new Uint8Array([0])); // None - no existing position
+  // Arguments for hook (NO minLpTokens - hook doesn't read it)
+  serializer.serializeU64(amountYes);
+  serializer.serializeU64(amountNo);
 
-  // 3. Serialize amount_yes as u64
-  const yesBytes = new ArrayBuffer(8);
-  new DataView(yesBytes).setBigUint64(0, BigInt(amountYes), true);
-  parts.push(new Uint8Array(yesBytes));
-
-  // 4. Serialize amount_no as u64
-  const noBytes = new ArrayBuffer(8);
-  new DataView(noBytes).setBigUint64(0, BigInt(amountNo), true);
-  parts.push(new Uint8Array(noBytes));
-
-  // 5. Serialize min_lp_tokens as u64
-  const minBytes = new ArrayBuffer(8);
-  new DataView(minBytes).setBigUint64(0, BigInt(minLpTokens), true);
-  parts.push(new Uint8Array(minBytes));
-
-  // Concatenate all parts
-  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  return serializer.toUint8Array();
 }
 
 /**
  * Helper to serialize swap arguments for Tapp
- * Format from fixtures.move:
- * - pool_addr: address
- * - a2b: bool (true = YES→NO, false = NO→YES)
- * - amount_in: u64
- * - min_amount_out: u64
+ * Format: pool_addr + [amount_in, yes_to_no, min_amount_out] for hook
+ * CRITICAL: Hook expects amount_in FIRST, then yes_to_no boolean
  */
 function serializeSwapArgs(
   poolAddr: string,
   yesToNo: boolean,
-  amountIn: number,
-  minAmountOut: number,
+  amountIn: bigint,
+  minAmountOut: bigint,
 ): Uint8Array {
-  const parts: Uint8Array[] = [];
+  const serializer = new Serializer();
 
-  // 1. Serialize pool address (32 bytes)
-  parts.push(AccountAddress.from(poolAddr).toUint8Array());
+  // Argument for router
+  serializer.serializeFixedBytes(AccountAddress.from(poolAddr).toUint8Array());
 
-  // 2. Serialize a2b as bool
-  parts.push(new Uint8Array([yesToNo ? 1 : 0]));
+  // Arguments for hook (CORRECT ORDER!)
+  serializer.serializeU64(amountIn);      // 1. amount_in (u64)
+  serializer.serializeBool(yesToNo);      // 2. yes_to_no (bool)
+  serializer.serializeU64(minAmountOut);  // 3. min_amount_out (u64)
 
-  // 3. Serialize amount_in as u64
-  const inBytes = new ArrayBuffer(8);
-  new DataView(inBytes).setBigUint64(0, BigInt(amountIn), true);
-  parts.push(new Uint8Array(inBytes));
-
-  // 4. Serialize min_amount_out as u64
-  const outBytes = new ArrayBuffer(8);
-  new DataView(outBytes).setBigUint64(0, BigInt(minAmountOut), true);
-  parts.push(new Uint8Array(outBytes));
-
-  // Concatenate all parts
-  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  return serializer.toUint8Array();
 }
 
 async function main() {
@@ -209,7 +142,7 @@ async function main() {
   let poolAddress: string | undefined;
 
   // === Step 0: Check and register oracle if needed ===
-  console.log("[0/7] Checking oracle registration...");
+  console.log("[0/8] Checking oracle registration...");
   try {
     // Check if oracle exists
     const oracleExists = await aptos.view({
@@ -273,7 +206,7 @@ async function main() {
   }
 
   // === Step 1: Create VeriFi Market ===
-  console.log("\n[1/7] Creating VeriFi prediction market...");
+  console.log("\n[1/8] Creating VeriFi prediction market...");
   try {
     const createTxn = await aptos.transaction.build.simple({
       sender: marketCreatorAccount.accountAddress,
@@ -318,7 +251,7 @@ async function main() {
   }
 
   // === Step 2: Get YES/NO Token Addresses ===
-  console.log("\n[2/7] Getting YES/NO token addresses from market...");
+  console.log("\n[2/8] Getting YES/NO token addresses from market...");
   try {
     const tokens = await aptos.view({
       payload: {
@@ -359,14 +292,14 @@ async function main() {
   }
 
   // === Step 3: Buy YES/NO Shares (to have tokens for liquidity) ===
-  console.log("\n[3/7] Trader 1 buying YES/NO shares for liquidity...");
+  console.log("\n[3/8] Trader 1 buying YES/NO shares for liquidity...");
   try {
-    // Buy 0.02 APT worth of YES (minimal amount for testing)
+    // Buy 0.05 APT worth of YES (more liquidity for swaps)
     const buyYesTxn = await aptos.transaction.build.simple({
       sender: trader1Account.accountAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
-        functionArguments: [marketAddress, 2_000_000, true], // 0.02 APT
+        functionArguments: [marketAddress, 5_000_000, true], // 0.05 APT
       },
     });
     const yesCommit = await aptos.signAndSubmitTransaction({
@@ -379,12 +312,12 @@ async function main() {
     // Wait a bit before next transaction
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Buy 0.02 APT worth of NO
+    // Buy 0.05 APT worth of NO
     const buyNoTxn = await aptos.transaction.build.simple({
       sender: trader1Account.accountAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
-        functionArguments: [marketAddress, 2_000_000, false], // 0.02 APT
+        functionArguments: [marketAddress, 5_000_000, false], // 0.05 APT
       },
     });
     const noCommit = await aptos.signAndSubmitTransaction({
@@ -394,7 +327,7 @@ async function main() {
     await aptos.waitForTransaction({ transactionHash: noCommit.hash });
     console.log(`    Bought NO shares`);
 
-    console.log(` Trader 1 bought 0.02 APT of YES and 0.02 APT of NO shares`);
+    console.log(` Trader 1 bought 0.05 APT of YES and 0.05 APT of NO shares`);
 
     // Check balances
     const balances = await aptos.view({
@@ -413,7 +346,7 @@ async function main() {
   }
 
   // === Step 4: Create Tapp AMM Pool ===
-  console.log("\n[4/7] Creating Tapp AMM pool with prediction hook...");
+  console.log("\n[4/8] Creating Tapp AMM pool with prediction hook...");
 
   // First, verify the market exists in get_all_market_addresses
   console.log("    Verifying market is in registry...");
@@ -531,13 +464,12 @@ async function main() {
   }
 
   // === Step 5: Add Liquidity to Tapp Pool ===
-  console.log("\n[5/7] Adding liquidity to Tapp AMM pool...");
+  console.log("\n[5/8] Adding liquidity to Tapp AMM pool...");
   try {
     const liquidityArgs = serializeAddLiquidityArgs(
       poolAddress!,
-      1_500_000, // 0.015 APT worth of YES
-      1_500_000, // 0.015 APT worth of NO
-      0, // min LP tokens
+      4_000_000n, // 0.04 APT worth of YES (BigInt for u64) - more liquidity for swaps
+      4_000_000n, // 0.04 APT worth of NO (BigInt for u64)
     );
 
     const addLiqTxn = await aptos.transaction.build.simple({
@@ -574,14 +506,14 @@ async function main() {
   }
 
   // === Step 6: Trader 2 Buys Shares for Swapping ===
-  console.log("\n[6/7] Trader 2 buying shares to swap in Tapp AMM...");
+  console.log("\n[6/8] Trader 2 buying shares to swap in Tapp AMM...");
   try {
-    // Buy YES shares for swapping
+    // Buy YES shares for swapping (reduced amount)
     const buyYesTxn = await aptos.transaction.build.simple({
       sender: trader2Account.accountAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
-        functionArguments: [marketAddress, 10_000_000, true], // 0.1 APT of YES
+        functionArguments: [marketAddress, 1_000_000, true], // 0.01 APT of YES
       },
     });
     const yesCommit = await aptos.signAndSubmitTransaction({
@@ -597,7 +529,7 @@ async function main() {
       sender: trader2Account.accountAddress,
       data: {
         function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
-        functionArguments: [marketAddress, 100_000, false], // 0.001 APT of NO (minimal)
+        functionArguments: [marketAddress, 10_000, false], // 0.0001 APT of NO (minimal)
       },
     });
     const noCommit = await aptos.signAndSubmitTransaction({
@@ -607,14 +539,14 @@ async function main() {
     await aptos.waitForTransaction({ transactionHash: noCommit.hash });
     console.log(`    Bought NO shares (to initialize store)`);
 
-    console.log(` Trader 2 ready to swap YES → NO`);
+    console.log(` Trader 2 ready to swap YES → NO with 0.01 APT`);
   } catch (error: any) {
     console.error(" Failed to buy shares:", error.message || error);
     process.exit(1);
   }
 
   // === Step 7: Execute Swap YES → NO via Tapp AMM ===
-  console.log("\n[7/7] Executing swap YES → NO via Tapp AMM...");
+  console.log("\n[7/8] Executing swap YES → NO via Tapp AMM...");
 
   // Wait a bit before swap to avoid mempool issues
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -638,15 +570,15 @@ async function main() {
   }
 
   try {
-    // Use 10% of balance for swap (1M tokens = 0.01 APT)
-    const swapAmount = 1_000_000; // 0.01 APT worth of YES tokens
-    console.log(`    Attempting to swap ${swapAmount} YES tokens (0.01 APT)...`);
+    // Use smaller amount for swap (100k tokens = 0.001 APT)
+    const swapAmount = 100_000n; // 0.001 APT worth of YES tokens (BigInt for u64)
+    console.log(`    Attempting to swap ${swapAmount} YES tokens (0.001 APT)...`);
 
     const swapArgs = serializeSwapArgs(
       poolAddress!,
       true, // YES to NO
       swapAmount,
-      0, // min amount out
+      0n, // min amount out (BigInt for u64)
     );
 
     const swapTxn = await aptos.transaction.build.simple({
@@ -678,7 +610,92 @@ async function main() {
       }
     }
   } catch (error: any) {
-    console.error(" Failed to swap:", error.message || error);
+    console.error(" Failed to swap YES → NO:", error.message || error);
+    process.exit(1);
+  }
+
+  // === Step 8: Execute Swap NO → YES via Tapp AMM ===
+  console.log("\n[8/8] Executing swap NO → YES via Tapp AMM...");
+
+  // Wait a bit before swap to avoid mempool issues
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Check Trader 3's balance first
+  try {
+    const balances = await aptos.view({
+      payload: {
+        function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
+        functionArguments: [
+          trader3Account.accountAddress.toString(),
+          marketAddress,
+        ],
+      },
+    });
+    console.log(
+      `    Trader 3 balances before swap: YES=${balances[0]}, NO=${balances[1]}`,
+    );
+  } catch (e: any) {
+    console.log(`     Could not check balances: ${e.message}`);
+  }
+
+  try {
+    // First, Trader 3 needs to buy some NO tokens
+    console.log("    Trader 3 buying NO shares first...");
+    const buyNoTxn = await aptos.transaction.build.simple({
+      sender: trader3Account.accountAddress,
+      data: {
+        function: `${MODULE_ADDRESS}::verifi_protocol::buy_shares`,
+        functionArguments: [marketAddress, 1_000_000n, false], // 0.01 APT of NO tokens
+      },
+    });
+    const buyNoResponse = await aptos.signAndSubmitTransaction({
+      signer: trader3Account,
+      transaction: buyNoTxn,
+    });
+    await aptos.waitForTransaction({ transactionHash: buyNoResponse.hash });
+    console.log("    Bought NO shares");
+
+    // Now swap NO → YES (smaller amount to avoid balance issues)
+    const swapAmount = 100_000n; // 0.001 APT worth of NO tokens (BigInt for u64)
+    console.log(`    Attempting to swap ${swapAmount} NO tokens to YES...`);
+
+    const swapArgs = serializeSwapArgs(
+      poolAddress!,
+      false, // NO to YES (reverse direction)
+      swapAmount,
+      0n, // min amount out (BigInt for u64)
+    );
+
+    const swapTxn = await aptos.transaction.build.simple({
+      sender: trader3Account.accountAddress,
+      data: {
+        function: `${TAPP_ADDRESS}::router::swap`,
+        functionArguments: [swapArgs],
+      },
+    });
+    const committedTxn = await aptos.signAndSubmitTransaction({
+      signer: trader3Account,
+      transaction: swapTxn,
+    });
+    const response = await aptos.waitForTransaction({
+      transactionHash: committedTxn.hash,
+    });
+
+    if (isUserTransactionResponse(response)) {
+      const event = response.events.find(
+        (e) => e.type === `${TAPP_ADDRESS}::router::Swapped`,
+      );
+      if (event) {
+        console.log(` Swap NO → YES executed successfully via Tapp AMM!`);
+        console.log(`   Amount In: ${event.data.amount_in}`);
+        console.log(`   Amount Out: ${event.data.amount_out}`);
+        console.log(
+          `   TX: https://explorer.aptoslabs.com/txn/${committedTxn.hash}?network=${networkName}`,
+        );
+      }
+    }
+  } catch (error: any) {
+    console.error(" Failed to swap NO → YES:", error.message || error);
     process.exit(1);
   }
 
