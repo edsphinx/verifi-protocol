@@ -9,7 +9,7 @@ module VeriFiPublisher::protocol_integration_test {
     use aptos_framework::aptos_coin;
     use aptos_framework::coin::{BurnCapability, MintCapability};
 
-    use VeriFiPublisher::verifi_protocol::{Self, Market};
+    use VeriFiPublisher::verifi_protocol;
     use VeriFiPublisher::oracle_registry;
     use VeriFiPublisher::access_control;
 

@@ -2,7 +2,6 @@
 module VeriFiPublisher::tapp_prediction_hook_test {
     use std::signer;
     use std::vector;
-    use std::option;
     use std::string;
 
     use aptos_framework::timestamp;
@@ -10,7 +9,6 @@ module VeriFiPublisher::tapp_prediction_hook_test {
     use aptos_framework::object::{Self, Object};
     use aptos_framework::aptos_coin;
     use aptos_framework::coin::{BurnCapability, MintCapability};
-    use aptos_std::bcs_stream;
     use aptos_std::bcs;
 
     use VeriFiPublisher::verifi_protocol::{Self, Market};
@@ -315,7 +313,7 @@ module VeriFiPublisher::tapp_prediction_hook_test {
     }
 
     #[test(admin = @VeriFiPublisher, creator = @0x247058d0fa4d63683376116b11ab90bea4a9582141794d83ddbcce5a75b3578c, pool_signer = @0x55ba2b4d7be676e77bbfef29c27401c9862eb6682e66b45e5924da34324c55cd)]
-    fun test_pool_seed_changes_with_different_assets(admin: &signer, creator: &signer, pool_signer: &signer) {
+    fun test_pool_seed_changes_with_different_assets(admin: &signer, creator: &signer, _pool_signer: &signer) {
         // This test doesn't need pool_signer account creation since it only calls pool_seed (pure function)
         setup_protocol(admin);
         let market = create_test_market(admin, creator);
