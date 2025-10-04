@@ -17,10 +17,12 @@ export async function POST(request: Request) {
     // Get resolver private key from env
     const resolverKey = process.env.NEXT_MODULE_PUBLISHER_ACCOUNT_PRIVATE_KEY;
     if (!resolverKey) {
-      console.error("[resolve-expired] ❌ Resolver key not found in environment");
+      console.error(
+        "[resolve-expired] ❌ Resolver key not found in environment",
+      );
       return NextResponse.json(
         { error: "Resolver key not configured" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -28,19 +30,24 @@ export async function POST(request: Request) {
     const privateKey = new Ed25519PrivateKey(resolverKey);
     const resolver = Account.fromPrivateKey({ privateKey });
 
-    console.log(`[resolve-expired] 🔑 Resolver address: ${resolver.accountAddress.toString()}`);
+    console.log(
+      `[resolve-expired] 🔑 Resolver address: ${resolver.accountAddress.toString()}`,
+    );
 
     // Get all market addresses from registry
     const result = await aptosClient().view({
       payload: {
-        function: `${MODULE_ADDRESS}::verifi_protocol::get_all_market_addresses` as `${string}::${string}::${string}`,
+        function:
+          `${MODULE_ADDRESS}::verifi_protocol::get_all_market_addresses` as `${string}::${string}::${string}`,
         typeArguments: [],
         functionArguments: [],
       },
     });
 
     const marketAddresses = (result[0] as string[]) || [];
-    console.log(`[resolve-expired] 📊 Found ${marketAddresses.length} total markets`);
+    console.log(
+      `[resolve-expired] 📊 Found ${marketAddresses.length} total markets`,
+    );
 
     const results = {
       total: marketAddresses.length,
@@ -59,7 +66,8 @@ export async function POST(request: Request) {
         // Get market state
         const marketState = await aptosClient().view({
           payload: {
-            function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state` as `${string}::${string}::${string}`,
+            function:
+              `${MODULE_ADDRESS}::verifi_protocol::get_market_state` as `${string}::${string}::${string}`,
             typeArguments: [],
             functionArguments: [marketAddress],
           },
@@ -69,7 +77,9 @@ export async function POST(request: Request) {
 
         // Skip if already resolved (status 2 or 3)
         if (status === 2 || status === 3) {
-          console.log(`[resolve-expired] ⏭️  Market ${marketAddress.substring(0, 10)}... already resolved (status: ${status})`);
+          console.log(
+            `[resolve-expired] ⏭️  Market ${marketAddress.substring(0, 10)}... already resolved (status: ${status})`,
+          );
           continue;
         }
 
@@ -79,16 +89,22 @@ export async function POST(request: Request) {
           resourceType: `${MODULE_ADDRESS}::verifi_protocol::Market`,
         });
 
-        const expirationTime = Number((marketDetails.data as any).expiration_timestamp);
+        const expirationTime = Number(
+          (marketDetails.data as any).expiration_timestamp,
+        );
 
         // Check if expired
         if (now >= expirationTime) {
           results.expired++;
-          console.log(`[resolve-expired] ⏰ Market ${marketAddress.substring(0, 10)}... is expired, resolving...`);
+          console.log(
+            `[resolve-expired] ⏰ Market ${marketAddress.substring(0, 10)}... is expired, resolving...`,
+          );
 
           try {
             // Call resolve_market
-            console.log(`[resolve-expired] 📝 Building transaction for market ${marketAddress.substring(0, 10)}...`);
+            console.log(
+              `[resolve-expired] 📝 Building transaction for market ${marketAddress.substring(0, 10)}...`,
+            );
             const transaction = await aptosClient().transaction.build.simple({
               sender: resolver.accountAddress,
               data: {
@@ -97,13 +113,17 @@ export async function POST(request: Request) {
               },
             });
 
-            console.log(`[resolve-expired] ✍️  Signing and submitting transaction...`);
+            console.log(
+              `[resolve-expired] ✍️  Signing and submitting transaction...`,
+            );
             const committedTxn = await aptosClient().signAndSubmitTransaction({
               signer: resolver,
               transaction,
             });
 
-            console.log(`[resolve-expired] ⏳ Waiting for transaction ${committedTxn.hash.substring(0, 20)}...`);
+            console.log(
+              `[resolve-expired] ⏳ Waiting for transaction ${committedTxn.hash.substring(0, 20)}...`,
+            );
             await aptosClient().waitForTransaction({
               transactionHash: committedTxn.hash,
               options: {
@@ -114,7 +134,9 @@ export async function POST(request: Request) {
 
             results.resolved++;
             results.txHashes.push(committedTxn.hash);
-            console.log(`[resolve-expired] ✅ Resolved market ${marketAddress.substring(0, 10)}... - tx: ${committedTxn.hash}`);
+            console.log(
+              `[resolve-expired] ✅ Resolved market ${marketAddress.substring(0, 10)}... - tx: ${committedTxn.hash}`,
+            );
           } catch (resolveError: any) {
             results.failed++;
             const errorMsg = `Failed to resolve ${marketAddress.substring(0, 10)}...: ${resolveError.message}`;
@@ -123,12 +145,18 @@ export async function POST(request: Request) {
           }
         }
       } catch (error: any) {
-        console.error(`[resolve-expired] ⚠️  Error checking market ${marketAddress.substring(0, 10)}...:`, error.message);
+        console.error(
+          `[resolve-expired] ⚠️  Error checking market ${marketAddress.substring(0, 10)}...:`,
+          error.message,
+        );
       }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`[resolve-expired] 🎉 Resolution complete in ${duration}s:`, results);
+    console.log(
+      `[resolve-expired] 🎉 Resolution complete in ${duration}s:`,
+      results,
+    );
 
     return NextResponse.json({
       success: true,
@@ -139,7 +167,7 @@ export async function POST(request: Request) {
     console.error("[resolve-expired] Fatal error:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -2,16 +2,19 @@ import { NextResponse } from "next/server";
 import client from "@/lib/clients/prisma";
 import { aptosClient } from "@/aptos/client";
 
-const TAPP_PROTOCOL_ADDRESS = "0xf9c301c8cc04dc7bd99bc5cf3a18f45fbc47b8b3d6ea1ed2ee93c580a2eef932";
+const TAPP_PROTOCOL_ADDRESS =
+  "0xf9c301c8cc04dc7bd99bc5cf3a18f45fbc47b8b3d6ea1ed2ee93c580a2eef932";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ marketAddress: string }> }
+  { params }: { params: Promise<{ marketAddress: string }> },
 ) {
   try {
     const { marketAddress } = await params;
 
-    console.log(`[API /api/tapp/pools/by-market] 📊 Fetching pool for market: ${marketAddress.substring(0, 10)}...`);
+    console.log(
+      `[API /api/tapp/pools/by-market] 📊 Fetching pool for market: ${marketAddress.substring(0, 10)}...`,
+    );
 
     // First, check database
     let pool = await client.tappPool.findFirst({
@@ -19,12 +22,17 @@ export async function GET(
     });
 
     if (pool) {
-      console.log(`[API /api/tapp/pools/by-market] ✅ Pool found in DB:`, pool.poolAddress.substring(0, 10) + '...');
+      console.log(
+        `[API /api/tapp/pools/by-market] ✅ Pool found in DB:`,
+        pool.poolAddress.substring(0, 10) + "...",
+      );
       return NextResponse.json(pool);
     }
 
     // If not in DB, check on-chain
-    console.log(`[API /api/tapp/pools/by-market] 🔍 Pool not in DB, checking on-chain...`);
+    console.log(
+      `[API /api/tapp/pools/by-market] 🔍 Pool not in DB, checking on-chain...`,
+    );
 
     try {
       // Try to get pool info from Tapp protocol
@@ -37,7 +45,9 @@ export async function GET(
       });
 
       if (poolInfo && poolInfo.length > 0) {
-        console.log(`[API /api/tapp/pools/by-market] ⚠️  Pool exists on-chain but not in DB`);
+        console.log(
+          `[API /api/tapp/pools/by-market] ⚠️  Pool exists on-chain but not in DB`,
+        );
 
         // Return a minimal pool object to indicate it exists
         // Include default values for all expected fields
@@ -54,16 +64,27 @@ export async function GET(
       }
     } catch (onChainError: any) {
       // If view function fails, pool doesn't exist on-chain
-      console.log(`[API /api/tapp/pools/by-market] ❌ Pool not found on-chain:`, onChainError.message);
+      console.log(
+        `[API /api/tapp/pools/by-market] ❌ Pool not found on-chain:`,
+        onChainError.message,
+      );
     }
 
-    console.log(`[API /api/tapp/pools/by-market] 🚫 No pool found for market: ${marketAddress.substring(0, 10)}...`);
+    console.log(
+      `[API /api/tapp/pools/by-market] 🚫 No pool found for market: ${marketAddress.substring(0, 10)}...`,
+    );
     return NextResponse.json(null, { status: 404 });
   } catch (error) {
-    console.error("[API /api/tapp/pools/by-market] Error fetching pool:", error);
+    console.error(
+      "[API /api/tapp/pools/by-market] Error fetching pool:",
+      error,
+    );
 
     if (error instanceof Error) {
-      console.error("[API /api/tapp/pools/by-market] Error details:", error.message);
+      console.error(
+        "[API /api/tapp/pools/by-market] Error details:",
+        error.message,
+      );
     }
 
     return NextResponse.json(null, { status: 500 });
@@ -72,14 +93,17 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ marketAddress: string }> }
+  { params }: { params: Promise<{ marketAddress: string }> },
 ) {
   try {
     const { marketAddress } = await params;
     const body = await request.json();
-    const { poolAddress, yesTokenAddress, noTokenAddress, creatorAddress } = body;
+    const { poolAddress, yesTokenAddress, noTokenAddress, creatorAddress } =
+      body;
 
-    console.log(`[API /api/tapp/pools/by-market] Creating pool record for market: ${marketAddress}`);
+    console.log(
+      `[API /api/tapp/pools/by-market] Creating pool record for market: ${marketAddress}`,
+    );
 
     // Check if pool already exists
     const existingPool = await client.tappPool.findFirst({
@@ -87,7 +111,9 @@ export async function POST(
     });
 
     if (existingPool) {
-      console.log(`[API /api/tapp/pools/by-market] Pool already exists for market: ${marketAddress}`);
+      console.log(
+        `[API /api/tapp/pools/by-market] Pool already exists for market: ${marketAddress}`,
+      );
       return NextResponse.json(existingPool);
     }
 
@@ -106,18 +132,27 @@ export async function POST(
       },
     });
 
-    console.log(`[API /api/tapp/pools/by-market] Pool record created:`, pool.poolAddress);
+    console.log(
+      `[API /api/tapp/pools/by-market] Pool record created:`,
+      pool.poolAddress,
+    );
     return NextResponse.json(pool);
   } catch (error) {
-    console.error("[API /api/tapp/pools/by-market] Error creating pool:", error);
+    console.error(
+      "[API /api/tapp/pools/by-market] Error creating pool:",
+      error,
+    );
 
     if (error instanceof Error) {
-      console.error("[API /api/tapp/pools/by-market] Error details:", error.message);
+      console.error(
+        "[API /api/tapp/pools/by-market] Error details:",
+        error.message,
+      );
     }
 
     return NextResponse.json(
       { error: "Failed to create pool record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

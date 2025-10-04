@@ -8,7 +8,7 @@ import { getActivitiesByUser } from "@/services/activity.service";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ address: string }> }
+  { params }: { params: Promise<{ address: string }> },
 ) {
   try {
     const { address } = await params;
@@ -22,7 +22,7 @@ export async function GET(
     console.error("Error fetching user activities:", error);
     return NextResponse.json(
       { error: "Failed to fetch activities" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

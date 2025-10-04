@@ -3,13 +3,17 @@ import { getActiveMarkets } from "@/services/market.service";
 
 export async function GET() {
   try {
-    console.log('[API /api/markets] GET request received');
+    console.log("[API /api/markets] GET request received");
     const markets = await getActiveMarkets();
-    console.log(`[API /api/markets] Returning ${markets.length} markets to client`);
+    console.log(
+      `[API /api/markets] Returning ${markets.length} markets to client`,
+    );
 
     // Always return an array, even if empty
     if (!markets || !Array.isArray(markets)) {
-      console.warn('[API /api/markets] Markets is not an array, returning empty array');
+      console.warn(
+        "[API /api/markets] Markets is not an array, returning empty array",
+      );
       return NextResponse.json([]);
     }
 

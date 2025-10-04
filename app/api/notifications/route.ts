@@ -4,7 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getAllNotificationsForUser, getUnreadCount } from "@/services/notification.service";
+import {
+  getAllNotificationsForUser,
+  getUnreadCount,
+} from "@/services/notification.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const notifications = await getAllNotificationsForUser(
       userAddress || undefined,
-      limit
+      limit,
     );
 
     const unreadCount = await getUnreadCount(userAddress || undefined);
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching notifications:", error);
     return NextResponse.json(
       { error: "Failed to fetch notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

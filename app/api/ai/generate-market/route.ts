@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json(
         { error: "Prompt is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -105,7 +105,7 @@ RESPONSE FORMAT:
     if (!content) {
       return NextResponse.json(
         { error: "No response from AI" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -116,9 +116,13 @@ RESPONSE FORMAT:
 
       // Check if content is wrapped in ```json ... ```
       if (cleanedContent.startsWith("```json")) {
-        cleanedContent = cleanedContent.replace(/^```json\s*/i, "").replace(/```\s*$/, "");
+        cleanedContent = cleanedContent
+          .replace(/^```json\s*/i, "")
+          .replace(/```\s*$/, "");
       } else if (cleanedContent.startsWith("```")) {
-        cleanedContent = cleanedContent.replace(/^```\s*/, "").replace(/```\s*$/, "");
+        cleanedContent = cleanedContent
+          .replace(/^```\s*/, "")
+          .replace(/```\s*$/, "");
       }
 
       const marketData = JSON.parse(cleanedContent.trim());
@@ -134,7 +138,7 @@ RESPONSE FORMAT:
     console.error("Error generating market:", error);
     return NextResponse.json(
       { error: "Failed to generate market data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

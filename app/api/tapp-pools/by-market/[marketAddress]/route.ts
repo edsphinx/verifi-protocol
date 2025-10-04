@@ -8,7 +8,7 @@ import { getTappPoolByMarket } from "@/services/tapp-pool.service";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ marketAddress: string }> }
+  { params }: { params: Promise<{ marketAddress: string }> },
 ) {
   try {
     // In Next.js 15, params is a Promise that must be awaited
@@ -19,7 +19,7 @@ export async function GET(
     if (!pool) {
       return NextResponse.json(
         { error: "Pool not found for this market" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function GET(
     console.error("Error fetching Tapp pool:", error);
     return NextResponse.json(
       { error: "Failed to fetch pool" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

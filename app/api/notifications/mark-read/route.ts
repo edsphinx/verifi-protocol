@@ -4,7 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { markNotificationAsRead, markAllAsReadForUser } from "@/services/notification.service";
+import {
+  markNotificationAsRead,
+  markAllAsReadForUser,
+} from "@/services/notification.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,14 +25,14 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: "Missing notificationId or userAddress" },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } catch (error) {
     console.error("Error marking notification as read:", error);
     return NextResponse.json(
       { error: "Failed to mark notification as read" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

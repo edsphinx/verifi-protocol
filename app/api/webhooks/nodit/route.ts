@@ -7,7 +7,10 @@ import { NextResponse } from "next/server";
 import { recordActivity, activityExists } from "@/services/activity.service";
 import { recordTappPool, poolExists } from "@/services/tapp-pool.service";
 import { recordNewMarket } from "@/services/market.service";
-import { createGlobalNotification, createUserNotification } from "@/services/notification.service";
+import {
+  createGlobalNotification,
+  createUserNotification,
+} from "@/services/notification.service";
 
 const MODULE_ADDRESS = process.env.NEXT_PUBLIC_PUBLISHER_ACCOUNT_ADDRESS;
 
@@ -15,7 +18,10 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
 
-    console.log("📨 Nodit webhook FULL PAYLOAD:", JSON.stringify(payload, null, 2));
+    console.log(
+      "📨 Nodit webhook FULL PAYLOAD:",
+      JSON.stringify(payload, null, 2),
+    );
     console.log("📨 Nodit webhook summary:", {
       event: payload.event?.type,
       tx: payload.transaction?.hash,
@@ -23,11 +29,17 @@ export async function POST(request: Request) {
 
     // Validate payload structure
     if (!payload.event || !payload.transaction || !payload.transaction.hash) {
-      console.warn("⚠️ Invalid webhook payload structure - likely a test webhook");
-      return NextResponse.json({
-        status: "ignored",
-        reason: "Invalid payload structure - missing event or transaction data"
-      }, { status: 200 });
+      console.warn(
+        "⚠️ Invalid webhook payload structure - likely a test webhook",
+      );
+      return NextResponse.json(
+        {
+          status: "ignored",
+          reason:
+            "Invalid payload structure - missing event or transaction data",
+        },
+        { status: 200 },
+      );
     }
 
     const eventType = payload.event?.type;
@@ -89,7 +101,7 @@ export async function POST(request: Request) {
           title: eventData.title,
           oracleId: eventData.oracle_id,
           expirationTime: eventData.expiration_time,
-        }
+        },
       );
     }
 
@@ -117,7 +129,7 @@ export async function POST(request: Request) {
             poolAddress: eventData.pool_addr,
             marketAddress: eventData.market_address,
             fee: eventData.fee,
-          }
+          },
         );
       }
     }
