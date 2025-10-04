@@ -10,6 +10,7 @@ import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
+import { recordActivity } from "@/lib/services/activity-client.service";
 
 interface SwapParams {
   marketId: string;
@@ -176,7 +177,7 @@ export function useSwap() {
         return await executeSwap(params, signAndSubmitTransaction, account);
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
       const direction = variables.yesToNo ? "YES → NO" : "NO → YES";
 
@@ -186,10 +187,22 @@ export function useSwap() {
           label: "View TX",
           onClick: () => window.open(explorerLink, "_blank"),
         },
-        duration: 15000, // 15 seconds to give time to click
+        duration: 15000,
       });
 
-      // Force refetch immediately after swap
+      if (!isDemo && account?.address) {
+        await recordActivity({
+          txHash: data.txHash,
+          marketAddress: variables.marketId,
+          userAddress: account.address.toString(),
+          action: "SWAP",
+          outcome: direction,
+          amount: variables.amountIn,
+          price: data.amountOut / variables.amountIn,
+          totalValue: variables.amountIn,
+        });
+      }
+
       queryClient.refetchQueries({
         queryKey: ["pool-data", variables.marketId],
       });

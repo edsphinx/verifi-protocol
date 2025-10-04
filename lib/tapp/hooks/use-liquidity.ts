@@ -10,6 +10,7 @@ import { aptosClient } from "@/aptos/client";
 import { TAPP_PROTOCOL_ADDRESS } from "../constants";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
+import { recordActivity } from "@/lib/services/activity-client.service";
 
 interface AddLiquidityParams {
   marketId: string;
@@ -35,6 +36,7 @@ async function simulateAddLiquidity(params: AddLiquidityParams) {
     lpTokens: Math.sqrt(params.yesAmount * params.noAmount),
     positionIdx: params.positionIdx ?? Date.now() % 1000,
     txHash: `0xdemo_add_${Date.now()}`,
+    poolAddress: `0xdemo_pool_${params.marketId}`,
   };
 }
 
@@ -176,6 +178,7 @@ async function executeAddLiquidity(
     lpTokens: Math.sqrt(params.yesAmount * params.noAmount),
     positionIdx: params.positionIdx ?? Date.now() % 1000,
     txHash: response.hash,
+    poolAddress, // Return pool address for activity recording
   };
 }
 
@@ -187,9 +190,10 @@ async function simulateRemoveLiquidity(params: RemoveLiquidityParams) {
 
   return {
     success: true,
-    yesAmount: params.lpTokens * 0.5, // Simplified
+    yesAmount: params.lpTokens * 0.5,
     noAmount: params.lpTokens * 0.5,
     txHash: `0xdemo_remove_${Date.now()}`,
+    poolAddress: `0xdemo_pool_${params.marketId}`,
   };
 }
 
@@ -205,7 +209,16 @@ async function executeRemoveLiquidity(
     throw new Error("Wallet not connected");
   }
 
-  const poolAddress = params.marketId;
+  // Get pool address from API
+  const poolResponse = await fetch(
+    `/api/tapp/pools/by-market/${params.marketId}`,
+  );
+  if (!poolResponse.ok) {
+    throw new Error("No AMM pool found for this market.");
+  }
+
+  const poolData = await poolResponse.json();
+  const poolAddress = poolData.poolAddress;
 
   // Serialize remove liquidity parameters
   const serializer = new Serializer();
@@ -240,6 +253,7 @@ async function executeRemoveLiquidity(
     yesAmount: params.lpTokens * 0.5,
     noAmount: params.lpTokens * 0.5,
     txHash: response.hash,
+    poolAddress, // Return pool address for activity recording
   };
 }
 
@@ -263,7 +277,7 @@ export function useAddLiquidity() {
         );
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
 
       toast.success("Liquidity added successfully!", {
@@ -274,6 +288,25 @@ export function useAddLiquidity() {
         },
         duration: 15000, // 15 seconds to give time to click
       });
+
+      // Record activity in database (only in live mode)
+      if (!isDemo && account?.address && data.poolAddress) {
+        const totalValue = variables.yesAmount + variables.noAmount;
+        await recordActivity({
+          txHash: data.txHash,
+          marketAddress: variables.marketId,
+          userAddress: account.address.toString(),
+          action: "LIQUIDITY_ADD",
+          outcome: null,
+          amount: data.lpTokens,
+          price: null,
+          totalValue,
+          poolAddress: data.poolAddress,
+          yesAmount: variables.yesAmount,
+          noAmount: variables.noAmount,
+          lpTokens: data.lpTokens,
+        });
+      }
 
       // Optimistically update the query cache with the new position
       if (!isDemo && account?.address) {
@@ -425,7 +458,7 @@ export function useRemoveLiquidity() {
         );
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       const explorerLink = getTxExplorerLink(data.txHash, NETWORK);
 
       toast.success("Liquidity removed successfully!", {
@@ -436,6 +469,25 @@ export function useRemoveLiquidity() {
         },
         duration: 15000, // 15 seconds to give time to click
       });
+
+      // Record activity in database (only in live mode)
+      if (!isDemo && account?.address && data.poolAddress) {
+        const totalValue = data.yesAmount + data.noAmount;
+        await recordActivity({
+          txHash: data.txHash,
+          marketAddress: variables.marketId,
+          userAddress: account.address.toString(),
+          action: "LIQUIDITY_REMOVE",
+          outcome: null,
+          amount: variables.lpTokens,
+          price: null,
+          totalValue,
+          poolAddress: data.poolAddress,
+          yesAmount: data.yesAmount,
+          noAmount: data.noAmount,
+          lpTokens: variables.lpTokens,
+        });
+      }
 
       queryClient.invalidateQueries({
         queryKey: ["pool-data", variables.marketId],

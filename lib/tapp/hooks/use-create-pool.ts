@@ -8,6 +8,7 @@ import { TAPP_PROTOCOL_ADDRESS } from "../constants";
 import { useTappMode } from "../context/TappModeContext";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
+import { recordActivity } from "@/lib/services/activity-client.service";
 
 interface CreatePoolParams {
   marketId: string;
@@ -217,6 +218,19 @@ export function useCreatePool() {
         }
       } catch (error) {
         console.error("[useCreatePool] Error saving pool to database:", error);
+      }
+
+      if (!isDemo && account?.address) {
+        await recordActivity({
+          txHash: data.txHash,
+          marketAddress: variables.marketId,
+          userAddress: account.address.toString(),
+          action: "CREATE_POOL",
+          outcome: null,
+          amount: 0,
+          price: null,
+          totalValue: null,
+        });
       }
 
       // Invalidate relevant queries - use partial matching to catch all modes
