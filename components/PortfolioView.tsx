@@ -1,22 +1,20 @@
 "use client";
 
 /**
- * Portfolio View - Enhanced with Nivo Charts
- * Shows user's portfolio with advanced visualizations
+ * Portfolio View - Lightweight Performance Edition
+ * Shows user's portfolio with fast, responsive UI
  */
 
 import React, { useMemo } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, RefreshCw } from "lucide-react";
+import { Wallet, RefreshCw, TrendingUp, Target, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePortfolio } from "@/lib/hooks";
 import { ActivityFeed } from "@/components/portfolio/ActivityFeed";
 import { UserPositions } from "@/components/portfolio/UserPositions";
-import { PerformanceMetrics } from "@/components/portfolio/PerformanceMetrics";
-import { PositionAllocation } from "@/components/portfolio/PositionAllocation";
-import { PortfolioBreakdown } from "@/components/portfolio/PortfolioBreakdown";
-import { TradingActivity } from "@/components/portfolio/TradingActivity";
+import { StatCard } from "@/components/ui/stat-card";
+import { CSSDonut } from "@/components/ui/css-donut";
 import { useUserActivities } from "@/lib/hooks/use-user-activities";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -39,31 +37,25 @@ export function PortfolioView() {
     refetch: refetchActivities,
   } = useUserActivities(account?.address?.toString());
 
-  // Calculate trading activity calendar data - ALWAYS call hooks
-  const tradingActivityData = useMemo(() => {
-    if (!activitiesData?.activities) return [];
-
-    const activityByDay = activitiesData.activities.reduce(
-      (acc, activity) => {
-        const day = new Date(activity.timestamp).toISOString().split("T")[0];
-        acc[day] = (acc[day] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(activityByDay).map(([day, value]) => ({
-      day,
-      value,
-    }));
-  }, [activitiesData]);
-
-  // Calculate date range (last year)
-  const today = new Date();
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(today.getFullYear() - 1);
-
   const winRate = portfolio?.stats?.winRate || 0;
+
+  // Prepare donut chart data for YES/NO distribution
+  const donutData = useMemo(() => {
+    if (!portfolio?.openPositions) return [];
+
+    const yesShares = portfolio.openPositions
+      .filter((p) => p.outcome === "YES")
+      .reduce((sum, p) => sum + p.sharesOwned, 0);
+
+    const noShares = portfolio.openPositions
+      .filter((p) => p.outcome === "NO")
+      .reduce((sum, p) => sum + p.sharesOwned, 0);
+
+    return [
+      { label: "YES Positions", value: yesShares, color: "#3b82f6" },
+      { label: "NO Positions", value: noShares, color: "#f59e0b" },
+    ];
+  }, [portfolio?.openPositions]);
 
   // Adapt PortfolioPosition to Position type for UserPositions component - ALWAYS call hooks
   const adaptedPositions = useMemo(() => {
@@ -133,30 +125,41 @@ export function PortfolioView() {
         </Button>
       </div>
 
-      {/* Performance Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <PerformanceMetrics
-            roi={roi}
-            winRate={winRate}
-            totalPnL={totalPnLPct}
-          />
-        </div>
-        <PortfolioBreakdown
-          positions={portfolio?.openPositions || []}
-          totalValue={totalValue}
+      {/* Performance Metrics - Lightweight Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          label="Return on Investment"
+          value={`${roi.toFixed(2)}%`}
+          trend={roi > 0 ? "up" : roi < 0 ? "down" : "neutral"}
+          color={roi > 0 ? "green" : roi < 0 ? "red" : "gray"}
+          icon={<TrendingUp className="w-5 h-5" />}
+          subtitle="Total portfolio performance"
+        />
+        <StatCard
+          label="Win Rate"
+          value={`${winRate.toFixed(1)}%`}
+          trend={winRate > 50 ? "up" : "down"}
+          color={winRate > 50 ? "green" : "red"}
+          icon={<Target className="w-5 h-5" />}
+          subtitle="Winning positions ratio"
+        />
+        <StatCard
+          label="Unrealized P&L"
+          value={`${totalPnLPct > 0 ? "+" : ""}${totalPnLPct.toFixed(2)}%`}
+          trend={totalPnLPct > 0 ? "up" : totalPnLPct < 0 ? "down" : "neutral"}
+          color={totalPnLPct > 0 ? "green" : totalPnLPct < 0 ? "red" : "gray"}
+          icon={<Trophy className="w-5 h-5" />}
+          subtitle={`$${totalPnL.toFixed(2)} total`}
         />
       </div>
 
-      {/* Position Allocation */}
-      <PositionAllocation positions={portfolio?.openPositions || []} />
-
-      {/* Trading Activity Calendar */}
-      <TradingActivity
-        data={tradingActivityData}
-        from={oneYearAgo.toISOString().split("T")[0]}
-        to={today.toISOString().split("T")[0]}
-      />
+      {/* Portfolio Breakdown - Lightweight CSS Donut */}
+      {donutData.length > 0 && donutData.some((d) => d.value > 0) && (
+        <div className="bg-card rounded-lg border p-6">
+          <h3 className="text-lg font-semibold mb-4">Position Distribution</h3>
+          <CSSDonut segments={donutData} size={200} thickness={50} />
+        </div>
+      )}
 
       {/* Active Positions Table */}
       <UserPositions

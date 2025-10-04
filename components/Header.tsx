@@ -47,8 +47,9 @@ export function Header() {
           {/* Logo Section */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <Logo />
-            <span className="text-lg font-semibold tracking-tight group-hover:text-primary transition-colors">
-              VeriFi
+            <span className="text-xl font-bold transition-colors">
+              <span className="text-foreground group-hover:text-primary transition-colors">Veri</span>
+              <span className="text-primary">Fi</span>
             </span>
           </Link>
 

@@ -83,30 +83,57 @@ export function MarketCard({ market }: MarketCardProps) {
     <motion.div
       variants={itemVariants}
       whileHover={{
-        y: -6,
-        transition: { type: "spring", stiffness: 300 } as const,
+        y: -8,
+        scale: 1.02,
+        transition: { type: "spring", stiffness: 400, damping: 17 } as const,
       }}
+      whileTap={{ scale: 0.98 }}
       className="h-full group"
     >
       <Link href={`/market/${market.id}`} className="h-full block">
         <Card
           className={cn(
-            "h-full flex flex-col justify-between border-border/40 bg-card hover:border-primary/20 transition-all duration-300",
+            "h-full flex flex-col justify-between border-border/40 bg-card hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden relative",
             (isExpired || isResolved) &&
               "opacity-75 border-muted-foreground/20 hover:border-muted-foreground/30",
           )}
         >
+          {/* Gradient overlay on hover */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+          />
           <div>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center mb-3">
-                <Badge
-                  className={cn(
-                    "text-xs font-semibold px-3 py-1",
-                    badgeContent.className,
-                  )}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.05 }}
                 >
-                  {badgeContent.text}
-                </Badge>
+                  <Badge
+                    className={cn(
+                      "text-xs font-semibold px-3 py-1 relative overflow-hidden",
+                      badgeContent.className,
+                    )}
+                  >
+                    {!isExpired && !isResolved && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "200%" }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                          repeatDelay: 4,
+                          ease: "linear"
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{badgeContent.text}</span>
+                  </Badge>
+                </motion.div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <CalendarDays className="h-3.5 w-3.5" />
                   <span className="font-medium">{market.resolvesOn}</span>
@@ -117,20 +144,41 @@ export function MarketCard({ market }: MarketCardProps) {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="space-y-3 pb-4">
+            <CardContent className="space-y-3 pb-4 relative z-10">
               {/* Volume Display */}
-              <div className="p-3 bg-muted/40 rounded-lg border border-border/40">
+              <motion.div
+                className="p-3 bg-muted/40 rounded-lg border border-border/40 group-hover:border-primary/20 transition-colors duration-300"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        repeatDelay: 3
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                    </motion.div>
                     <span>Volume</span>
                   </div>
-                  <div className="font-mono font-bold text-foreground">
+                  <motion.div
+                    className="font-mono font-bold text-foreground"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
                     {market.totalVolume.toLocaleString()}
                     <span className="ml-1.5 text-primary">APT</span>
-                  </div>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Countdown Timer */}
               {!isExpired && !isResolved && (
@@ -171,11 +219,23 @@ export function MarketCard({ market }: MarketCardProps) {
             </CardContent>
           </div>
 
-          <CardFooter className="pt-0 pb-4">
-            <div className="w-full text-sm font-semibold text-primary/80 group-hover:text-primary flex items-center justify-center transition-all duration-300">
-              View Market & Trade
-              <ArrowRight className="ml-2 h-4 w-4 transform transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
+          <CardFooter className="pt-0 pb-4 relative z-10">
+            <motion.div
+              className="w-full text-sm font-semibold text-primary/80 group-hover:text-primary flex items-center justify-center transition-all duration-300"
+              whileHover={{ x: 4 }}
+            >
+              {isExpired ? "View Details" : isResolved ? "View Results" : "View Market & Trade"}
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatDelay: 2
+                }}
+              >
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </motion.div>
+            </motion.div>
           </CardFooter>
         </Card>
       </Link>

@@ -12,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Droplets, Activity } from "lucide-react";
 import Link from "next/link";
 import { usePools } from "@/lib/hooks/usePools";
-import { LiquidityFlow } from "@/components/pools/LiquidityFlow";
-import { VolumeStream } from "@/components/pools/VolumeStream";
+// Removed heavy Nivo charts for performance
+// import { LiquidityFlow } from "@/components/pools/LiquidityFlow";
+// import { VolumeStream } from "@/components/pools/VolumeStream";
 
 export function PoolsView() {
   const { data: pools, isLoading, isError } = usePools();
@@ -65,11 +66,9 @@ export function PoolsView() {
 
   return (
     <div className="space-y-6">
-      {/* Liquidity Flow Visualization */}
-      <LiquidityFlow pools={pools} totalTVL={totalTVL} />
-
-      {/* Volume Stream */}
-      <VolumeStream data={[]} />
+      {/* Charts removed for performance - will add lightweight alternatives */}
+      {/* <LiquidityFlow pools={pools} totalTVL={totalTVL} /> */}
+      {/* <VolumeStream data={[]} /> */}
 
       {/* Pools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

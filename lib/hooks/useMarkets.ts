@@ -133,14 +133,24 @@ export function useMarkets() {
       const now = new Date();
       const soonThreshold = new Date(now.getTime() + SOON_THRESHOLD_MS);
 
-      // Filter by status
-      const activeMarkets = marketsWithStatus.filter(
-        (market) => market.onChainStatus === MARKET_STATUS.OPEN,
-      );
+      // Filter by status - be more strict about what's "active"
+      const activeMarkets = marketsWithStatus.filter((market) => {
+        // Must be OPEN status
+        if (market.onChainStatus !== MARKET_STATUS.OPEN) return false;
 
-      const expiredMarkets = marketsWithStatus.filter(
-        (market) => market.onChainStatus === MARKET_STATUS.CLOSED,
-      );
+        // Must not be past resolution date
+        if (market.resolvesOnDate <= now) return false;
+
+        return true;
+      });
+
+      const expiredMarkets = marketsWithStatus.filter((market) => {
+        // CLOSED status OR past resolution date but not resolved yet
+        return (
+          market.onChainStatus === MARKET_STATUS.CLOSED ||
+          (market.onChainStatus === MARKET_STATUS.OPEN && market.resolvesOnDate <= now)
+        );
+      });
 
       const resolvedMarkets = marketsWithStatus.filter(
         (market) =>

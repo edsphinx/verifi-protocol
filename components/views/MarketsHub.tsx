@@ -3,9 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FeaturedMarketCard } from "@/components/cards/FeaturedMarketCard";
 import { MarketCard } from "@/components/cards/MarketCard";
-import { MarketsSentiment } from "@/components/markets/MarketsSentiment";
-import { MarketRankings } from "@/components/markets/MarketRankings";
-import { Skeleton } from "@/components/ui/skeleton";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 
@@ -124,10 +122,10 @@ export function MarketsHub() {
                     transition={{ duration: 0.5 }}
                     className="space-y-10"
                   >
-                    {/* Sentiment Overview */}
-                    {activeMarketsData.length > 0 && (
+                    {/* Sentiment Overview - Removed for performance */}
+                    {/* {activeMarketsData.length > 0 && (
                       <MarketsSentiment markets={activeMarketsData} />
-                    )}
+                    )} */}
 
                     {featuredMarket ? (
                       <FeaturedMarketCard market={featuredMarket} />
@@ -184,7 +182,12 @@ export function MarketsHub() {
                   )}
                 </TabsContent>
                 <TabsContent value="rankings">
-                  <MarketRankings data={[]} />
+                  {/* MarketRankings chart removed for performance */}
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      Market rankings coming soon once we have historical volume data
+                    </p>
+                  </div>
                 </TabsContent>
               </>
             )}
@@ -196,17 +199,7 @@ export function MarketsHub() {
 }
 
 // --- Componentes Helper ---
-const LoadingState = () => (
-  <div className="space-y-10">
-    <Skeleton className="h-[280px] w-full" />
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[...Array(3)].map((_, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: <biome-ignore lint: false positive>
-        <Skeleton key={i} className="h-[250px] w-full" />
-      ))}
-    </div>
-  </div>
-);
+const LoadingState = () => <VeriFiLoader message="Loading markets..." />;
 
 const ErrorState = () => (
   <div className="text-center py-20 text-destructive">
