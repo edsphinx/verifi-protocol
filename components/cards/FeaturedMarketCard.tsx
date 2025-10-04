@@ -2,12 +2,7 @@ import { ArrowRight, TrendingUp, CalendarDays, Clock } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Countdown } from "@/components/ui/countdown";
 import type { Market } from "./MarketCard";
 
@@ -94,7 +89,9 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             {/* YES Probability */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">YES</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  YES
+                </span>
                 <span className="text-xl font-bold font-mono text-green-400">
                   {yesProbability}%
                 </span>
@@ -110,7 +107,9 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             {/* NO Probability */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">NO</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  NO
+                </span>
                 <span className="text-xl font-bold font-mono text-red-400">
                   {noProbability}%
                 </span>
@@ -127,7 +126,9 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             <div className="pt-4 border-t border-border/40">
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <div className="text-xs text-green-400/70 mb-1">YES Price</div>
+                  <div className="text-xs text-green-400/70 mb-1">
+                    YES Price
+                  </div>
                   <div className="text-sm font-bold font-mono text-green-400">
                     {(yesProbability / 100).toFixed(2)} APT
                   </div>

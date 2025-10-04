@@ -8,7 +8,13 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, TrendingUp, TrendingDown, Droplet, ArrowLeftRight } from "lucide-react";
+import {
+  ExternalLink,
+  TrendingUp,
+  TrendingDown,
+  Droplet,
+  ArrowLeftRight,
+} from "lucide-react";
 import { NETWORK } from "@/aptos/constants";
 import type { Activity } from "@prisma/client";
 import Link from "next/link";
@@ -114,7 +120,9 @@ export function ActivityFeed({ activities, isLoading }: ActivityFeedProps) {
                     </p>
                     {activity.outcome && (
                       <Badge
-                        variant={activity.outcome === "YES" ? "default" : "secondary"}
+                        variant={
+                          activity.outcome === "YES" ? "default" : "secondary"
+                        }
                         className="text-xs"
                       >
                         {activity.outcome}

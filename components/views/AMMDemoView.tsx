@@ -47,7 +47,11 @@ export function AMMDemoView() {
       )}
 
       {/* Pool Overview */}
-      <PoolOverview marketId={mockMarketId} data={poolData} isLoading={isLoading} />
+      <PoolOverview
+        marketId={mockMarketId}
+        data={poolData}
+        isLoading={isLoading}
+      />
 
       {/* Swap and Liquidity Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

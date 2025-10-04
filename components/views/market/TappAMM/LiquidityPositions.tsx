@@ -1,10 +1,21 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Wallet, TrendingUp, Droplets, Info } from "lucide-react";
-import { formatNumber, formatPercentage, formatCurrency, type UserPosition } from "@/lib/tapp/mock/pool-data";
+import {
+  formatNumber,
+  formatPercentage,
+  formatCurrency,
+  type UserPosition,
+} from "@/lib/tapp/mock/pool-data";
 
 interface LiquidityPositionsProps {
   positions: UserPosition[];
@@ -27,7 +38,9 @@ export function LiquidityPositions({
         <CardContent className="flex flex-col items-center justify-center py-8">
           <Wallet className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
           <p className="text-sm text-muted-foreground text-center">
-            No liquidity positions yet.<br />Add liquidity to start earning fees.
+            No liquidity positions yet.
+            <br />
+            Add liquidity to start earning fees.
           </p>
         </CardContent>
       </Card>
@@ -44,19 +57,26 @@ export function LiquidityPositions({
               Your Liquidity Positions
             </CardTitle>
             <CardDescription>
-              {positions.length} active {positions.length === 1 ? "position" : "positions"}
+              {positions.length} active{" "}
+              {positions.length === 1 ? "position" : "positions"}
             </CardDescription>
           </div>
           <Badge variant="secondary">
-            {formatNumber(positions.reduce((sum, p) => sum + p.lpTokens, 0), 2)} LP
+            {formatNumber(
+              positions.reduce((sum, p) => sum + p.lpTokens, 0),
+              2,
+            )}{" "}
+            LP
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {positions.map((position) => {
           const currentShareOfPool = (position.lpTokens / totalLpSupply) * 100;
-          const currentYesValue = (position.lpTokens / totalLpSupply) * yesReserve;
-          const currentNoValue = (position.lpTokens / totalLpSupply) * noReserve;
+          const currentYesValue =
+            (position.lpTokens / totalLpSupply) * yesReserve;
+          const currentNoValue =
+            (position.lpTokens / totalLpSupply) * noReserve;
           const totalCurrentValue = currentYesValue + currentNoValue;
           const initialValue = position.yesAmount + position.noAmount;
           const pnl = totalCurrentValue - initialValue;
@@ -71,7 +91,9 @@ export function LiquidityPositions({
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Position #{position.positionId}</span>
+                    <span className="text-sm font-medium">
+                      Position #{position.positionId}
+                    </span>
                     <Badge variant="outline" className="text-xs">
                       {formatPercentage(currentShareOfPool, 2)} of pool
                     </Badge>
@@ -84,8 +106,11 @@ export function LiquidityPositions({
                   <div className="text-sm font-semibold">
                     {formatNumber(position.lpTokens, 2)} LP
                   </div>
-                  <div className={`text-xs ${pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
-                    {pnl >= 0 ? "+" : ""}{formatPercentage(pnlPercent, 2)}
+                  <div
+                    className={`text-xs ${pnl >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {pnl >= 0 ? "+" : ""}
+                    {formatPercentage(pnlPercent, 2)}
                   </div>
                 </div>
               </div>
@@ -93,29 +118,41 @@ export function LiquidityPositions({
               {/* Current Value */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Current Value</div>
+                  <div className="text-xs text-muted-foreground">
+                    Current Value
+                  </div>
                   <div className="space-y-0.5">
                     <div className="flex justify-between">
                       <span className="text-green-600">YES:</span>
-                      <span className="font-medium">{formatNumber(currentYesValue, 2)}</span>
+                      <span className="font-medium">
+                        {formatNumber(currentYesValue, 2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-red-600">NO:</span>
-                      <span className="font-medium">{formatNumber(currentNoValue, 2)}</span>
+                      <span className="font-medium">
+                        {formatNumber(currentNoValue, 2)}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Initial Deposit</div>
+                  <div className="text-xs text-muted-foreground">
+                    Initial Deposit
+                  </div>
                   <div className="space-y-0.5">
                     <div className="flex justify-between">
                       <span className="text-green-600/70">YES:</span>
-                      <span className="text-muted-foreground text-xs">{formatNumber(position.yesAmount, 2)}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatNumber(position.yesAmount, 2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-red-600/70">NO:</span>
-                      <span className="text-muted-foreground text-xs">{formatNumber(position.noAmount, 2)}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatNumber(position.noAmount, 2)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -146,7 +183,8 @@ export function LiquidityPositions({
         <div className="bg-muted/50 rounded-lg p-3 flex items-start gap-2 mt-4">
           <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
           <p className="text-xs text-muted-foreground">
-            Your LP tokens represent your share of the pool. As the pool earns trading fees, the value of your position increases.
+            Your LP tokens represent your share of the pool. As the pool earns
+            trading fees, the value of your position increases.
           </p>
         </div>
       </CardContent>

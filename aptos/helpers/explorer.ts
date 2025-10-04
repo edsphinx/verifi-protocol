@@ -60,7 +60,11 @@ export function getAccountExplorerLink(
 /**
  * Truncate hash for display (e.g., "0x1234...5678")
  */
-export function truncateHash(hash: string, prefixLength = 6, suffixLength = 4): string {
+export function truncateHash(
+  hash: string,
+  prefixLength = 6,
+  suffixLength = 4,
+): string {
   if (hash.length <= prefixLength + suffixLength) return hash;
   return `${hash.slice(0, prefixLength)}...${hash.slice(-suffixLength)}`;
 }

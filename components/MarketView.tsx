@@ -87,7 +87,8 @@ export function MarketView({ marketId }: { marketId: string }) {
   }
 
   const details = displayData;
-  const totalVolume = (details.totalSupplyYes + details.totalSupplyNo) / 2 / 10 ** 6; // YES/NO tokens have 6 decimals
+  const totalVolume =
+    (details.totalSupplyYes + details.totalSupplyNo) / 2 / 10 ** 6; // YES/NO tokens have 6 decimals
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -105,17 +106,23 @@ export function MarketView({ marketId }: { marketId: string }) {
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">Volume:</span>
-            <span className="font-mono font-semibold">{totalVolume.toFixed(2)} APT</span>
+            <span className="font-mono font-semibold">
+              {totalVolume.toFixed(2)} APT
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">YES:</span>
-            <span className="font-mono font-semibold">{(details.totalSupplyYes / 10 ** 6).toLocaleString()}</span>
+            <span className="font-mono font-semibold">
+              {(details.totalSupplyYes / 10 ** 6).toLocaleString()}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">NO:</span>
-            <span className="font-mono font-semibold">{(details.totalSupplyNo / 10 ** 6).toLocaleString()}</span>
+            <span className="font-mono font-semibold">
+              {(details.totalSupplyNo / 10 ** 6).toLocaleString()}
+            </span>
           </div>
         </div>
       </div>
@@ -136,7 +143,10 @@ export function MarketView({ marketId }: { marketId: string }) {
             </TabsContent>
 
             <TabsContent value="swap" className="mt-0">
-              <SwapTabContent marketId={marketId} onNavigateToLiquidity={() => setActiveTab("liquidity")} />
+              <SwapTabContent
+                marketId={marketId}
+                onNavigateToLiquidity={() => setActiveTab("liquidity")}
+              />
             </TabsContent>
 
             <TabsContent value="liquidity" className="mt-0">

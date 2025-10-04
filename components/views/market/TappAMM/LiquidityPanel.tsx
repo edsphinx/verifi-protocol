@@ -60,7 +60,9 @@ export function LiquidityPanel({
   // Reserves from poolData are in on-chain format (10^6), convert to display format
   const yesReserveOnChain = poolData?.yesReserve ?? initialYesReserve ?? 0;
   const noReserveOnChain = poolData?.noReserve ?? initialNoReserve ?? 0;
-  const yesReserve = poolData ? yesReserveOnChain / 1_000_000 : yesReserveOnChain;
+  const yesReserve = poolData
+    ? yesReserveOnChain / 1_000_000
+    : yesReserveOnChain;
   const noReserve = poolData ? noReserveOnChain / 1_000_000 : noReserveOnChain;
   const tradingEnabled =
     poolData?.tradingEnabled ?? initialTradingEnabled ?? false;

@@ -20,7 +20,7 @@ function serializeSwapArgs(
   poolAddr: string,
   yesToNo: boolean,
   amountIn: number,
-  minAmountOut: number
+  minAmountOut: number,
 ): Uint8Array {
   const parts: Uint8Array[] = [];
 
@@ -64,11 +64,12 @@ export function buildSwapTransaction(args: SwapTransactionArgs) {
     args.poolAddress,
     args.fromYes,
     args.amountIn,
-    minAmountOut
+    minAmountOut,
   );
 
   return {
-    function: `${TAPP_ADDRESS}::router::swap` as `${string}::${string}::${string}`,
+    function:
+      `${TAPP_ADDRESS}::router::swap` as `${string}::${string}::${string}`,
     functionArguments: [swapArgs],
   };
 }

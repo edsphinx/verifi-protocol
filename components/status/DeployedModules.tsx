@@ -61,7 +61,10 @@ const MODULES: Module[] = [
 ];
 
 export function DeployedModules() {
-  const getExplorerUrl = (address: string, type: "account" | "module" = "account") => {
+  const getExplorerUrl = (
+    address: string,
+    type: "account" | "module" = "account",
+  ) => {
     const network = NETWORK.toLowerCase();
     if (type === "account") {
       return `https://explorer.aptoslabs.com/account/${address}?network=${network}`;
@@ -82,7 +85,9 @@ export function DeployedModules() {
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={() => window.open(getExplorerUrl(MODULE_ADDRESS || ""), "_blank")}
+          onClick={() =>
+            window.open(getExplorerUrl(MODULE_ADDRESS || ""), "_blank")
+          }
         >
           View Publisher Account
           <ExternalLink className="h-3 w-3" />
@@ -100,7 +105,9 @@ export function DeployedModules() {
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <div className="flex-1">
                 <p className="font-mono text-sm font-medium">{module.name}</p>
-                <p className="text-xs text-muted-foreground">{module.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {module.description}
+                </p>
               </div>
             </div>
             <Button
@@ -110,7 +117,7 @@ export function DeployedModules() {
               onClick={() =>
                 window.open(
                   `https://explorer.aptoslabs.com/account/${module.address}/modules/code/${module.name}?network=${NETWORK.toLowerCase()}`,
-                  "_blank"
+                  "_blank",
                 )
               }
             >

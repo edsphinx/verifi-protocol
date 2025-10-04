@@ -3,11 +3,21 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Wallet, AlertCircle } from "lucide-react";
 import { WalletSelector } from "@/components/WalletSelector";
 
-export function WalletConnectionGuard({ children }: { children: React.ReactNode }) {
+export function WalletConnectionGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { connected } = useWallet();
   const [showReconnectPrompt, setShowReconnectPrompt] = useState(false);
   const [wasConnected, setWasConnected] = useState(false);
@@ -42,9 +52,12 @@ export function WalletConnectionGuard({ children }: { children: React.ReactNode 
                 <AlertCircle className="h-5 w-5 text-destructive absolute -top-1 -right-1" />
               </div>
             </div>
-            <CardTitle className="text-xl font-semibold">Wallet Disconnected</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Wallet Disconnected
+            </CardTitle>
             <CardDescription className="text-base">
-              Your wallet connection was lost. Please reconnect to continue using VeriFi Protocol.
+              Your wallet connection was lost. Please reconnect to continue
+              using VeriFi Protocol.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -70,9 +83,7 @@ export function WalletConnectionGuard({ children }: { children: React.ReactNode 
       </div>
 
       {/* Render children in background (blurred) */}
-      <div className="blur-sm pointer-events-none">
-        {children}
-      </div>
+      <div className="blur-sm pointer-events-none">{children}</div>
     </>
   );
 }

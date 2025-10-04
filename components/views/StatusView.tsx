@@ -7,7 +7,13 @@
  */
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { OracleRegistry } from "@/components/status/OracleRegistry";
@@ -25,9 +31,10 @@ export function StatusView() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            This page shows the current protocol configuration and admin controls.
-            All information is public for transparency. Admin functions (register/activate oracles, etc.)
-            are only available when the publisher account is connected.
+            This page shows the current protocol configuration and admin
+            controls. All information is public for transparency. Admin
+            functions (register/activate oracles, etc.) are only available when
+            the publisher account is connected.
           </AlertDescription>
         </Alert>
       </div>
@@ -40,8 +47,8 @@ export function StatusView() {
         <CardHeader>
           <CardTitle>Oracle Registry</CardTitle>
           <CardDescription>
-            Available on-chain data sources for market creation.
-            Markets can only be created with active, whitelisted oracles.
+            Available on-chain data sources for market creation. Markets can
+            only be created with active, whitelisted oracles.
           </CardDescription>
         </CardHeader>
         <CardContent>

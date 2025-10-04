@@ -23,7 +23,11 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const { signAndSubmitTransaction, account } = useWallet();
   const queryClient = useQueryClient();
 
-  const handleTransactionSuccess = (hash: string, title: string, description: string) => {
+  const handleTransactionSuccess = (
+    hash: string,
+    title: string,
+    description: string,
+  ) => {
     const explorerLink = getTxExplorerLink(hash, NETWORK);
 
     toast.success(title, {
@@ -137,7 +141,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
     const amountOctas = Math.floor(amountFloat * 10 ** 8);
     const userAptBalanceOctas = dynamicData.userAptBalance;
 
-    console.log('[ActionPanel] Buy shares:', {
+    console.log("[ActionPanel] Buy shares:", {
       amountInput: buyAmount,
       amountFloat,
       amountOctas,
@@ -194,15 +198,21 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="p-3 bg-muted/40 rounded-lg">
               <div className="text-xs text-muted-foreground mb-1">APT</div>
-              <div className="font-mono font-bold text-sm">{userAptBalance}</div>
+              <div className="font-mono font-bold text-sm">
+                {userAptBalance}
+              </div>
             </div>
             <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
               <div className="text-xs text-green-400/70 mb-1">YES</div>
-              <div className="font-mono font-bold text-sm text-green-400">{userYesBalance}</div>
+              <div className="font-mono font-bold text-sm text-green-400">
+                {userYesBalance}
+              </div>
             </div>
             <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
               <div className="text-xs text-red-400/70 mb-1">NO</div>
-              <div className="font-mono font-bold text-sm text-red-400">{userNoBalance}</div>
+              <div className="font-mono font-bold text-sm text-red-400">
+                {userNoBalance}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -236,7 +246,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                    const amount =
+                      (parseFloat(userAptBalance) * percentage) / 100;
                     setBuyAmount(amount.toFixed(4));
                   }}
                   disabled={isProcessing}
@@ -289,7 +300,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
             {/* Sell YES */}
             <div className="space-y-3 p-4 bg-green-500/5 rounded-lg border border-green-500/20">
               <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">Sell YES Shares</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Sell YES Shares
+                </div>
                 <div className="text-sm font-mono font-semibold text-green-400">
                   Balance: {userYesBalance}
                 </div>
@@ -310,7 +323,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const amount = (parseFloat(userYesBalance) * percentage) / 100;
+                      const amount =
+                        (parseFloat(userYesBalance) * percentage) / 100;
                       setSellYesAmount(amount.toFixed(2));
                     }}
                     disabled={isProcessing || dynamicData.userYesBalance === 0}
@@ -335,7 +349,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
             {/* Sell NO */}
             <div className="space-y-3 p-4 bg-red-500/5 rounded-lg border border-red-500/20">
               <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">Sell NO Shares</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Sell NO Shares
+                </div>
                 <div className="text-sm font-mono font-semibold text-red-400">
                   Balance: {userNoBalance}
                 </div>
@@ -356,7 +372,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const amount = (parseFloat(userNoBalance) * percentage) / 100;
+                      const amount =
+                        (parseFloat(userNoBalance) * percentage) / 100;
                       setSellNoAmount(amount.toFixed(2));
                     }}
                     disabled={isProcessing || dynamicData.userNoBalance === 0}

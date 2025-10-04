@@ -3,7 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, TrendingUp, Droplet, ArrowLeftRight } from "lucide-react";
+import {
+  ExternalLink,
+  TrendingUp,
+  Droplet,
+  ArrowLeftRight,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface TappPoolStatsProps {
@@ -29,7 +34,7 @@ async function fetchPoolData(marketAddress: string): Promise<PoolData> {
           volume24h: 0,
           yesPrice: 0.5,
           noPrice: 0.5,
-          poolExists: false
+          poolExists: false,
         };
       }
       throw new Error("Failed to fetch pool data");
@@ -38,14 +43,14 @@ async function fetchPoolData(marketAddress: string): Promise<PoolData> {
     const data = await response.json();
 
     // Defensive: validate data structure
-    if (!data || typeof data !== 'object') {
-      console.warn('[TappPoolStats] Invalid data structure received:', data);
+    if (!data || typeof data !== "object") {
+      console.warn("[TappPoolStats] Invalid data structure received:", data);
       return {
         liquidity: 0,
         volume24h: 0,
         yesPrice: 0.5,
         noPrice: 0.5,
-        poolExists: false
+        poolExists: false,
       };
     }
 
@@ -57,20 +62,24 @@ async function fetchPoolData(marketAddress: string): Promise<PoolData> {
       poolExists: true,
     };
   } catch (error) {
-    console.error('[TappPoolStats] Error fetching pool data:', error);
+    console.error("[TappPoolStats] Error fetching pool data:", error);
     // Return safe defaults on error
     return {
       liquidity: 0,
       volume24h: 0,
       yesPrice: 0.5,
       noPrice: 0.5,
-      poolExists: false
+      poolExists: false,
     };
   }
 }
 
 export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
-  const { data: poolData, isLoading: loading, isError } = useQuery({
+  const {
+    data: poolData,
+    isLoading: loading,
+    isError,
+  } = useQuery({
     queryKey: ["tapp-pool-stats", marketAddress],
     queryFn: () => fetchPoolData(marketAddress),
     refetchInterval: 5000, // Auto-refetch every 5 seconds
@@ -126,7 +135,8 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            No AMM pool exists for this market yet. Create one to enable automated trading.
+            No AMM pool exists for this market yet. Create one to enable
+            automated trading.
           </p>
           <Button
             variant="outline"
@@ -134,9 +144,11 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
             onClick={() => {
               // Scroll to tabs and click "Add Liquidity" tab
               const tabs = document.querySelector('[role="tablist"]');
-              const liquidityTab = document.querySelector('[value="liquidity"]') as HTMLButtonElement;
+              const liquidityTab = document.querySelector(
+                '[value="liquidity"]',
+              ) as HTMLButtonElement;
               if (tabs && liquidityTab) {
-                tabs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tabs.scrollIntoView({ behavior: "smooth", block: "center" });
                 setTimeout(() => liquidityTab.click(), 500);
               }
             }}
@@ -167,8 +179,9 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
             </p>
             <p className="text-xl font-bold font-mono">
               {poolData.liquidity.toLocaleString(undefined, {
-                maximumFractionDigits: 2
-              })} APT
+                maximumFractionDigits: 2,
+              })}{" "}
+              APT
             </p>
           </div>
 
@@ -179,8 +192,9 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
             </p>
             <p className="text-xl font-bold font-mono">
               {poolData.volume24h.toLocaleString(undefined, {
-                maximumFractionDigits: 2
-              })} APT
+                maximumFractionDigits: 2,
+              })}{" "}
+              APT
             </p>
           </div>
         </div>

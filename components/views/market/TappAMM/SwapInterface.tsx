@@ -54,7 +54,8 @@ export function SwapInterface({
   const noReserveOnChain = poolData?.noReserve ?? initialNoReserve ?? 0;
   const yesReserve = yesReserveOnChain / 1_000_000;
   const noReserve = noReserveOnChain / 1_000_000;
-  const tradingEnabled = poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
+  const tradingEnabled =
+    poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
 
   const [amountIn, setAmountIn] = useState("");
   const [yesToNo, setYesToNo] = useState(true);
@@ -122,15 +123,21 @@ export function SwapInterface({
         {/* Pool Liquidity Info */}
         {(yesReserve > 0 || noReserve > 0) && (
           <div className="bg-muted/50 rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground mb-2">Pool Liquidity</div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">
+              Pool Liquidity
+            </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground">YES:</span>{" "}
-                <span className="font-semibold text-green-600">{formatNumber(yesReserve, 0)}</span>
+                <span className="font-semibold text-green-600">
+                  {formatNumber(yesReserve, 0)}
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground">NO:</span>{" "}
-                <span className="font-semibold text-red-600">{formatNumber(noReserve, 0)}</span>
+                <span className="font-semibold text-red-600">
+                  {formatNumber(noReserve, 0)}
+                </span>
               </div>
             </div>
           </div>

@@ -76,9 +76,7 @@ export function PoolStats({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{feePercent}%</div>
-          <p className="text-xs text-muted-foreground">
-            Charged per swap
-          </p>
+          <p className="text-xs text-muted-foreground">Charged per swap</p>
         </CardContent>
       </Card>
 
@@ -93,9 +91,7 @@ export function PoolStats({
               ? (yesReserve / noReserve).toFixed(3)
               : "N/A"}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Reserve ratio
-          </p>
+          <p className="text-xs text-muted-foreground">Reserve ratio</p>
         </CardContent>
       </Card>
 

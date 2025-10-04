@@ -56,7 +56,9 @@ export function NotificationProvider({
 
       // Check if response is OK before parsing JSON
       if (!response.ok) {
-        console.warn(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
+        console.warn(
+          `Failed to fetch notifications: ${response.status} ${response.statusText}`,
+        );
         return; // Exit early, don't crash
       }
 

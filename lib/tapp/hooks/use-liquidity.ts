@@ -59,13 +59,21 @@ function serializeAddLiquidityArgs(
   // 3. Serialize amount_yes as u64 (little-endian)
   // YES/NO tokens have 6 decimals, so multiply by 10^6
   const yesBytes = new ArrayBuffer(8);
-  new DataView(yesBytes).setBigUint64(0, BigInt(Math.floor(amountYes * 1_000_000)), true);
+  new DataView(yesBytes).setBigUint64(
+    0,
+    BigInt(Math.floor(amountYes * 1_000_000)),
+    true,
+  );
   parts.push(new Uint8Array(yesBytes));
 
   // 4. Serialize amount_no as u64 (little-endian)
   // YES/NO tokens have 6 decimals, so multiply by 10^6
   const noBytes = new ArrayBuffer(8);
-  new DataView(noBytes).setBigUint64(0, BigInt(Math.floor(amountNo * 1_000_000)), true);
+  new DataView(noBytes).setBigUint64(
+    0,
+    BigInt(Math.floor(amountNo * 1_000_000)),
+    true,
+  );
   parts.push(new Uint8Array(noBytes));
 
   // 5. Serialize min_lp_tokens as u64 (little-endian)
@@ -93,15 +101,16 @@ async function executeAddLiquidity(
   signAndSubmitTransaction: any,
   account: any,
 ) {
-
   if (!account?.address) {
     throw new Error("Wallet not connected");
   }
 
-  console.log('[useAddLiquidity] Executing add liquidity with params:', params);
+  console.log("[useAddLiquidity] Executing add liquidity with params:", params);
 
   // Get pool address from API
-  const poolResponse = await fetch(`/api/tapp/pools/by-market/${params.marketId}`);
+  const poolResponse = await fetch(
+    `/api/tapp/pools/by-market/${params.marketId}`,
+  );
   if (!poolResponse.ok) {
     throw new Error("No AMM pool found for this market. Create a pool first.");
   }
@@ -112,21 +121,26 @@ async function executeAddLiquidity(
   }
 
   const poolAddress = poolData.poolAddress;
-  console.log('[useAddLiquidity] Using pool address:', poolAddress);
+  console.log("[useAddLiquidity] Using pool address:", poolAddress);
 
   // Calculate minimum LP tokens (allow 0.5% slippage)
   // LP tokens also have 6 decimals
-  const minLpTokens = Math.floor(Math.sqrt(params.yesAmount * params.noAmount) * 0.995 * 1_000_000);
+  const minLpTokens = Math.floor(
+    Math.sqrt(params.yesAmount * params.noAmount) * 0.995 * 1_000_000,
+  );
 
   // Serialize add liquidity arguments
   const liquidityArgs = serializeAddLiquidityArgs(
     poolAddress,
     params.yesAmount,
     params.noAmount,
-    minLpTokens
+    minLpTokens,
   );
 
-  console.log('[useAddLiquidity] Serialized args length:', liquidityArgs.length);
+  console.log(
+    "[useAddLiquidity] Serialized args length:",
+    liquidityArgs.length,
+  );
 
   // Build transaction payload
   const payload = {
@@ -134,7 +148,7 @@ async function executeAddLiquidity(
     functionArguments: [liquidityArgs],
   };
 
-  console.log('[useAddLiquidity] Submitting transaction...');
+  console.log("[useAddLiquidity] Submitting transaction...");
 
   // Sign and submit
   const response = await signAndSubmitTransaction({
@@ -142,7 +156,7 @@ async function executeAddLiquidity(
     data: payload,
   });
 
-  console.log('[useAddLiquidity] Transaction submitted:', response.hash);
+  console.log("[useAddLiquidity] Transaction submitted:", response.hash);
 
   // Wait for confirmation
   const txResponse = await aptosClient().waitForTransaction({
@@ -153,7 +167,7 @@ async function executeAddLiquidity(
     },
   });
 
-  console.log('[useAddLiquidity] Transaction confirmed');
+  console.log("[useAddLiquidity] Transaction confirmed");
 
   // Parse LiquidityAdded event to get actual values
   // For now, using expected values
@@ -271,15 +285,21 @@ export function useAddLiquidity() {
           (oldData: any) => {
             if (!oldData) return oldData;
 
-            console.log('[useAddLiquidity] Optimistically updating cache with new position');
-            console.log('[useAddLiquidity] Old positions:', oldData.positions);
+            console.log(
+              "[useAddLiquidity] Optimistically updating cache with new position",
+            );
+            console.log("[useAddLiquidity] Old positions:", oldData.positions);
 
             // Calculate new reserves (in on-chain format: multiply by 10^6)
-            const newYesReserve = oldData.yesReserve + (variables.yesAmount * 1_000_000);
-            const newNoReserve = oldData.noReserve + (variables.noAmount * 1_000_000);
+            const newYesReserve =
+              oldData.yesReserve + variables.yesAmount * 1_000_000;
+            const newNoReserve =
+              oldData.noReserve + variables.noAmount * 1_000_000;
 
             // Calculate total LP supply in display format for UI consistency
-            const newTotalLpSupplyDisplay = Math.sqrt((newYesReserve / 1_000_000) * (newNoReserve / 1_000_000));
+            const newTotalLpSupplyDisplay = Math.sqrt(
+              (newYesReserve / 1_000_000) * (newNoReserve / 1_000_000),
+            );
 
             // Create a new position object from the transaction result
             // Store lpTokens in display format to match how UI components expect it
@@ -294,17 +314,25 @@ export function useAddLiquidity() {
               createdAt: Date.now(),
             };
 
-            console.log('[useAddLiquidity] New position:', newPosition);
+            console.log("[useAddLiquidity] New position:", newPosition);
 
             // Store position in localStorage for persistence across page reloads
             try {
               const storageKey = `tapp_positions_${variables.marketId}_${userAddress}`;
-              const existingPositions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+              const existingPositions = JSON.parse(
+                localStorage.getItem(storageKey) || "[]",
+              );
               existingPositions.push(newPosition);
-              localStorage.setItem(storageKey, JSON.stringify(existingPositions));
-              console.log('[useAddLiquidity] Saved position to localStorage');
+              localStorage.setItem(
+                storageKey,
+                JSON.stringify(existingPositions),
+              );
+              console.log("[useAddLiquidity] Saved position to localStorage");
             } catch (error) {
-              console.error('[useAddLiquidity] Failed to save to localStorage:', error);
+              console.error(
+                "[useAddLiquidity] Failed to save to localStorage:",
+                error,
+              );
             }
 
             // Add the new position to the positions array and update reserves
@@ -316,10 +344,13 @@ export function useAddLiquidity() {
               positions: [...(oldData.positions || []), newPosition],
             };
 
-            console.log('[useAddLiquidity] Updated positions:', updatedData.positions);
+            console.log(
+              "[useAddLiquidity] Updated positions:",
+              updatedData.positions,
+            );
 
             return updatedData;
-          }
+          },
         );
       }
 
@@ -329,28 +360,40 @@ export function useAddLiquidity() {
       setTimeout(() => {
         if (!isDemo && account?.address) {
           const userAddress = account.address.toString();
-          const currentData = queryClient.getQueryData(["pool-data", variables.marketId, userAddress, "live"]) as any;
+          const currentData = queryClient.getQueryData([
+            "pool-data",
+            variables.marketId,
+            userAddress,
+            "live",
+          ]) as any;
 
           // Refetch to get fresh reserves but preserve the optimistic positions
-          queryClient.refetchQueries({
-            queryKey: ["pool-data", variables.marketId, userAddress, "live"],
-            exact: true,
-          }).then(() => {
-            // After refetch, merge back the optimistic position if it's not in the fetched data
-            const newData = queryClient.getQueryData(["pool-data", variables.marketId, userAddress, "live"]) as any;
-            if (newData && currentData?.positions) {
-              // If the refetched data has empty positions, keep our optimistic ones
-              if (!newData.positions || newData.positions.length === 0) {
-                queryClient.setQueryData(
-                  ["pool-data", variables.marketId, userAddress, "live"],
-                  {
-                    ...newData,
-                    positions: currentData.positions,
-                  }
-                );
+          queryClient
+            .refetchQueries({
+              queryKey: ["pool-data", variables.marketId, userAddress, "live"],
+              exact: true,
+            })
+            .then(() => {
+              // After refetch, merge back the optimistic position if it's not in the fetched data
+              const newData = queryClient.getQueryData([
+                "pool-data",
+                variables.marketId,
+                userAddress,
+                "live",
+              ]) as any;
+              if (newData && currentData?.positions) {
+                // If the refetched data has empty positions, keep our optimistic ones
+                if (!newData.positions || newData.positions.length === 0) {
+                  queryClient.setQueryData(
+                    ["pool-data", variables.marketId, userAddress, "live"],
+                    {
+                      ...newData,
+                      positions: currentData.positions,
+                    },
+                  );
+                }
               }
-            }
-          });
+            });
         }
       }, 2000);
     },

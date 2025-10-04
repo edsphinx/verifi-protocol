@@ -19,7 +19,7 @@ const HOOK_PREDICTION = 4; // Prediction market hook type
 function serializeCreatePoolArgs(
   yesTokenAddr: string,
   noTokenAddr: string,
-  fee: number
+  fee: number,
 ): Uint8Array {
   const parts: Uint8Array[] = [];
 
@@ -64,11 +64,12 @@ export function buildCreatePoolTransaction(args: CreatePoolTransactionArgs) {
   const poolArgs = serializeCreatePoolArgs(
     args.yesTokenAddress,
     args.noTokenAddress,
-    fee
+    fee,
   );
 
   return {
-    function: `${TAPP_ADDRESS}::router::create_pool` as `${string}::${string}::${string}`,
+    function:
+      `${TAPP_ADDRESS}::router::create_pool` as `${string}::${string}::${string}`,
     functionArguments: [poolArgs],
   };
 }

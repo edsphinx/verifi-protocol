@@ -55,13 +55,21 @@ function serializeSwapArgs(
   // 3. Serialize amount_in as u64 (little-endian)
   // YES/NO tokens have 6 decimals, so multiply by 10^6
   const inBytes = new ArrayBuffer(8);
-  new DataView(inBytes).setBigUint64(0, BigInt(Math.floor(amountIn * 1_000_000)), true);
+  new DataView(inBytes).setBigUint64(
+    0,
+    BigInt(Math.floor(amountIn * 1_000_000)),
+    true,
+  );
   parts.push(new Uint8Array(inBytes));
 
   // 4. Serialize min_amount_out as u64 (little-endian)
   // YES/NO tokens have 6 decimals, so multiply by 10^6
   const outBytes = new ArrayBuffer(8);
-  new DataView(outBytes).setBigUint64(0, BigInt(Math.floor(minAmountOut * 1_000_000)), true);
+  new DataView(outBytes).setBigUint64(
+    0,
+    BigInt(Math.floor(minAmountOut * 1_000_000)),
+    true,
+  );
   parts.push(new Uint8Array(outBytes));
 
   // Concatenate all parts
@@ -84,15 +92,16 @@ async function executeSwap(
   signAndSubmitTransaction: any,
   account: any,
 ) {
-
   if (!account?.address) {
     throw new Error("Wallet not connected");
   }
 
-  console.log('[useSwap] Executing swap with params:', params);
+  console.log("[useSwap] Executing swap with params:", params);
 
   // Get pool address from API
-  const poolResponse = await fetch(`/api/tapp/pools/by-market/${params.marketId}`);
+  const poolResponse = await fetch(
+    `/api/tapp/pools/by-market/${params.marketId}`,
+  );
   if (!poolResponse.ok) {
     throw new Error("No AMM pool found for this market. Create a pool first.");
   }
@@ -103,17 +112,17 @@ async function executeSwap(
   }
 
   const poolAddress = poolData.poolAddress;
-  console.log('[useSwap] Using pool address:', poolAddress);
+  console.log("[useSwap] Using pool address:", poolAddress);
 
   // Serialize swap arguments
   const swapArgs = serializeSwapArgs(
     poolAddress,
     params.yesToNo,
     params.amountIn,
-    params.minAmountOut
+    params.minAmountOut,
   );
 
-  console.log('[useSwap] Serialized args length:', swapArgs.length);
+  console.log("[useSwap] Serialized args length:", swapArgs.length);
 
   // Build transaction payload
   const payload = {
@@ -121,7 +130,7 @@ async function executeSwap(
     functionArguments: [swapArgs],
   };
 
-  console.log('[useSwap] Submitting transaction...');
+  console.log("[useSwap] Submitting transaction...");
 
   // Sign and submit transaction
   const response = await signAndSubmitTransaction({
@@ -129,7 +138,7 @@ async function executeSwap(
     data: payload,
   });
 
-  console.log('[useSwap] Transaction submitted:', response.hash);
+  console.log("[useSwap] Transaction submitted:", response.hash);
 
   // Wait for transaction confirmation
   const txResponse = await aptosClient().waitForTransaction({
@@ -140,7 +149,7 @@ async function executeSwap(
     },
   });
 
-  console.log('[useSwap] Transaction confirmed');
+  console.log("[useSwap] Transaction confirmed");
 
   // Parse swap event to get actual output amount
   // For now, using expected amount

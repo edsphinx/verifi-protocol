@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -22,10 +28,13 @@ interface AIMarketGeneratorProps {
   onMarketGenerated: (market: GeneratedMarket) => void;
 }
 
-export function AIMarketGenerator({ onMarketGenerated }: AIMarketGeneratorProps) {
+export function AIMarketGenerator({
+  onMarketGenerated,
+}: AIMarketGeneratorProps) {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedMarket, setGeneratedMarket] = useState<GeneratedMarket | null>(null);
+  const [generatedMarket, setGeneratedMarket] =
+    useState<GeneratedMarket | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
@@ -91,7 +100,8 @@ export function AIMarketGenerator({ onMarketGenerated }: AIMarketGeneratorProps)
           AI Market Generator
         </CardTitle>
         <CardDescription>
-          Describe your prediction market in natural language, and AI will generate the details for you.
+          Describe your prediction market in natural language, and AI will
+          generate the details for you.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -126,34 +136,46 @@ export function AIMarketGenerator({ onMarketGenerated }: AIMarketGeneratorProps)
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium">Title:</span>
-                <p className="text-muted-foreground mt-1">{generatedMarket.title}</p>
+                <p className="text-muted-foreground mt-1">
+                  {generatedMarket.title}
+                </p>
               </div>
 
               <div>
                 <span className="font-medium">Description:</span>
-                <p className="text-muted-foreground mt-1">{generatedMarket.description}</p>
+                <p className="text-muted-foreground mt-1">
+                  {generatedMarket.description}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t">
                 <div>
                   <span className="font-medium">Oracle:</span>
-                  <p className="text-muted-foreground">{generatedMarket.oracleId}</p>
+                  <p className="text-muted-foreground">
+                    {generatedMarket.oracleId}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Operator:</span>
                   <p className="text-muted-foreground">
-                    {generatedMarket.operator === 0 ? "Greater Than" : "Less Than"}
+                    {generatedMarket.operator === 0
+                      ? "Greater Than"
+                      : "Less Than"}
                   </p>
                 </div>
                 {generatedMarket.targetAddress && (
                   <div className="col-span-2">
                     <span className="font-medium">Target Address:</span>
-                    <p className="text-muted-foreground truncate">{generatedMarket.targetAddress}</p>
+                    <p className="text-muted-foreground truncate">
+                      {generatedMarket.targetAddress}
+                    </p>
                   </div>
                 )}
                 <div>
                   <span className="font-medium">Target Value:</span>
-                  <p className="text-muted-foreground">{generatedMarket.targetValue}</p>
+                  <p className="text-muted-foreground">
+                    {generatedMarket.targetValue}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Resolution:</span>

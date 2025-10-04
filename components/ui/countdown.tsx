@@ -25,7 +25,7 @@ export function Countdown({
         className={cn(
           "flex items-center gap-2 text-muted-foreground",
           variant === "badge" && "text-xs",
-          className
+          className,
         )}
       >
         {showIcon && <Clock className="h-4 w-4" />}
@@ -50,7 +50,7 @@ export function Countdown({
           timeRemaining.totalSeconds < 86400 &&
             timeRemaining.totalSeconds >= 3600 &&
             "text-orange-500",
-          className
+          className,
         )}
       >
         {showIcon && <Clock className="h-4 w-4" />}
@@ -74,7 +74,7 @@ export function Countdown({
           timeRemaining.totalSeconds < 86400 &&
             timeRemaining.totalSeconds >= 3600 &&
             "text-orange-500",
-          className
+          className,
         )}
       >
         {showIcon && <Clock className="h-3 w-3" />}
@@ -104,7 +104,9 @@ export function Countdown({
 function TimeUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="text-2xl font-bold tabular-nums">{value.toString().padStart(2, "0")}</div>
+      <div className="text-2xl font-bold tabular-nums">
+        {value.toString().padStart(2, "0")}
+      </div>
       <div className="text-xs text-muted-foreground uppercase">{label}</div>
     </div>
   );

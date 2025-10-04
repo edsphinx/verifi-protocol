@@ -24,31 +24,32 @@ export function useMarketDetails(marketObjectAddress: string) {
       const ownerAddress = AccountAddress.from(accountAddress);
 
       // Fetch all data in parallel for maximum efficiency
-      const [marketState, userBalances, aptBalance, tokenAddresses] = await Promise.all([
-        // Call get_market_state
-        aptosClient().view<[string, string, string, string, string]>({
-          payload: {
-            function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state`,
-            functionArguments: [marketObjectAddress],
-          },
-        }),
-        // Call get_balances
-        aptosClient().view<[string, string]>({
-          payload: {
-            function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-            functionArguments: [accountAddress, marketObjectAddress],
-          },
-        }),
-        // Get user's APT balance
-        getAccountAPTBalance({ accountAddress: ownerAddress.toString() }),
-        // Get token addresses for YES and NO tokens
-        aptosClient().view<[string, string]>({
-          payload: {
-            function: `${MODULE_ADDRESS}::verifi_protocol::get_token_addresses`,
-            functionArguments: [marketObjectAddress],
-          },
-        }),
-      ]);
+      const [marketState, userBalances, aptBalance, tokenAddresses] =
+        await Promise.all([
+          // Call get_market_state
+          aptosClient().view<[string, string, string, string, string]>({
+            payload: {
+              function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state`,
+              functionArguments: [marketObjectAddress],
+            },
+          }),
+          // Call get_balances
+          aptosClient().view<[string, string]>({
+            payload: {
+              function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
+              functionArguments: [accountAddress, marketObjectAddress],
+            },
+          }),
+          // Get user's APT balance
+          getAccountAPTBalance({ accountAddress: ownerAddress.toString() }),
+          // Get token addresses for YES and NO tokens
+          aptosClient().view<[string, string]>({
+            payload: {
+              function: `${MODULE_ADDRESS}::verifi_protocol::get_token_addresses`,
+              functionArguments: [marketObjectAddress],
+            },
+          }),
+        ]);
 
       const [status, totalSupplyYes, totalSupplyNo, poolYes, poolNo] =
         marketState;

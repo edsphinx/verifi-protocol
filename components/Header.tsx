@@ -45,10 +45,7 @@ export function Header() {
       <div className="container mx-auto">
         <div className="flex h-14 items-center justify-between px-4">
           {/* Logo Section */}
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group"
-          >
+          <Link href="/" className="flex items-center gap-2.5 group">
             <Logo />
             <span className="text-lg font-semibold tracking-tight group-hover:text-primary transition-colors">
               VeriFi
@@ -70,7 +67,7 @@ export function Header() {
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
                   pathname === item.href
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                 )}
               >
                 {item.label}

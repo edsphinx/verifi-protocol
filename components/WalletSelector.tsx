@@ -74,7 +74,9 @@ export function WalletSelector() {
         >
           <div className="h-2 w-2 rounded-full bg-green-400" />
           {account?.ansName ||
-            (account?.address ? truncateAddress(account.address.toString()) : "Unknown")}
+            (account?.address
+              ? truncateAddress(account.address.toString())
+              : "Unknown")}
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
@@ -100,7 +102,10 @@ export function WalletSelector() {
             </a>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={disconnect} className="gap-2 text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onSelect={disconnect}
+          className="gap-2 text-destructive focus:text-destructive"
+        >
           <LogOut className="h-4 w-4" /> Disconnect
         </DropdownMenuItem>
       </DropdownMenuContent>

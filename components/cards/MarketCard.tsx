@@ -58,7 +58,10 @@ export function MarketCard({ market }: MarketCardProps) {
   const getBadgeContent = () => {
     if (isResolved) {
       return {
-        text: market.onChainStatus === MARKET_STATUS.RESOLVED_YES ? "Resolved: YES" : "Resolved: NO",
+        text:
+          market.onChainStatus === MARKET_STATUS.RESOLVED_YES
+            ? "Resolved: YES"
+            : "Resolved: NO",
         className: "bg-green-500/10 text-green-400 border-green-500/40",
       };
     }
@@ -89,7 +92,8 @@ export function MarketCard({ market }: MarketCardProps) {
         <Card
           className={cn(
             "h-full flex flex-col justify-between border-border/40 bg-card hover:border-primary/20 transition-all duration-300",
-            (isExpired || isResolved) && "opacity-75 border-muted-foreground/20 hover:border-muted-foreground/30"
+            (isExpired || isResolved) &&
+              "opacity-75 border-muted-foreground/20 hover:border-muted-foreground/30",
           )}
         >
           <div>
@@ -98,7 +102,7 @@ export function MarketCard({ market }: MarketCardProps) {
                 <Badge
                   className={cn(
                     "text-xs font-semibold px-3 py-1",
-                    badgeContent.className
+                    badgeContent.className,
                   )}
                 >
                   {badgeContent.text}
@@ -148,7 +152,10 @@ export function MarketCard({ market }: MarketCardProps) {
               {isResolved && (
                 <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                   <div className="text-xs text-green-400 font-medium">
-                    Market has been resolved: {market.onChainStatus === MARKET_STATUS.RESOLVED_YES ? "YES" : "NO"}
+                    Market has been resolved:{" "}
+                    {market.onChainStatus === MARKET_STATUS.RESOLVED_YES
+                      ? "YES"
+                      : "NO"}
                   </div>
                 </div>
               )}

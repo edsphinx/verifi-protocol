@@ -58,7 +58,9 @@ export function TappIntegration() {
     return `https://explorer.aptoslabs.com/account/${TAPP_ADDRESS}/modules/code/${moduleName}?network=${network}`;
   };
 
-  const completedCount = INTEGRATION_CHECKS.filter((c) => c.status === "completed").length;
+  const completedCount = INTEGRATION_CHECKS.filter(
+    (c) => c.status === "completed",
+  ).length;
   const totalCount = INTEGRATION_CHECKS.length;
 
   return (
@@ -68,7 +70,9 @@ export function TappIntegration() {
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4" />
           <span className="text-sm font-medium">Integration Status:</span>
-          <Badge variant={completedCount === totalCount ? "default" : "secondary"}>
+          <Badge
+            variant={completedCount === totalCount ? "default" : "secondary"}
+          >
             {completedCount}/{totalCount} Complete
           </Badge>
         </div>
@@ -92,14 +96,20 @@ export function TappIntegration() {
           >
             <CheckCircle2
               className={`h-5 w-5 mt-0.5 ${
-                check.status === "completed" ? "text-green-500" : "text-gray-400"
+                check.status === "completed"
+                  ? "text-green-500"
+                  : "text-gray-400"
               }`}
             />
             <div className="flex-1">
               <p className="font-medium text-sm">{check.name}</p>
-              <p className="text-xs text-muted-foreground">{check.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {check.description}
+              </p>
             </div>
-            <Badge variant={check.status === "completed" ? "default" : "outline"}>
+            <Badge
+              variant={check.status === "completed" ? "default" : "outline"}
+            >
               {check.status}
             </Badge>
           </div>
@@ -123,7 +133,9 @@ export function TappIntegration() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => window.open(getExplorerUrl("tapp_prediction_hook"), "_blank")}
+            onClick={() =>
+              window.open(getExplorerUrl("tapp_prediction_hook"), "_blank")
+            }
           >
             tapp_prediction_hook
             <ExternalLink className="h-3 w-3" />

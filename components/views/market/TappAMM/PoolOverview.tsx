@@ -33,10 +33,17 @@ interface PoolOverviewProps {
   isLoading?: boolean;
 }
 
-export function PoolOverview({ marketId, data: initialData, isLoading: initialLoading = false }: PoolOverviewProps) {
+export function PoolOverview({
+  marketId,
+  data: initialData,
+  isLoading: initialLoading = false,
+}: PoolOverviewProps) {
   // Fetch live pool data - this will auto-update when refetchQueries is called
   // Note: PoolOverview doesn't need user-specific data, so we pass undefined
-  const { data: poolData, isLoading: isLoadingLive } = usePoolData(marketId, undefined);
+  const { data: poolData, isLoading: isLoadingLive } = usePoolData(
+    marketId,
+    undefined,
+  );
 
   // Use live data if available, fallback to initial props
   const data = poolData ?? initialData;

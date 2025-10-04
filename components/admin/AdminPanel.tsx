@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, AlertTriangle, Zap, Terminal } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Zap,
+  Terminal,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface LogEntry {
@@ -32,9 +45,9 @@ export function AdminPanel() {
       hour12: false,
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit"
+      second: "2-digit",
     });
-    setLogs(prev => [...prev, { timestamp, type, message }]);
+    setLogs((prev) => [...prev, { timestamp, type, message }]);
   };
 
   const handleResolveExpired = async () => {
@@ -66,7 +79,10 @@ export function AdminPanel() {
       addLog("info", `⏰ Detected ${results.expired} expired markets`);
 
       if (results.resolved > 0) {
-        addLog("success", `✨ Successfully resolved ${results.resolved} markets`);
+        addLog(
+          "success",
+          `✨ Successfully resolved ${results.resolved} markets`,
+        );
       }
 
       if (results.failed > 0) {
@@ -74,7 +90,10 @@ export function AdminPanel() {
       }
 
       if (results.txHashes && results.txHashes.length > 0) {
-        addLog("info", `📝 Generated ${results.txHashes.length} transaction(s)`);
+        addLog(
+          "info",
+          `📝 Generated ${results.txHashes.length} transaction(s)`,
+        );
         results.txHashes.forEach((hash: string, idx: number) => {
           addLog("info", `  TX ${idx + 1}: ${hash.substring(0, 20)}...`);
         });
@@ -114,7 +133,8 @@ export function AdminPanel() {
             <div>
               <h3 className="font-semibold text-sm">Resolve Expired Markets</h3>
               <p className="text-xs text-muted-foreground">
-                Automatically resolve all markets that have passed their expiration time
+                Automatically resolve all markets that have passed their
+                expiration time
               </p>
             </div>
             <Button
@@ -154,18 +174,29 @@ export function AdminPanel() {
                       log.type === "success"
                         ? "text-green-400"
                         : log.type === "error"
-                        ? "text-red-400"
-                        : log.type === "warning"
-                        ? "text-yellow-400"
-                        : "text-gray-300"
+                          ? "text-red-400"
+                          : log.type === "warning"
+                            ? "text-yellow-400"
+                            : "text-gray-300"
                     }`}
                   >
-                    <span className="text-gray-500">[{log.timestamp}]</span> {log.message}
+                    <span className="text-gray-500">[{log.timestamp}]</span>{" "}
+                    {log.message}
                   </div>
                 ))}
                 {isResolving && (
                   <div className="text-amber-400 animate-pulse">
-                    <span className="text-gray-500">[{new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}]</span> ⏳ Processing...
+                    <span className="text-gray-500">
+                      [
+                      {new Date().toLocaleTimeString("en-US", {
+                        hour12: false,
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
+                      ]
+                    </span>{" "}
+                    ⏳ Processing...
                   </div>
                 )}
               </div>
@@ -193,20 +224,28 @@ export function AdminPanel() {
               {/* Statistics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-muted/50 rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground mb-1">Total Markets</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Total Markets
+                  </div>
                   <div className="text-2xl font-bold">{result.total}</div>
                 </div>
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
                   <div className="text-xs text-amber-400 mb-1">Expired</div>
-                  <div className="text-2xl font-bold text-amber-400">{result.expired}</div>
+                  <div className="text-2xl font-bold text-amber-400">
+                    {result.expired}
+                  </div>
                 </div>
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                   <div className="text-xs text-green-400 mb-1">Resolved</div>
-                  <div className="text-2xl font-bold text-green-400">{result.resolved}</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    {result.resolved}
+                  </div>
                 </div>
                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
                   <div className="text-xs text-destructive mb-1">Failed</div>
-                  <div className="text-2xl font-bold text-destructive">{result.failed}</div>
+                  <div className="text-2xl font-bold text-destructive">
+                    {result.failed}
+                  </div>
                 </div>
               </div>
 
@@ -243,7 +282,9 @@ export function AdminPanel() {
                     <div className="space-y-1">
                       <div className="font-semibold">Errors encountered:</div>
                       {result.errors.map((err: string, idx: number) => (
-                        <div key={idx} className="text-xs">• {err}</div>
+                        <div key={idx} className="text-xs">
+                          • {err}
+                        </div>
                       ))}
                     </div>
                   </AlertDescription>

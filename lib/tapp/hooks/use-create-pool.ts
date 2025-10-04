@@ -207,7 +207,7 @@ export function useCreatePool() {
               noTokenAddress: variables.noTokenAddress,
               creatorAddress: account?.address?.toString() || data.poolAddress,
             }),
-          }
+          },
         );
 
         if (response.ok) {

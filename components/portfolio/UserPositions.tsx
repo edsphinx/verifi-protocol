@@ -44,7 +44,13 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
   };
 
   const redeemMutation = useMutation({
-    mutationFn: async ({ marketAddress, amount }: { marketAddress: string; amount: number }) => {
+    mutationFn: async ({
+      marketAddress,
+      amount,
+    }: {
+      marketAddress: string;
+      amount: number;
+    }) => {
       if (!account?.address) throw new Error("Wallet not connected");
 
       const payload = getRedeemWinningsPayload({
@@ -77,7 +83,7 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
             onClick: () =>
               window.open(
                 `https://explorer.aptoslabs.com/txn/${hash}?network=${NETWORK.toLowerCase()}`,
-                "_blank"
+                "_blank",
               ),
           },
         });
@@ -110,7 +116,10 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
     redeemMutation.mutate({ marketAddress, amount: winningBalance });
   };
 
-  const totalPortfolioValue = positions.reduce((sum, pos) => sum + pos.totalValue, 0);
+  const totalPortfolioValue = positions.reduce(
+    (sum, pos) => sum + pos.totalValue,
+    0,
+  );
 
   if (isLoading) {
     return (
@@ -147,7 +156,9 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
           <CardTitle>Active Positions</CardTitle>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Total Value</p>
-            <p className="text-2xl font-bold">{totalPortfolioValue.toFixed(2)} APT</p>
+            <p className="text-2xl font-bold">
+              {totalPortfolioValue.toFixed(2)} APT
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -177,11 +188,17 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">YES Shares</p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    YES Shares
+                  </p>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="default"
-                      className={position.marketStatus === 2 ? "bg-green-500 text-white" : ""}
+                      className={
+                        position.marketStatus === 2
+                          ? "bg-green-500 text-white"
+                          : ""
+                      }
                     >
                       {formatBalance(position.yesBalance)}
                     </Badge>
@@ -191,11 +208,17 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">NO Shares</p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    NO Shares
+                  </p>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
-                      className={position.marketStatus === 3 ? "bg-red-500 text-white" : ""}
+                      className={
+                        position.marketStatus === 3
+                          ? "bg-red-500 text-white"
+                          : ""
+                      }
                     >
                       {formatBalance(position.noBalance)}
                     </Badge>
@@ -218,24 +241,30 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
                 <div className="mt-3 pt-3 border-t">
                   {(() => {
                     const isYesWinner = position.marketStatus === 2;
-                    const winningBalance = isYesWinner ? position.yesBalance : position.noBalance;
+                    const winningBalance = isYesWinner
+                      ? position.yesBalance
+                      : position.noBalance;
                     const isWinner = winningBalance > 0;
 
                     if (!isWinner) {
                       return (
                         <div className="text-center py-2">
                           <p className="text-sm text-muted-foreground">
-                            Market resolved {isYesWinner ? "YES" : "NO"} - No winnings to claim
+                            Market resolved {isYesWinner ? "YES" : "NO"} - No
+                            winnings to claim
                           </p>
                         </div>
                       );
                     }
 
-                    const isRedeeming = redeemingMarket === position.marketAddress;
+                    const isRedeeming =
+                      redeemingMarket === position.marketAddress;
 
                     return (
                       <Button
-                        onClick={() => handleRedeem(position.marketAddress, winningBalance)}
+                        onClick={() =>
+                          handleRedeem(position.marketAddress, winningBalance)
+                        }
                         disabled={isRedeeming}
                         className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600"
                       >
@@ -247,7 +276,8 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
                         ) : (
                           <>
                             <Trophy className="mr-2 h-4 w-4" />
-                            Claim {formatBalance(winningBalance)} {isYesWinner ? "YES" : "NO"} Winnings
+                            Claim {formatBalance(winningBalance)}{" "}
+                            {isYesWinner ? "YES" : "NO"} Winnings
                           </>
                         )}
                       </Button>

@@ -20,7 +20,7 @@ function serializeAddLiquidityArgs(
   poolAddr: string,
   amountYes: number,
   amountNo: number,
-  minLpTokens: number
+  minLpTokens: number,
 ): Uint8Array {
   const parts: Uint8Array[] = [];
 
@@ -62,18 +62,21 @@ function serializeAddLiquidityArgs(
  * @param args Liquidity parameters
  * @returns Transaction payload for add_liquidity
  */
-export function buildAddLiquidityTransaction(args: AddLiquidityTransactionArgs) {
+export function buildAddLiquidityTransaction(
+  args: AddLiquidityTransactionArgs,
+) {
   const minLpTokens = args.minLpTokens || 0;
 
   const liquidityArgs = serializeAddLiquidityArgs(
     args.poolAddress,
     args.amountYes,
     args.amountNo,
-    minLpTokens
+    minLpTokens,
   );
 
   return {
-    function: `${TAPP_ADDRESS}::router::add_liquidity` as `${string}::${string}::${string}`,
+    function:
+      `${TAPP_ADDRESS}::router::add_liquidity` as `${string}::${string}::${string}`,
     functionArguments: [liquidityArgs],
   };
 }

@@ -7,7 +7,7 @@ export interface RedeemWinningsPayload {
 }
 
 export function getRedeemWinningsPayload(
-  payload: RedeemWinningsPayload
+  payload: RedeemWinningsPayload,
 ): InputTransactionData {
   return {
     data: {

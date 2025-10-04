@@ -92,18 +92,26 @@ export function CreateMarketForm() {
     onSuccess: async (payload) => {
       if (!account?.address) return;
       try {
-        console.log('[CreateMarketForm] Submitting transaction with payload:', payload);
-        console.log('[CreateMarketForm] Sender address:', account.address);
+        console.log(
+          "[CreateMarketForm] Submitting transaction with payload:",
+          payload,
+        );
+        console.log("[CreateMarketForm] Sender address:", account.address);
 
         const committedTxn = await signAndSubmitTransaction({
           sender: account.address,
           data: payload,
         });
 
-        console.log('[CreateMarketForm] Transaction committed:', committedTxn.hash);
+        console.log(
+          "[CreateMarketForm] Transaction committed:",
+          committedTxn.hash,
+        );
         toast.info("Market creation submitted, waiting for confirmation...");
 
-        console.log('[CreateMarketForm] Waiting for transaction confirmation...');
+        console.log(
+          "[CreateMarketForm] Waiting for transaction confirmation...",
+        );
 
         const response = await aptosClient().waitForTransaction({
           transactionHash: committedTxn.hash,
@@ -113,7 +121,7 @@ export function CreateMarketForm() {
           },
         });
 
-        console.log('[CreateMarketForm] Transaction confirmed:', response);
+        console.log("[CreateMarketForm] Transaction confirmed:", response);
 
         if (isUserTransactionResponse(response)) {
           const event = response.events.find(
@@ -142,8 +150,8 @@ export function CreateMarketForm() {
           }
         }
       } catch (e: any) {
-        console.error('[CreateMarketForm] Transaction error:', e);
-        console.error('[CreateMarketForm] Error details:', {
+        console.error("[CreateMarketForm] Transaction error:", e);
+        console.error("[CreateMarketForm] Error details:", {
           message: e.message,
           stack: e.stack,
           response: e.response,
@@ -152,7 +160,7 @@ export function CreateMarketForm() {
       }
     },
     onError: (e: Error) => {
-      console.error('[CreateMarketForm] Payload build error:', e);
+      console.error("[CreateMarketForm] Payload build error:", e);
       toast.error("Error building transaction", { description: e.message });
     },
   });
@@ -204,7 +212,9 @@ export function CreateMarketForm() {
     }
 
     // Find the oracle configuration
-    const selectedOracle = ORACLE_OPTIONS.find((opt) => opt.id === market.oracleId);
+    const selectedOracle = ORACLE_OPTIONS.find(
+      (opt) => opt.id === market.oracleId,
+    );
     if (!selectedOracle) {
       toast.error("Invalid oracle configuration");
       return;
@@ -219,7 +229,9 @@ export function CreateMarketForm() {
       resolutionTimestamp: utcTimestamp,
       resolverAddress: account.address.toString(),
       oracleId: market.oracleId,
-      targetAddress: selectedOracle.requiresTargetAddress ? market.targetAddress : "0x1",
+      targetAddress: selectedOracle.requiresTargetAddress
+        ? market.targetAddress
+        : "0x1",
       targetFunction: selectedOracle.targetMetric,
       targetValue: Number(market.targetValue),
       operator: market.operator,
@@ -241,150 +253,156 @@ export function CreateMarketForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-          {/* Oracle Warning Alert */}
-          {hasNoActiveOracles && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No Active Oracles Available</AlertTitle>
-              <AlertDescription className="space-y-2">
-                <p>
-                  There are no active oracles registered in the protocol. Markets require at least
-                  one active oracle to function.
-                </p>
-                {isPublisher ? (
-                  <p className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    <Link href="/status" className="underline font-medium">
-                      Go to Status page to register and activate oracles
-                    </Link>
-                  </p>
-                ) : (
+            {/* Oracle Warning Alert */}
+            {hasNoActiveOracles && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No Active Oracles Available</AlertTitle>
+                <AlertDescription className="space-y-2">
                   <p>
-                    Please contact the protocol publisher to register oracles before creating markets.
+                    There are no active oracles registered in the protocol.
+                    Markets require at least one active oracle to function.
                   </p>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
+                  {isPublisher ? (
+                    <p className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      <Link href="/status" className="underline font-medium">
+                        Go to Status page to register and activate oracles
+                      </Link>
+                    </p>
+                  ) : (
+                    <p>
+                      Please contact the protocol publisher to register oracles
+                      before creating markets.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {checkingOracles && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Checking for active oracles...</AlertDescription>
-            </Alert>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="description">Market Question</Label>
-            <Input
-              id="description"
-              placeholder="e.g., Will USDC total supply be > 1,000,000?"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              disabled={isPending}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="oracle-type">On-Chain Data Source (Oracle)</Label>
-            <Select
-              onValueChange={setSelectedOracleId}
-              defaultValue={selectedOracle.id}
-              disabled={isPending}
-            >
-              <SelectTrigger id="oracle-type">
-                <SelectValue placeholder="Select an oracle" />
-              </SelectTrigger>
-              <SelectContent>
-                {ORACLE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedOracle.requiresTargetAddress && (
+            {checkingOracles && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Checking for active oracles...
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="target-address">Target Account Address</Label>
+              <Label htmlFor="description">Market Question</Label>
               <Input
-                id="target-address"
-                placeholder="0x..."
-                value={targetAddress}
-                onChange={(e) => setTargetAddress(e.target.value)}
+                id="description"
+                placeholder="e.g., Will USDC total supply be > 1,000,000?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 required
                 disabled={isPending}
               />
             </div>
-          )}
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="operator">Condition</Label>
+              <Label htmlFor="oracle-type">On-Chain Data Source (Oracle)</Label>
               <Select
-                onValueChange={(val) => setOperator(Number(val))}
-                defaultValue="0"
+                onValueChange={setSelectedOracleId}
+                defaultValue={selectedOracle.id}
                 disabled={isPending}
               >
-                <SelectTrigger id="operator">
-                  <SelectValue />
+                <SelectTrigger id="oracle-type">
+                  <SelectValue placeholder="Select an oracle" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Greater Than (&gt;)</SelectItem>
-                  <SelectItem value="1">Less Than (&lt;)</SelectItem>
+                  {ORACLE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {selectedOracle.requiresTargetAddress && (
+              <div className="space-y-2">
+                <Label htmlFor="target-address">Target Account Address</Label>
+                <Input
+                  id="target-address"
+                  placeholder="0x..."
+                  value={targetAddress}
+                  onChange={(e) => setTargetAddress(e.target.value)}
+                  required
+                  disabled={isPending}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="operator">Condition</Label>
+                <Select
+                  onValueChange={(val) => setOperator(Number(val))}
+                  defaultValue="0"
+                  disabled={isPending}
+                >
+                  <SelectTrigger id="operator">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Greater Than (&gt;)</SelectItem>
+                    <SelectItem value="1">Less Than (&lt;)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="target-value">
+                  {selectedOracle.targetValueLabel}
+                </Label>
+                <Input
+                  id="target-value"
+                  type="number"
+                  placeholder="e.g., 1000000"
+                  value={targetValue}
+                  onChange={(e) => setTargetValue(e.target.value)}
+                  required
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="target-value">
-                {selectedOracle.targetValueLabel}
-              </Label>
+              <Label htmlFor="resolution-date">Resolution Date & Time</Label>
               <Input
-                id="target-value"
-                type="number"
-                placeholder="e.g., 1000000"
-                value={targetValue}
-                onChange={(e) => setTargetValue(e.target.value)}
+                id="resolution-date"
+                type="datetime-local"
+                value={resolutionDate}
+                onChange={(e) => setResolutionDate(e.target.value)}
                 required
                 disabled={isPending}
               />
+              <p className="text-sm text-muted-foreground">
+                Enter the time when the market should close in your local
+                timezone.
+                {resolutionDate && (
+                  <span className="block mt-1">
+                    <strong>Your time:</strong>{" "}
+                    {resolutionDate.replace("T", " at ")}
+                    <br />
+                    <strong>UTC:</strong>{" "}
+                    {new Date(resolutionDate + "Z").toUTCString()}
+                  </span>
+                )}
+              </p>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="resolution-date">Resolution Date & Time</Label>
-            <Input
-              id="resolution-date"
-              type="datetime-local"
-              value={resolutionDate}
-              onChange={(e) => setResolutionDate(e.target.value)}
-              required
-              disabled={isPending}
-            />
-            <p className="text-sm text-muted-foreground">
-              Enter the time when the market should close in your local timezone.
-              {resolutionDate && (
-                <span className="block mt-1">
-                  <strong>Your time:</strong> {resolutionDate.replace('T', ' at ')}
-                  <br />
-                  <strong>UTC:</strong> {new Date(resolutionDate + 'Z').toUTCString()}
-                </span>
-              )}
-            </p>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!account || isPending}
-          >
-            {isPending ? "Submitting Transaction..." : "Create Market"}
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+          </CardContent>
+          <CardFooter>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!account || isPending}
+            >
+              {isPending ? "Submitting Transaction..." : "Create Market"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
     </div>
   );
 }

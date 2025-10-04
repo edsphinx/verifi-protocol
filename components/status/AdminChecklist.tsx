@@ -40,7 +40,8 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: "register-oracles",
     category: "deployment",
     task: "Register & activate oracles",
-    description: "Register at least one oracle (aptos-balance, usdc-total-supply)",
+    description:
+      "Register at least one oracle (aptos-balance, usdc-total-supply)",
   },
 
   // Nodit Configuration
@@ -77,7 +78,8 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: "db-migrations",
     category: "database",
     task: "Run database migrations",
-    description: "Execute: npx prisma migrate dev --name add_tapp_and_notifications",
+    description:
+      "Execute: npx prisma migrate dev --name add_tapp_and_notifications",
   },
   {
     id: "db-seed",
@@ -148,7 +150,11 @@ export function AdminChecklist() {
     return { completed, total: items.length };
   };
 
-  const categories: Array<{ name: string; key: ChecklistItem["category"]; color: string }> = [
+  const categories: Array<{
+    name: string;
+    key: ChecklistItem["category"];
+    color: string;
+  }> = [
     { name: "Deployment", key: "deployment", color: "bg-blue-500" },
     { name: "Nodit Setup", key: "nodit", color: "bg-purple-500" },
     { name: "Database", key: "database", color: "bg-green-500" },
@@ -167,7 +173,13 @@ export function AdminChecklist() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Overall Progress:</span>
-            <Badge variant={totalProgress.completed === totalProgress.total ? "default" : "secondary"}>
+            <Badge
+              variant={
+                totalProgress.completed === totalProgress.total
+                  ? "default"
+                  : "secondary"
+              }
+            >
               {totalProgress.completed}/{totalProgress.total}
             </Badge>
           </div>
@@ -177,7 +189,12 @@ export function AdminChecklist() {
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={resetChecklist} className="gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={resetChecklist}
+          className="gap-2"
+        >
           <RefreshCw className="h-3 w-3" />
           Reset
         </Button>
@@ -189,7 +206,9 @@ export function AdminChecklist() {
           const progress = getCategoryProgress(cat.key);
           return (
             <div key={cat.key} className="p-3 border rounded-lg">
-              <div className={`h-1 ${cat.color} rounded-full mb-2 opacity-20`} />
+              <div
+                className={`h-1 ${cat.color} rounded-full mb-2 opacity-20`}
+              />
               <p className="text-sm font-medium">{cat.name}</p>
               <p className="text-xs text-muted-foreground">
                 {progress.completed}/{progress.total}
@@ -201,7 +220,9 @@ export function AdminChecklist() {
 
       {/* Checklist Items by Category */}
       {categories.map((cat) => {
-        const items = CHECKLIST_ITEMS.filter((item) => item.category === cat.key);
+        const items = CHECKLIST_ITEMS.filter(
+          (item) => item.category === cat.key,
+        );
         return (
           <div key={cat.key} className="space-y-2">
             <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -224,12 +245,16 @@ export function AdminChecklist() {
                     <label
                       htmlFor={item.id}
                       className={`text-sm font-medium cursor-pointer ${
-                        checkedItems.has(item.id) ? "line-through text-muted-foreground" : ""
+                        checkedItems.has(item.id)
+                          ? "line-through text-muted-foreground"
+                          : ""
                       }`}
                     >
                       {item.task}
                     </label>
-                    <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {item.description}
+                    </p>
                   </div>
                   {item.docsLink && (
                     <Button

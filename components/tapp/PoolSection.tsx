@@ -21,7 +21,12 @@ interface PoolSectionProps {
 async function checkPoolExists(marketAddress: string): Promise<boolean> {
   try {
     const response = await fetch(`/api/tapp/pools/by-market/${marketAddress}`);
-    console.log('[PoolSection] Pool exists check:', response.ok, 'for market:', marketAddress);
+    console.log(
+      "[PoolSection] Pool exists check:",
+      response.ok,
+      "for market:",
+      marketAddress,
+    );
     return response.ok;
   } catch (error) {
     console.error("[PoolSection] Failed to check pool existence:", error);
@@ -34,7 +39,11 @@ export function PoolSection({
   yesTokenAddress,
   noTokenAddress,
 }: PoolSectionProps) {
-  const { data: poolExists, isLoading: isCheckingPool, isError } = useQuery({
+  const {
+    data: poolExists,
+    isLoading: isCheckingPool,
+    isError,
+  } = useQuery({
     queryKey: ["pool-exists", marketAddress],
     queryFn: () => checkPoolExists(marketAddress),
     refetchInterval: 3000, // Auto-refetch every 3 seconds
@@ -63,7 +72,9 @@ export function PoolSection({
     return (
       <Card className="border-dashed">
         <CardHeader>
-          <CardTitle className="text-muted-foreground">AMM Liquidity Pool</CardTitle>
+          <CardTitle className="text-muted-foreground">
+            AMM Liquidity Pool
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -103,9 +114,10 @@ export function PoolSection({
 
   // Pool exists, show live data using PoolOverview component
   // PoolOverview handles its own data fetching internally
-  console.log('[PoolSection] Rendering PoolOverview for market:', marketAddress);
-
-  return (
-    <PoolOverview marketId={marketAddress} />
+  console.log(
+    "[PoolSection] Rendering PoolOverview for market:",
+    marketAddress,
   );
+
+  return <PoolOverview marketId={marketAddress} />;
 }

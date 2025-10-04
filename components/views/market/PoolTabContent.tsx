@@ -26,28 +26,31 @@ export function PoolTabContent({
   const { account } = useWallet();
   const { data: poolData } = usePoolData(marketId, account?.address.toString());
 
-  const checkPoolExists = useCallback(async (forceRefresh = false) => {
-    setIsLoading(true);
-    try {
-      // Add cache busting if forcing refresh
-      const url = forceRefresh
-        ? `/api/tapp/pools/by-market/${marketId}?t=${Date.now()}`
-        : `/api/tapp/pools/by-market/${marketId}`;
+  const checkPoolExists = useCallback(
+    async (forceRefresh = false) => {
+      setIsLoading(true);
+      try {
+        // Add cache busting if forcing refresh
+        const url = forceRefresh
+          ? `/api/tapp/pools/by-market/${marketId}?t=${Date.now()}`
+          : `/api/tapp/pools/by-market/${marketId}`;
 
-      const response = await fetch(url, {
-        cache: forceRefresh ? "no-cache" : "default",
-      });
-      setPoolExists(response.ok);
-      console.log(
-        `[PoolTabContent] Pool exists check: ${response.ok}, forceRefresh: ${forceRefresh}`,
-      );
-    } catch (error) {
-      console.error("Error checking pool existence:", error);
-      setPoolExists(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [marketId]);
+        const response = await fetch(url, {
+          cache: forceRefresh ? "no-cache" : "default",
+        });
+        setPoolExists(response.ok);
+        console.log(
+          `[PoolTabContent] Pool exists check: ${response.ok}, forceRefresh: ${forceRefresh}`,
+        );
+      } catch (error) {
+        console.error("Error checking pool existence:", error);
+        setPoolExists(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [marketId],
+  );
 
   useEffect(() => {
     checkPoolExists();
@@ -122,9 +125,12 @@ export function PoolTabContent({
 
   // Pool exists, show add liquidity interface + user positions
   // Filter positions for current user
-  console.log('[PoolTabContent] poolData:', poolData);
-  console.log('[PoolTabContent] account?.address:', account?.address?.toString());
-  console.log('[PoolTabContent] poolData?.positions:', poolData?.positions);
+  console.log("[PoolTabContent] poolData:", poolData);
+  console.log(
+    "[PoolTabContent] account?.address:",
+    account?.address?.toString(),
+  );
+  console.log("[PoolTabContent] poolData?.positions:", poolData?.positions);
 
   const userPositions =
     poolData?.positions?.filter(
@@ -133,7 +139,7 @@ export function PoolTabContent({
         p.owner.toLowerCase() === account.address.toString().toLowerCase(),
     ) || [];
 
-  console.log('[PoolTabContent] userPositions after filter:', userPositions);
+  console.log("[PoolTabContent] userPositions after filter:", userPositions);
 
   // Convert reserves to display format (divide by 10^6) before calculating LP supply
   // This ensures consistency with how positions store lpTokens in display format

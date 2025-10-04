@@ -6,7 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Send, Loader2, CheckCircle2, User, Bot, RotateCcw } from "lucide-react";
+import {
+  Sparkles,
+  Send,
+  Loader2,
+  CheckCircle2,
+  User,
+  Bot,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -34,13 +42,15 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'll help you create a prediction market. What would you like to predict? For example:\n\n• Will USDC supply on Aptos exceed 1 billion?\n• Will a specific wallet hold more than 1000 APT?\n\nNote: I can only work with APT balance and USDC supply oracles.",
+      content:
+        "Hi! I'll help you create a prediction market. What would you like to predict? For example:\n\n• Will USDC supply on Aptos exceed 1 billion?\n• Will a specific wallet hold more than 1000 APT?\n\nNote: I can only work with APT balance and USDC supply oracles.",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedMarket, setGeneratedMarket] = useState<GeneratedMarket | null>(null);
+  const [generatedMarket, setGeneratedMarket] =
+    useState<GeneratedMarket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,29 +105,29 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
         try {
           // Ensure the date string is interpreted as UTC
           let dateStr = result.data.resolutionDate;
-          if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
-            dateStr += 'Z'; // Force UTC interpretation
+          if (!dateStr.endsWith("Z") && !dateStr.includes("+")) {
+            dateStr += "Z"; // Force UTC interpretation
           }
 
           const resDate = new Date(dateStr);
           if (!isNaN(resDate.getTime())) {
             // Show in user's local timezone
             resolutionDateStr = resDate.toLocaleString(undefined, {
-              weekday: 'short',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
             });
 
             // Also show UTC for reference
-            resolutionUTC = resDate.toLocaleString('en-US', {
-              timeZone: 'UTC',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
+            resolutionUTC = resDate.toLocaleString("en-US", {
+              timeZone: "UTC",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
             });
           }
         } catch (e) {
@@ -125,15 +135,17 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
         }
 
         // Format oracle name nicely
-        const oracleName = result.data.oracleId === "usdc-total-supply"
-          ? "USDC Total Supply"
-          : "APT Balance";
+        const oracleName =
+          result.data.oracleId === "usdc-total-supply"
+            ? "USDC Total Supply"
+            : "APT Balance";
 
         // Format target value nicely
         // Note: USDC uses 6 decimals, APT uses 8 decimals
-        const formattedTarget = result.data.oracleId === "usdc-total-supply"
-          ? `${Number(result.data.targetValue).toLocaleString()} USDC (base units)`
-          : `${(Number(result.data.targetValue) / 100000000).toLocaleString()} APT`;
+        const formattedTarget =
+          result.data.oracleId === "usdc-total-supply"
+            ? `${Number(result.data.targetValue).toLocaleString()} USDC (base units)`
+            : `${(Number(result.data.targetValue) / 100000000).toLocaleString()} APT`;
 
         const confirmationMessage: Message = {
           role: "assistant",
@@ -154,7 +166,8 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
       console.error("Error:", error);
       const errorMessage: Message = {
         role: "assistant",
-        content: "Sorry, I encountered an error. Please try again or rephrase your request.",
+        content:
+          "Sorry, I encountered an error. Please try again or rephrase your request.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -184,7 +197,8 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
     setGeneratedMarket(null);
     const regenerateMessage: Message = {
       role: "assistant",
-      content: "No problem! Please describe what you'd like to change or create a different market.",
+      content:
+        "No problem! Please describe what you'd like to change or create a different market.",
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, regenerateMessage]);
@@ -194,7 +208,8 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
     setMessages([
       {
         role: "assistant",
-        content: "Hi! I'll help you create a prediction market. What would you like to predict? For example:\n\n• Will USDC supply on Aptos exceed 1 billion?\n• Will a specific wallet hold more than 1000 APT?\n\nNote: I can only work with APT balance and USDC supply oracles.",
+        content:
+          "Hi! I'll help you create a prediction market. What would you like to predict? For example:\n\n• Will USDC supply on Aptos exceed 1 billion?\n• Will a specific wallet hold more than 1000 APT?\n\nNote: I can only work with APT balance and USDC supply oracles.",
         timestamp: new Date(),
       },
     ]);
@@ -230,7 +245,7 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
               key={index}
               className={cn(
                 "flex gap-3 items-start",
-                message.role === "user" && "flex-row-reverse"
+                message.role === "user" && "flex-row-reverse",
               )}
             >
               <div
@@ -238,7 +253,7 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    : "bg-muted",
                 )}
               >
                 {message.role === "user" ? (
@@ -250,7 +265,7 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
               <div
                 className={cn(
                   "flex flex-col gap-1 max-w-[80%]",
-                  message.role === "user" && "items-end"
+                  message.role === "user" && "items-end",
                 )}
               >
                 <div
@@ -258,7 +273,7 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
                     "rounded-lg px-4 py-2 text-sm",
                     message.role === "user"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                      : "bg-muted",
                   )}
                 >
                   <div className="whitespace-pre-wrap">{message.content}</div>
@@ -279,7 +294,9 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
               </div>
               <div className="flex items-center gap-2 bg-muted rounded-lg px-4 py-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
+                <span className="text-sm text-muted-foreground">
+                  Thinking...
+                </span>
               </div>
             </div>
           )}
@@ -291,19 +308,11 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
       <CardContent className="p-4 space-y-3 bg-background">
         {generatedMarket ? (
           <div className="flex gap-2">
-            <Button
-              onClick={handleCreateMarket}
-              className="flex-1"
-              size="lg"
-            >
+            <Button onClick={handleCreateMarket} className="flex-1" size="lg">
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Create This Market
             </Button>
-            <Button
-              onClick={handleRegenerate}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={handleRegenerate} variant="outline" size="lg">
               Cancel
             </Button>
           </div>

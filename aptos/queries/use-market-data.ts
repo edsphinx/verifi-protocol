@@ -13,13 +13,16 @@ async function getFungibleAssetBalance({
   assetType: string;
 }) {
   try {
-    console.log(`[getFungibleAssetBalance] Fetching balance for owner: ${owner.toString()}, asset: ${assetType}`);
+    console.log(
+      `[getFungibleAssetBalance] Fetching balance for owner: ${owner.toString()}, asset: ${assetType}`,
+    );
 
     // Use the primary_fungible_store::balance view function
     // Signature: balance<T: key>(account: address, metadata: Object<T>): u64
     const balance = await aptosClient().view({
       payload: {
-        function: "0x1::primary_fungible_store::balance" as `${string}::${string}::${string}`,
+        function:
+          "0x1::primary_fungible_store::balance" as `${string}::${string}::${string}`,
         typeArguments: ["0x1::fungible_asset::Metadata"],
         functionArguments: [owner.toString(), assetType],
       },

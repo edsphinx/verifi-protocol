@@ -68,8 +68,16 @@ export function OracleRegistry() {
 
       // Fallback to known oracles for demo
       setOracles([
-        { oracleId: "aptos-balance", protocolName: "Aptos Balance", isActive: true },
-        { oracleId: "usdc-total-supply", protocolName: "USDC Total Supply", isActive: true },
+        {
+          oracleId: "aptos-balance",
+          protocolName: "Aptos Balance",
+          isActive: true,
+        },
+        {
+          oracleId: "usdc-total-supply",
+          protocolName: "USDC Total Supply",
+          isActive: true,
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -99,7 +107,10 @@ export function OracleRegistry() {
     }
   };
 
-  const handleToggleOracle = async (oracleId: string, currentStatus: boolean) => {
+  const handleToggleOracle = async (
+    oracleId: string,
+    currentStatus: boolean,
+  ) => {
     if (!account || !isPublisher) {
       toast.error("Only publisher can activate/deactivate oracles");
       return;
@@ -144,7 +155,9 @@ export function OracleRegistry() {
                   id="oracle-id"
                   placeholder="e.g., aptos-balance"
                   value={newOracle.id}
-                  onChange={(e) => setNewOracle({ ...newOracle, id: e.target.value })}
+                  onChange={(e) =>
+                    setNewOracle({ ...newOracle, id: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -153,7 +166,9 @@ export function OracleRegistry() {
                   id="oracle-name"
                   placeholder="e.g., Aptos Balance"
                   value={newOracle.name}
-                  onChange={(e) => setNewOracle({ ...newOracle, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewOracle({ ...newOracle, name: e.target.value })
+                  }
                 />
               </div>
               <Button onClick={handleRegisterOracle} className="w-full">
@@ -167,7 +182,9 @@ export function OracleRegistry() {
       {/* Oracles List */}
       <div className="space-y-2">
         {oracles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No oracles registered yet</p>
+          <p className="text-sm text-muted-foreground">
+            No oracles registered yet
+          </p>
         ) : (
           oracles.map((oracle) => (
             <div
@@ -182,7 +199,9 @@ export function OracleRegistry() {
                 )}
                 <div>
                   <p className="font-medium">{oracle.protocolName}</p>
-                  <p className="text-sm text-muted-foreground">{oracle.oracleId}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {oracle.oracleId}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -193,7 +212,9 @@ export function OracleRegistry() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleToggleOracle(oracle.oracleId, oracle.isActive)}
+                    onClick={() =>
+                      handleToggleOracle(oracle.oracleId, oracle.isActive)
+                    }
                   >
                     <Power className="h-4 w-4" />
                   </Button>

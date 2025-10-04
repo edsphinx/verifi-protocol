@@ -6,7 +6,7 @@ let aptos: Aptos | null = null;
 // Reuse same Aptos instance to utilize cookie based sticky routing
 export function aptosClient() {
   if (!aptos) {
-    console.log('[aptos/client] Creating Aptos client:', {
+    console.log("[aptos/client] Creating Aptos client:", {
       network: NETWORK,
     });
 
@@ -16,7 +16,7 @@ export function aptosClient() {
 
     aptos = new Aptos(aptosConfig);
 
-    console.log('[aptos/client] Aptos client created successfully');
+    console.log("[aptos/client] Aptos client created successfully");
   }
 
   return aptos;
