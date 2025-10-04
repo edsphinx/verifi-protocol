@@ -6,8 +6,7 @@ import { NotificationProvider } from "@/components/providers/NotificationContext
 import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { WalletConnectionGuard } from "@/components/WalletConnectionGuard";
-import { WalletProvider } from "@/components/WalletProvider";
+import { WalletLayer } from "@/components/providers/WalletLayer";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { TappModeProvider } from "@/lib/tapp/context/TappModeContext";
 import "@/styles/globals.css";
@@ -38,28 +37,25 @@ export default function RootLayout({
       <body
         className={`${sora.variable} ${inter.variable} font-sans antialiased`}
       >
-        
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <WalletProvider>
-            <WalletConnectionGuard>
-              <ReactQueryProvider>
-                <NotificationProvider>
-                  <TappModeProvider>
-                    <Header />
-                    {children}
-                    <SpeedInsights/>
-                    <WrongNetworkAlert />
-                    <Toaster richColors position="bottom-right" />
-                  </TappModeProvider>
-                </NotificationProvider>
-              </ReactQueryProvider>
-            </WalletConnectionGuard>
-          </WalletProvider>
+          <WalletLayer>
+            <ReactQueryProvider>
+              <NotificationProvider>
+                <TappModeProvider>
+                  <Header />
+                  {children}
+                  <SpeedInsights />
+                  <WrongNetworkAlert />
+                  <Toaster richColors position="bottom-right" />
+                </TappModeProvider>
+              </NotificationProvider>
+            </ReactQueryProvider>
+          </WalletLayer>
         </ThemeProvider>
       </body>
     </html>
