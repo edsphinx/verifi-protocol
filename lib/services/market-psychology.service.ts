@@ -20,8 +20,8 @@ export interface MarketPsychologyData {
     supply: number;
     userBalance: number;
     scale: number; // 1.0 - 1.5 for size scaling
-    weight: "semibold" | "bold" | "extrabold";
-    glow: "sm" | "md" | "lg";
+    weight: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+    glow: "none" | "sm" | "md" | "lg";
   };
 
   secondaryOutcome: {
@@ -31,8 +31,8 @@ export interface MarketPsychologyData {
     supply: number;
     userBalance: number;
     scale: number; // 0.85 - 1.0 for size scaling
-    weight: "normal" | "medium" | "semibold";
-    glow: "none" | "sm";
+    weight: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+    glow: "none" | "sm" | "md" | "lg";
   };
 
   // Market sentiment
