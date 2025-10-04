@@ -55,7 +55,11 @@ export function AMMDemoView() {
 
       {/* Swap and Liquidity Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SwapInterface marketId={mockMarketId} />
+        <SwapInterface
+          marketId={mockMarketId}
+          yesTokenAddress="0xdemo_yes_token"
+          noTokenAddress="0xdemo_no_token"
+        />
         <LiquidityPanel
           marketId={mockMarketId}
           yesTokenAddress="0xdemo_yes_token"

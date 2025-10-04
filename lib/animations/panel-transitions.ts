@@ -5,7 +5,7 @@
  * Each designed to maximize user engagement and dopamine response.
  */
 
-import type { Transition, Variant } from "framer-motion";
+import type { Transition, TargetAndTransition } from "framer-motion";
 
 export type AnimationStyle =
   | "smooth-3d-flip"      // Current: 3D flip with spring bounce
@@ -18,9 +18,9 @@ export type AnimationStyle =
   | "ultra-degen";        // MAXIMUM DOPAMINE: Chaos mode with all triggers
 
 interface PanelAnimation {
-  initial: Variant;
-  animate: Variant;
-  exit: Variant;
+  initial: TargetAndTransition;
+  animate: TargetAndTransition;
+  exit: TargetAndTransition;
   transition: Transition;
   containerStyle?: React.CSSProperties;
 }
