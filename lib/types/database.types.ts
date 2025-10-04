@@ -83,3 +83,94 @@ export type CreateNotificationData = {
   isGlobal?: boolean;
   targetUser?: string;
 };
+
+// ==================================
+// Portfolio Types
+// ==================================
+
+export interface PortfolioPosition {
+  marketAddress: string;
+  marketDescription: string;
+  outcome: string;
+  sharesOwned: number;
+  avgEntryPrice: number;
+  totalInvested: number;
+  currentPrice: number;
+  currentValue: number;
+  unrealizedPnL: number;
+  unrealizedPnLPct: number;
+  status: string;
+}
+
+export interface PortfolioData {
+  totalValue: number;
+  totalInvested: number;
+  unrealizedPnL: number;
+  unrealizedPnLPct: number;
+  realizedPnL: number;
+  openPositions: PortfolioPosition[];
+  closedPositions: PortfolioPosition[];
+  totalPositions: number;
+  stats: {
+    totalTrades: number;
+    totalVolume: number;
+    winningTrades: number;
+    losingTrades: number;
+    winRate: number;
+    avgTradeSize: number;
+  };
+  lastUpdated: string;
+}
+
+// ==================================
+// Analytics Types
+// ==================================
+
+export interface ProtocolMetrics {
+  totalVolume: number;
+  volume24h: number;
+  volume7d: number;
+  totalValueLocked: number;
+  tvlChange24h: number;
+  totalMarkets: number;
+  activeMarkets: number;
+  resolvedMarkets: number;
+  totalUsers: number;
+  activeUsers24h: number;
+  activeUsers7d: number;
+  totalTrades: number;
+  trades24h: number;
+  totalPools: number;
+  totalLiquidity: number;
+  lastUpdated: string;
+}
+
+export interface MarketMetrics {
+  marketAddress: string;
+  description: string;
+  category?: string | null;
+  status: string;
+  volume24h: number;
+  totalVolume: number;
+  trades24h: number;
+  totalTrades: number;
+  uniqueTraders: number;
+  yesPrice: number;
+  noPrice: number;
+  priceChange24h: number;
+  yesSupply: number;
+  noSupply: number;
+  resolutionTimestamp: string;
+}
+
+export interface TraderMetrics {
+  address: string;
+  totalVolume: number;
+  volume24h: number;
+  totalTrades: number;
+  trades24h: number;
+  profitLoss: number;
+  winRate: number;
+  winningTrades: number;
+  losingTrades: number;
+}
