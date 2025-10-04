@@ -24,7 +24,8 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
     // Get all markets from registry
     const result = await client.view({
       payload: {
-        function: `${MODULE_ADDRESS}::verifi_protocol::get_all_market_addresses` as `${string}::${string}::${string}`,
+        function:
+          `${MODULE_ADDRESS}::verifi_protocol::get_all_market_addresses` as `${string}::${string}::${string}`,
         typeArguments: [],
         functionArguments: [],
       },
@@ -40,7 +41,8 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
         // Get user balances for this market
         const balances = await client.view({
           payload: {
-            function: `${MODULE_ADDRESS}::verifi_protocol::get_balances` as `${string}::${string}::${string}`,
+            function:
+              `${MODULE_ADDRESS}::verifi_protocol::get_balances` as `${string}::${string}::${string}`,
             typeArguments: [],
             functionArguments: [userAddress, marketAddress],
           },
@@ -58,7 +60,8 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
           // Get market status from chain
           const marketState = await client.view({
             payload: {
-              function: `${MODULE_ADDRESS}::verifi_protocol::get_market_state` as `${string}::${string}::${string}`,
+              function:
+                `${MODULE_ADDRESS}::verifi_protocol::get_market_state` as `${string}::${string}::${string}`,
               typeArguments: [],
               functionArguments: [marketAddress],
             },
@@ -76,7 +79,10 @@ async function fetchUserPositions(userAddress: string): Promise<Position[]> {
           });
         }
       } catch (error) {
-        console.error(`Error fetching position for market ${marketAddress}:`, error);
+        console.error(
+          `Error fetching position for market ${marketAddress}:`,
+          error,
+        );
       }
     }
 

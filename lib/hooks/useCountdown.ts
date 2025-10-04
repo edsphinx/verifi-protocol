@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export interface TimeRemaining {
   days: number;
@@ -16,7 +16,7 @@ export interface TimeRemaining {
  */
 export function useCountdown(targetTimestamp: number): TimeRemaining {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() =>
-    calculateTimeRemaining(targetTimestamp)
+    calculateTimeRemaining(targetTimestamp),
   );
 
   useEffect(() => {

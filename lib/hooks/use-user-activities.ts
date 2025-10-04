@@ -18,7 +18,7 @@ export function useUserActivities(userAddress?: string, limit = 50) {
       if (!userAddress) return { activities: [] };
 
       const response = await fetch(
-        `/api/activities/user/${userAddress}?limit=${limit}`
+        `/api/activities/user/${userAddress}?limit=${limit}`,
       );
 
       if (!response.ok) {

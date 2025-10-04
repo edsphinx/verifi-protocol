@@ -3,13 +3,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FeaturedMarketCard } from "@/components/cards/FeaturedMarketCard";
 import { MarketCard } from "@/components/cards/MarketCard";
+import { MarketsSentiment } from "@/components/markets/MarketsSentiment";
+import { MarketRankings } from "@/components/markets/MarketRankings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMarkets } from "@/lib/hooks/useMarkets";
 
 export function MarketsHub() {
-  const { featuredMarket, otherMarkets, soon, expired, resolved, isLoading, isError } =
-    useMarkets();
+  const {
+    featuredMarket,
+    otherMarkets,
+    soon,
+    expired,
+    resolved,
+    isLoading,
+    isError,
+  } = useMarkets();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -46,12 +55,22 @@ export function MarketsHub() {
     );
   };
 
+  // Prepare markets data for sentiment chart
+  const activeMarketsData = otherMarkets && featuredMarket
+    ? [featuredMarket, ...otherMarkets].map(m => ({
+        id: m.id,
+        description: m.title || '',
+        totalSupplyYes: 0, // TODO: Add supply data from contract
+        totalSupplyNo: 0,
+      }))
+    : [];
+
   return (
     <div className="space-y-8 md:space-y-12">
       <Tabs defaultValue="active">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Markets</h1>
-          <TabsList className="grid grid-cols-4 w-full md:w-auto">
+          <TabsList className="grid grid-cols-5 w-full md:w-auto">
             <TabsTrigger value="active">
               Active
               {!isLoading && otherMarkets && featuredMarket && (
@@ -84,6 +103,9 @@ export function MarketsHub() {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="rankings">
+              Rankings
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -102,6 +124,11 @@ export function MarketsHub() {
                     transition={{ duration: 0.5 }}
                     className="space-y-10"
                   >
+                    {/* Sentiment Overview */}
+                    {activeMarketsData.length > 0 && (
+                      <MarketsSentiment markets={activeMarketsData} />
+                    )}
+
                     {featuredMarket ? (
                       <FeaturedMarketCard market={featuredMarket} />
                     ) : (
@@ -124,7 +151,8 @@ export function MarketsHub() {
                     <>
                       <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                         <p className="text-sm text-amber-200">
-                          These markets will resolve within the next 24 hours. Place your final trades now!
+                          These markets will resolve within the next 24 hours.
+                          Place your final trades now!
                         </p>
                       </div>
                       {renderMarketGrid(soon)}
@@ -138,7 +166,8 @@ export function MarketsHub() {
                     <>
                       <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                         <p className="text-sm text-destructive/80">
-                          These markets have expired and are awaiting oracle resolution.
+                          These markets have expired and are awaiting oracle
+                          resolution.
                         </p>
                       </div>
                       {renderMarketGrid(expired)}
@@ -153,6 +182,9 @@ export function MarketsHub() {
                   ) : (
                     <EmptyState message="No resolved markets to show." />
                   )}
+                </TabsContent>
+                <TabsContent value="rankings">
+                  <MarketRankings data={[]} />
                 </TabsContent>
               </>
             )}
