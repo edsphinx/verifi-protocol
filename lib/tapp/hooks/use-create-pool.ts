@@ -231,6 +231,12 @@ export function useCreatePool() {
         exact: false,
       });
 
+      // Invalidate TappPoolStats
+      queryClient.invalidateQueries({
+        queryKey: ["tapp-pool-stats", variables.marketId],
+        exact: false,
+      });
+
       // Invalidate ALL pools queries
       queryClient.invalidateQueries({
         queryKey: ["pools"], // Main pools list

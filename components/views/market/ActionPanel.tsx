@@ -1,7 +1,7 @@
 "use client";
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { aptosClient } from "@/aptos/client";
@@ -21,6 +21,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [sellYesAmount, setSellYesAmount] = useState("");
   const [sellNoAmount, setSellNoAmount] = useState("");
   const { signAndSubmitTransaction, account } = useWallet();
+  const queryClient = useQueryClient();
 
   const handleTransactionSuccess = (hash: string, title: string, description: string) => {
     const explorerLink = getTxExplorerLink(hash, NETWORK);
@@ -69,6 +70,11 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           `Bought ${buyAmount} ${tokenType} tokens`,
         );
         setBuyAmount("");
+
+        // Invalidate market details to refresh balances
+        queryClient.invalidateQueries({
+          queryKey: ["market-details", marketId],
+        });
       } catch (e) {
         handleTransactionError(e);
       }
@@ -108,6 +114,11 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
         } else {
           setSellNoAmount("");
         }
+
+        // Invalidate market details to refresh balances
+        queryClient.invalidateQueries({
+          queryKey: ["market-details", marketId],
+        });
       } catch (e) {
         handleTransactionError(e);
       }

@@ -183,39 +183,6 @@ export function CreateMarketForm() {
       operator,
     };
 
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('📅 [CREATE MARKET] TIMEZONE DEBUGGING');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('📝 Input string from form:', resolutionDate);
-    console.log('');
-    console.log('🕐 LOCAL TIME:');
-    console.log('  - Full string:', localDate.toString());
-    console.log('  - ISO format:', localDate.toISOString());
-    console.log('  - Locale string:', localDate.toLocaleString());
-    console.log('  - Timezone offset:', -localDate.getTimezoneOffset() / 60, 'hours from UTC');
-    console.log('');
-    console.log('🌍 UTC TIME (Blockchain):');
-    console.log('  - Full string:', localDate.toUTCString());
-    console.log('  - Year:', localDate.getUTCFullYear());
-    console.log('  - Month:', localDate.getUTCMonth() + 1);
-    console.log('  - Day:', localDate.getUTCDate());
-    console.log('  - Hour:', localDate.getUTCHours());
-    console.log('  - Minute:', localDate.getUTCMinutes());
-    console.log('');
-    console.log('⏱️  TIMESTAMPS:');
-    console.log('  - Resolution timestamp (saved):', utcTimestamp);
-    console.log('  - Current timestamp:', currentTimestamp);
-    console.log('  - Difference (seconds):', utcTimestamp - currentTimestamp);
-    console.log('  - Difference (hours):', ((utcTimestamp - currentTimestamp) / 3600).toFixed(2));
-    console.log('  - Difference (days):', ((utcTimestamp - currentTimestamp) / 86400).toFixed(2));
-    console.log('');
-    console.log('✅ VERIFICATION:');
-    console.log('  - Market will close in future?', utcTimestamp > currentTimestamp ? '✓ YES' : '✗ NO (ERROR!)');
-    console.log('  - Time until closure:', Math.floor((utcTimestamp - currentTimestamp) / 60), 'minutes');
-    console.log('');
-    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
-    console.log('═══════════════════════════════════════════════════════════');
-
     mutate(payload);
   };
 

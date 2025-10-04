@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMarketDetails } from "@/aptos/queries/use-market-details";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +16,38 @@ import { TrendingUp, Users, BarChart3 } from "lucide-react";
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
   const [activeTab, setActiveTab] = useState("primary");
+  const [cachedData, setCachedData] = useState<any>(null);
+
   const {
     data: marketDetails,
     isLoading,
     isError,
   } = useMarketDetails(marketId);
+
+  // Load from localStorage on mount for instant display
+  useEffect(() => {
+    const cacheKey = `market_${marketId}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        setCachedData(JSON.parse(cached));
+      } catch (e) {
+        console.error("Error parsing cached market data:", e);
+      }
+    }
+  }, [marketId]);
+
+  // Save to localStorage when data loads
+  useEffect(() => {
+    if (marketDetails) {
+      const cacheKey = `market_${marketId}`;
+      localStorage.setItem(cacheKey, JSON.stringify(marketDetails));
+      setCachedData(marketDetails);
+    }
+  }, [marketDetails, marketId]);
+
+  // Use cached data while loading, then switch to fresh data
+  const displayData = marketDetails || cachedData;
 
   // This is a placeholder. In a real app, you'd fetch this from your database.
   const staticMarketData = {
@@ -28,16 +55,30 @@ export function MarketView({ marketId }: { marketId: string }) {
     category: "DeFi",
   };
 
-  if (isLoading) {
+  if (isLoading && !cachedData) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-96 w-full" />
+      <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+        {/* Header Skeleton */}
+        <div className="text-center space-y-4">
+          <Skeleton className="h-6 w-24 mx-auto" />
+          <Skeleton className="h-10 w-3/4 mx-auto" />
+          <div className="flex items-center justify-center gap-6">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+
+        {/* Tabs Skeleton */}
+        <div className="max-w-2xl mx-auto">
+          <Skeleton className="h-10 w-full mb-6" />
+          <Skeleton className="h-[480px] w-full" />
+        </div>
       </div>
     );
   }
 
-  if (isError || !marketDetails) {
+  if (isError || !displayData) {
     return (
       <div className="text-center py-12 text-destructive">
         Failed to load market data.
@@ -45,22 +86,22 @@ export function MarketView({ marketId }: { marketId: string }) {
     );
   }
 
-  const details = marketDetails;
-  const totalVolume = (details.totalSupplyYes + details.totalSupplyNo) / 2 / 10 ** 8;
+  const details = displayData;
+  const totalVolume = (details.totalSupplyYes + details.totalSupplyNo) / 2 / 10 ** 6; // YES/NO tokens have 6 decimals
 
   return (
-    <div className="space-y-6">
-      {/* Compact Market Header */}
-      <div className="space-y-3">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Centered Professional Header */}
+      <div className="text-center space-y-4 max-w-4xl mx-auto">
         <Badge className="text-xs font-semibold px-3 py-1">
           {staticMarketData.category}
         </Badge>
-        <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
           {staticMarketData.title}
         </h1>
 
-        {/* Compact Stats Row */}
-        <div className="flex items-center gap-6 text-sm">
+        {/* Centered Stats Row */}
+        <div className="flex items-center justify-center gap-6 text-sm flex-wrap">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">Volume:</span>
@@ -88,21 +129,24 @@ export function MarketView({ marketId }: { marketId: string }) {
             <TabsTrigger value="liquidity">Add Liquidity</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="primary" className="mt-0">
-            <ActionPanel marketId={marketId} dynamicData={details} />
-          </TabsContent>
+          {/* Fixed min-height container to prevent layout shift */}
+          <div className="min-h-[480px] transition-all duration-300">
+            <TabsContent value="primary" className="mt-0">
+              <ActionPanel marketId={marketId} dynamicData={details} />
+            </TabsContent>
 
-          <TabsContent value="swap" className="mt-0">
-            <SwapTabContent marketId={marketId} onNavigateToLiquidity={() => setActiveTab("liquidity")} />
-          </TabsContent>
+            <TabsContent value="swap" className="mt-0">
+              <SwapTabContent marketId={marketId} onNavigateToLiquidity={() => setActiveTab("liquidity")} />
+            </TabsContent>
 
-          <TabsContent value="liquidity" className="mt-0">
-            <PoolTabContent
-              marketId={marketId}
-              yesTokenAddress={details.yesTokenAddress}
-              noTokenAddress={details.noTokenAddress}
-            />
-          </TabsContent>
+            <TabsContent value="liquidity" className="mt-0">
+              <PoolTabContent
+                marketId={marketId}
+                yesTokenAddress={details.yesTokenAddress}
+                noTokenAddress={details.noTokenAddress}
+              />
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
 

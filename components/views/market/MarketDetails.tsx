@@ -10,7 +10,7 @@ interface MarketDetailsProps {
 
 export function MarketDetails({ staticData, dynamicData }: MarketDetailsProps) {
   const totalVolume =
-    (dynamicData.totalSupplyYes + dynamicData.totalSupplyNo) / 2 / 10 ** 8;
+    (dynamicData.totalSupplyYes + dynamicData.totalSupplyNo) / 2 / 10 ** 6; // YES/NO tokens have 6 decimals
 
   return (
     <div className="space-y-6">

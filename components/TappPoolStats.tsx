@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, TrendingUp, Droplet, ArrowLeftRight } from "lucide-react";
@@ -18,48 +18,66 @@ interface PoolData {
   poolExists: boolean;
 }
 
-export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
-  const [poolData, setPoolData] = useState<PoolData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function fetchPoolData(marketAddress: string): Promise<PoolData> {
+  try {
+    const response = await fetch(`/api/tapp/pools/by-market/${marketAddress}`);
 
-  useEffect(() => {
-    async function fetchPoolData() {
-      try {
-        const response = await fetch(`/api/tapp/pools/by-market/${marketAddress}`);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            setPoolData({
-              liquidity: 0,
-              volume24h: 0,
-              yesPrice: 0.5,
-              noPrice: 0.5,
-              poolExists: false
-            });
-            return;
-          }
-          throw new Error("Failed to fetch pool data");
-        }
-
-        const data = await response.json();
-        setPoolData({
-          liquidity: data.totalLiquidity || 0,
-          volume24h: data.volume24h || 0,
-          yesPrice: data.yesPrice || 0.5,
-          noPrice: data.noPrice || 0.5,
-          poolExists: true,
-        });
-      } catch (err) {
-        console.error("Error fetching Tapp pool data:", err);
-        setError("Unable to load pool stats");
-      } finally {
-        setLoading(false);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return {
+          liquidity: 0,
+          volume24h: 0,
+          yesPrice: 0.5,
+          noPrice: 0.5,
+          poolExists: false
+        };
       }
+      throw new Error("Failed to fetch pool data");
     }
 
-    fetchPoolData();
-  }, [marketAddress]);
+    const data = await response.json();
+
+    // Defensive: validate data structure
+    if (!data || typeof data !== 'object') {
+      console.warn('[TappPoolStats] Invalid data structure received:', data);
+      return {
+        liquidity: 0,
+        volume24h: 0,
+        yesPrice: 0.5,
+        noPrice: 0.5,
+        poolExists: false
+      };
+    }
+
+    return {
+      liquidity: Number(data.totalLiquidity) || 0,
+      volume24h: Number(data.volume24h) || 0,
+      yesPrice: Number(data.yesPrice) || 0.5,
+      noPrice: Number(data.noPrice) || 0.5,
+      poolExists: true,
+    };
+  } catch (error) {
+    console.error('[TappPoolStats] Error fetching pool data:', error);
+    // Return safe defaults on error
+    return {
+      liquidity: 0,
+      volume24h: 0,
+      yesPrice: 0.5,
+      noPrice: 0.5,
+      poolExists: false
+    };
+  }
+}
+
+export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
+  const { data: poolData, isLoading: loading, isError } = useQuery({
+    queryKey: ["tapp-pool-stats", marketAddress],
+    queryFn: () => fetchPoolData(marketAddress),
+    refetchInterval: 5000, // Auto-refetch every 5 seconds
+    staleTime: 2000,
+    retry: 2, // Retry failed requests twice
+    retryDelay: 1000, // Wait 1s between retries
+  });
 
   if (loading) {
     return (
@@ -78,8 +96,23 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
     );
   }
 
-  if (error || !poolData) {
-    return null;
+  // Defensive: always show something, even on error
+  if (isError || !poolData) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-muted-foreground">
+            <Droplet className="h-5 w-5" />
+            Tapp AMM Pool
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Unable to load pool data. Pool may not exist yet.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!poolData.poolExists) {

@@ -5,7 +5,8 @@
  * Displays Tapp AMM pool information for a market
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreatePoolButton } from "./CreatePoolButton";
@@ -17,33 +18,30 @@ interface PoolSectionProps {
   noTokenAddress?: string;
 }
 
+async function checkPoolExists(marketAddress: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/tapp/pools/by-market/${marketAddress}`);
+    console.log('[PoolSection] Pool exists check:', response.ok, 'for market:', marketAddress);
+    return response.ok;
+  } catch (error) {
+    console.error("[PoolSection] Failed to check pool existence:", error);
+    return false;
+  }
+}
+
 export function PoolSection({
   marketAddress,
   yesTokenAddress,
   noTokenAddress,
 }: PoolSectionProps) {
-  const [poolExists, setPoolExists] = useState<boolean | null>(null);
-  const [isCheckingPool, setIsCheckingPool] = useState(true);
-
-  const checkPoolExists = async () => {
-    setIsCheckingPool(true);
-    try {
-      const response = await fetch(
-        `/api/tapp/pools/by-market/${marketAddress}`
-      );
-      setPoolExists(response.ok);
-      console.log('[PoolSection] Pool exists check:', response.ok, 'for market:', marketAddress);
-    } catch (error) {
-      console.error("[PoolSection] Failed to check pool existence:", error);
-      setPoolExists(false);
-    } finally {
-      setIsCheckingPool(false);
-    }
-  };
-
-  useEffect(() => {
-    checkPoolExists();
-  }, [marketAddress]);
+  const { data: poolExists, isLoading: isCheckingPool, isError } = useQuery({
+    queryKey: ["pool-exists", marketAddress],
+    queryFn: () => checkPoolExists(marketAddress),
+    refetchInterval: 3000, // Auto-refetch every 3 seconds
+    staleTime: 1000,
+    retry: 2, // Retry failed requests twice
+    retryDelay: 1000,
+  });
 
   const isLoading = isCheckingPool;
 
@@ -60,6 +58,22 @@ export function PoolSection({
     );
   }
 
+  // Defensive: handle errors gracefully
+  if (isError) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="text-muted-foreground">AMM Liquidity Pool</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Unable to check pool status. Please refresh the page.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (poolExists === false) {
     // Only show create button if token addresses are available
     if (yesTokenAddress && noTokenAddress) {
@@ -71,12 +85,6 @@ export function PoolSection({
               marketAddress={marketAddress}
               yesTokenAddress={yesTokenAddress}
               noTokenAddress={noTokenAddress}
-              onPoolCreated={() => {
-                // Refetch pool after creation with delay for indexing
-                setTimeout(() => {
-                  checkPoolExists();
-                }, 3000);
-              }}
             />
           </CardHeader>
           <CardContent>
