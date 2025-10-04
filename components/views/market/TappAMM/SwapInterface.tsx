@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -30,9 +31,14 @@ import {
 } from "@/lib/tapp/mock/pool-data";
 import { calculateMinOutput } from "@/lib/tapp/cpmm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useMarketData } from "@/aptos/queries/use-market-data";
 
 interface SwapInterfaceProps {
   marketId: string;
+  yesTokenAddress: string;
+  noTokenAddress: string;
   yesReserve?: number;
   noReserve?: number;
   tradingEnabled?: boolean;
@@ -40,13 +46,48 @@ interface SwapInterfaceProps {
 
 export function SwapInterface({
   marketId,
+  yesTokenAddress,
+  noTokenAddress,
   yesReserve: initialYesReserve,
   noReserve: initialNoReserve,
   tradingEnabled: initialTradingEnabled,
 }: SwapInterfaceProps) {
+  // All hooks must be called before any conditional returns
+  const { account } = useWallet();
+  const [amountIn, setAmountIn] = useState("");
+  const [yesToNo, setYesToNo] = useState(true);
+  const [slippageTolerance, setSlippageTolerance] = useState(0.5); // 0.5%
+  const { isDemo } = useTappMode();
+  const swapMutation = useSwap();
+
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  // Note: SwapInterface doesn't need user-specific data, so we pass undefined
-  const { data: poolData } = usePoolData(marketId, undefined);
+  const { data: poolData, isLoading: isLoadingPool } = usePoolData(marketId, account?.address.toString());
+
+  // Fetch user's token balances
+  const { data: marketData, isLoading: isLoadingMarket } = useMarketData({
+    id: marketId,
+    yesToken: yesTokenAddress,
+    noToken: noTokenAddress,
+  });
+
+  // Clear input after successful swap
+  useEffect(() => {
+    if (swapMutation.isSuccess) {
+      setAmountIn("");
+      swapMutation.reset(); // Reset mutation state
+    }
+  }, [swapMutation.isSuccess]);
+
+  const isLoading = isLoadingPool || isLoadingMarket;
+
+  // Show loading state while fetching pool data
+  if (isLoading) {
+    return (
+      <Card className="min-h-[600px] flex items-center justify-center">
+        <VeriFiLoader message="Loading swap interface..." />
+      </Card>
+    );
+  }
 
   // Use live data if available, fallback to initial props
   // Reserves come in on-chain format (with 10^6 multiplier), convert to display format
@@ -57,12 +98,25 @@ export function SwapInterface({
   const tradingEnabled =
     poolData?.tradingEnabled ?? initialTradingEnabled ?? false;
 
-  const [amountIn, setAmountIn] = useState("");
-  const [yesToNo, setYesToNo] = useState(true);
-  const [slippageTolerance, setSlippageTolerance] = useState(0.5); // 0.5%
+  // User balances (divide by 10^6 to convert from on-chain format - YES/NO tokens have 6 decimals)
+  const userYesBalance = (marketData?.yesBalance || 0) / 10 ** 6;
+  const userNoBalance = (marketData?.noBalance || 0) / 10 ** 6;
 
-  const { isDemo } = useTappMode();
-  const swapMutation = useSwap();
+  console.log("[SwapInterface] User balances:", {
+    yesBalance: userYesBalance,
+    noBalance: userNoBalance,
+    yesBalanceRaw: marketData?.yesBalance,
+    noBalanceRaw: marketData?.noBalance,
+  });
+
+  console.log("[SwapInterface] Current swap direction:", {
+    yesToNo,
+    meaning: yesToNo ? "YES → NO" : "NO → YES",
+    inputToken: yesToNo ? "YES" : "NO",
+    outputToken: yesToNo ? "NO" : "YES",
+    inputBalance: yesToNo ? userYesBalance : userNoBalance,
+    outputBalance: yesToNo ? userNoBalance : userYesBalance,
+  });
 
   // Calculate swap preview (using regular function, not hook)
   // All values are in display format (human-readable)
@@ -99,11 +153,18 @@ export function SwapInterface({
   const outputToken = yesToNo ? "NO" : "YES";
   const inputReserve = yesToNo ? yesReserve : noReserve;
   const outputReserve = yesToNo ? noReserve : yesReserve;
+  const inputBalance = yesToNo ? userYesBalance : userNoBalance;
+  const outputBalance = yesToNo ? userNoBalance : userYesBalance;
 
   const isPriceImpactHigh = preview && preview.priceImpact > 5;
   const isPriceImpactVeryHigh = preview && preview.priceImpact > 10;
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -159,7 +220,7 @@ export function SwapInterface({
           <div className="flex items-center justify-between">
             <Label htmlFor="amount-in">You Pay</Label>
             <p className="text-xs text-muted-foreground">
-              Available: {formatNumber(inputReserve, 0)} {inputToken}
+              Balance: {account ? formatNumber(inputBalance, 2) : "0.00"} {inputToken}
             </p>
           </div>
           <div className="relative">
@@ -187,10 +248,10 @@ export function SwapInterface({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const amount = (inputReserve * percentage) / 100;
+                  const amount = (inputBalance * percentage) / 100;
                   setAmountIn(amount.toFixed(2));
                 }}
-                disabled={!tradingEnabled || swapMutation.isPending}
+                disabled={!tradingEnabled || swapMutation.isPending || !account}
                 className="flex-1 text-xs"
               >
                 {percentage}%
@@ -199,8 +260,8 @@ export function SwapInterface({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setAmountIn(inputReserve.toFixed(2))}
-              disabled={!tradingEnabled || swapMutation.isPending}
+              onClick={() => setAmountIn(inputBalance.toFixed(2))}
+              disabled={!tradingEnabled || swapMutation.isPending || !account}
               className="flex-1 text-xs font-semibold"
             >
               MAX
@@ -332,20 +393,23 @@ export function SwapInterface({
             !tradingEnabled ||
             !preview ||
             amountInNum <= 0 ||
-            amountInNum > inputReserve ||
-            swapMutation.isPending
+            amountInNum > inputBalance ||
+            swapMutation.isPending ||
+            !account
           }
           className="w-full"
         >
           {swapMutation.isPending
             ? "Swapping..."
-            : !tradingEnabled
-              ? "Trading Disabled"
-              : amountInNum > inputReserve
-                ? "Insufficient Reserve"
-                : amountInNum <= 0
-                  ? "Enter Amount"
-                  : `Swap ${inputToken} for ${outputToken}`}
+            : !account
+              ? "Connect Wallet"
+              : !tradingEnabled
+                ? "Trading Disabled"
+                : amountInNum > inputBalance
+                  ? "Insufficient Balance"
+                  : amountInNum <= 0
+                    ? "Enter Amount"
+                    : `Swap ${inputToken} for ${outputToken}`}
         </Button>
 
         {/* Info Box */}
@@ -361,5 +425,6 @@ export function SwapInterface({
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }

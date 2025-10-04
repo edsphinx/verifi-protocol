@@ -7,7 +7,7 @@ import { calculateAddLiquidity, calculateRemoveLiquidity } from "../cpmm";
 import { toast } from "sonner";
 import { Serializer } from "@aptos-labs/ts-sdk";
 import { aptosClient } from "@/aptos/client";
-import { TAPP_PROTOCOL_ADDRESS } from "../constants";
+import { TAPP_PROTOCOL_ADDRESS, TAPP_HOOK_MODULE, TAPP_FUNCTIONS } from "../constants";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 import { recordActivity } from "@/lib/services/activity-client.service";
@@ -171,12 +171,42 @@ async function executeAddLiquidity(
 
   console.log("[useAddLiquidity] Transaction confirmed");
 
+  // Parse LiquidityAdded event to get position index
+  let positionIdx: number | null = null;
+  const txData = txResponse as any;
+
+  if (txData.events) {
+    const liquidityAddedEvent = txData.events.find(
+      (event: any) => event.type.includes("LiquidityAdded")
+    );
+
+    if (liquidityAddedEvent?.data) {
+      positionIdx = Number(liquidityAddedEvent.data.position_idx);
+      console.log(`[useAddLiquidity] Position created with index: ${positionIdx}`);
+
+      // Store position ownership in localStorage
+      try {
+        const storageKey = `lp_positions_${poolAddress}`;
+        const stored = localStorage.getItem(storageKey);
+        const positions = stored ? JSON.parse(stored) : {};
+
+        // Map position index to owner address
+        positions[positionIdx] = account.address.toString();
+
+        localStorage.setItem(storageKey, JSON.stringify(positions));
+        console.log(`[useAddLiquidity] Stored position ${positionIdx} ownership for ${account.address}`);
+      } catch (error) {
+        console.error("[useAddLiquidity] Failed to store position ownership:", error);
+      }
+    }
+  }
+
   // Parse LiquidityAdded event to get actual values
   // For now, using expected values
   return {
     success: true,
     lpTokens: Math.sqrt(params.yesAmount * params.noAmount),
-    positionIdx: params.positionIdx ?? Date.now() % 1000,
+    positionIdx: positionIdx ?? Date.now() % 1000,
     txHash: response.hash,
     poolAddress, // Return pool address for activity recording
   };
@@ -220,16 +250,14 @@ async function executeRemoveLiquidity(
   const poolData = await poolResponse.json();
   const poolAddress = poolData.poolAddress;
 
-  // Serialize remove liquidity parameters
-  const serializer = new Serializer();
-  serializer.serializeU64(BigInt(Math.floor(params.lpTokens)));
-  const bcsStream = serializer.toUint8Array();
+  // LP tokens have 6 decimals, convert to smallest units
+  const lpTokensAmount = Math.floor(params.lpTokens * 1_000_000);
 
-  // Build transaction payload
+  // Build transaction payload - using Tapp hook function
   const payload = {
-    function: `${TAPP_PROTOCOL_ADDRESS}::pool::remove_liquidity`,
+    function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.REMOVE_LIQUIDITY}` as `${string}::${string}::${string}`,
     typeArguments: [],
-    functionArguments: [poolAddress, params.positionIdx, Array.from(bcsStream)],
+    functionArguments: [poolAddress, params.positionIdx, lpTokensAmount],
   };
 
   // Sign and submit

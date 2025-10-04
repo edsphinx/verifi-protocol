@@ -1,19 +1,25 @@
 "use client";
 
-import { AlertCircle, ArrowLeftRight, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { AlertCircle, ArrowLeftRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { SwapInterface } from "./TappAMM/SwapInterface";
 
 interface SwapTabContentProps {
   marketId: string;
+  yesTokenAddress: string;
+  noTokenAddress: string;
   onNavigateToLiquidity?: () => void;
 }
 
 export function SwapTabContent({
   marketId,
+  yesTokenAddress,
+  noTokenAddress,
   onNavigateToLiquidity,
 }: SwapTabContentProps) {
   const [poolExists, setPoolExists] = useState<boolean | null>(null);
@@ -47,10 +53,8 @@ export function SwapTabContent({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
+      <Card className="min-h-[400px] flex items-center justify-center">
+        <VeriFiLoader message="Loading swap interface..." />
       </Card>
     );
   }
@@ -58,8 +62,13 @@ export function SwapTabContent({
   // If pool doesn't exist in database, show create pool message
   if (poolExists === false) {
     return (
-      <Card className="border-dashed border-2">
-        <CardHeader className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-dashed border-2">
+          <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
               <ArrowLeftRight className="h-6 w-6 text-muted-foreground" />
@@ -91,6 +100,7 @@ export function SwapTabContent({
           </Button>
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
@@ -109,8 +119,13 @@ export function SwapTabContent({
 
   if (!hasLiquidity) {
     return (
-      <Card className="border-dashed border-2">
-        <CardHeader className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-dashed border-2">
+          <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
               <ArrowLeftRight className="h-6 w-6 text-amber-500" />
@@ -139,9 +154,16 @@ export function SwapTabContent({
           <Button onClick={onNavigateToLiquidity}>Add Liquidity</Button>
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
   // Pool exists and has liquidity, show swap interface
-  return <SwapInterface marketId={marketId} />;
+  return (
+    <SwapInterface
+      marketId={marketId}
+      yesTokenAddress={yesTokenAddress}
+      noTokenAddress={noTokenAddress}
+    />
+  );
 }

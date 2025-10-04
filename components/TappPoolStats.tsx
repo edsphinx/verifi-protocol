@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import {
   Droplet,
   ArrowLeftRight,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 
 interface TappPoolStatsProps {
   marketAddress: string;
@@ -90,17 +91,8 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Droplet className="h-5 w-5" />
-            Tapp AMM Pool
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </CardContent>
+      <Card className="min-h-[320px] flex items-center justify-center">
+        <VeriFiLoader message="Loading pool data..." />
       </Card>
     );
   }
@@ -162,6 +154,11 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
   }
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -171,7 +168,7 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Pool Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <Droplet className="h-3 w-3" />
@@ -205,7 +202,7 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
             <ArrowLeftRight className="h-3 w-3" />
             Current Prices
           </p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
               <p className="text-xs text-green-400 mb-1">YES</p>
               <p className="text-xl font-bold font-mono text-green-400">
@@ -234,5 +231,7 @@ export function TappPoolStats({ marketAddress }: TappPoolStatsProps) {
         </Button>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
+

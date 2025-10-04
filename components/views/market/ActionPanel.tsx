@@ -20,6 +20,7 @@ import { recordActivity } from "@/lib/services/activity-client.service";
 import { calculateMarketPsychology } from "@/lib/services/market-psychology.service";
 import { cn } from "@/lib/utils";
 import { getAnimationConfig, type AnimationStyle } from "@/lib/animations/panel-transitions";
+import { useTradeValidation } from "@/lib/hooks/use-trade-validation";
 
 type TradeMode = "buy" | "sell";
 
@@ -29,7 +30,8 @@ const ANIMATION_STYLE: AnimationStyle = "ultra-degen"; // 🚀💎🙌 MAXIMUM D
 
 export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [tradeMode, setTradeMode] = useState<TradeMode>("buy");
-  const [buyAmount, setBuyAmount] = useState("");
+  const [buyYesAmount, setBuyYesAmount] = useState("");
+  const [buyNoAmount, setBuyNoAmount] = useState("");
   const [sellYesAmount, setSellYesAmount] = useState("");
   const [sellNoAmount, setSellNoAmount] = useState("");
   const { signAndSubmitTransaction, account } = useWallet();
@@ -79,10 +81,11 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
         });
 
         const tokenType = variables.buysYesShares ? "YES" : "NO";
+        const amount = variables.buysYesShares ? buyYesAmount : buyNoAmount;
         handleTransactionSuccess(
           hash,
           "Shares purchased successfully!",
-          `Bought ${buyAmount} ${tokenType} tokens`,
+          `Bought ${amount} ${tokenType} tokens`,
         );
 
         await recordActivity({
@@ -91,12 +94,16 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           userAddress: account.address.toString(),
           action: "BUY",
           outcome: tokenType,
-          amount: parseFloat(buyAmount),
+          amount: parseFloat(amount),
           price: null,
-          totalValue: parseFloat(buyAmount),
+          totalValue: parseFloat(amount),
         });
 
-        setBuyAmount("");
+        if (variables.buysYesShares) {
+          setBuyYesAmount("");
+        } else {
+          setBuyNoAmount("");
+        }
 
         queryClient.invalidateQueries({
           queryKey: ["marketDetails"],
@@ -164,8 +171,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   });
 
   const handleBuyShares = (buysYesShares: boolean) => {
-    const amountFloat = parseFloat(buyAmount);
-    if (!buyAmount || amountFloat <= 0) {
+    const amount = buysYesShares ? buyYesAmount : buyNoAmount;
+    const amountFloat = parseFloat(amount);
+    if (!amount || amountFloat <= 0) {
       toast.error("Please enter a valid amount to buy.");
       return;
     }
@@ -216,6 +224,19 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
   // Get selected animation configuration
   const animationConfig = getAnimationConfig(ANIMATION_STYLE);
+
+  // Use trade validation hook
+  const validation = useTradeValidation(
+    buyYesAmount,
+    buyNoAmount,
+    sellYesAmount,
+    sellNoAmount,
+    {
+      aptBalance: dynamicData.userAptBalance,
+      yesBalance: dynamicData.userYesBalance,
+      noBalance: dynamicData.userNoBalance,
+    }
+  );
 
   return (
     <div className="space-y-3">
@@ -291,10 +312,16 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         id="buy-yes-amount"
                         type="number"
                         placeholder="0.0"
-                        value={buyAmount}
-                        onChange={(e) => setBuyAmount(e.target.value)}
+                        value={buyYesAmount}
+                        onChange={(e) => setBuyYesAmount(e.target.value)}
                         disabled={isProcessing}
+                        className={cn(
+                          buyYesAmount && !validation.isValidAmount(buyYesAmount) && "border-destructive"
+                        )}
                       />
+                      {validation.buyYesError && (
+                        <p className="text-xs text-destructive">{validation.buyYesError}</p>
+                      )}
                       <div className="flex items-center gap-2">
                         {[25, 50, 75].map((percentage) => (
                           <Button
@@ -303,7 +330,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             size="sm"
                             onClick={() => {
                               const amount = (parseFloat(userAptBalance) * percentage) / 100;
-                              setBuyAmount(amount.toFixed(4));
+                              setBuyYesAmount(amount.toFixed(4));
                             }}
                             disabled={isProcessing}
                             className="flex-1 text-xs"
@@ -314,7 +341,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setBuyAmount(userAptBalance)}
+                          onClick={() => setBuyYesAmount(userAptBalance)}
                           disabled={isProcessing}
                           className="flex-1 text-xs font-semibold"
                         >
@@ -324,8 +351,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     </div>
                     <Button
                       onClick={() => handleBuyShares(true)}
-                      disabled={isProcessing}
-                      className="w-full bg-green-600 hover:bg-green-700"
+                      disabled={isProcessing || !validation.canBuyYes}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
                     >
                       {buyMutation.isPending ? "Processing..." : "BUY YES"}
                     </Button>
@@ -347,10 +374,16 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         id="buy-no-amount"
                         type="number"
                         placeholder="0.0"
-                        value={buyAmount}
-                        onChange={(e) => setBuyAmount(e.target.value)}
+                        value={buyNoAmount}
+                        onChange={(e) => setBuyNoAmount(e.target.value)}
                         disabled={isProcessing}
+                        className={cn(
+                          buyNoAmount && !validation.isValidAmount(buyNoAmount) && "border-destructive"
+                        )}
                       />
+                      {validation.buyNoError && (
+                        <p className="text-xs text-destructive">{validation.buyNoError}</p>
+                      )}
                       <div className="flex items-center gap-2">
                         {[25, 50, 75].map((percentage) => (
                           <Button
@@ -359,7 +392,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             size="sm"
                             onClick={() => {
                               const amount = (parseFloat(userAptBalance) * percentage) / 100;
-                              setBuyAmount(amount.toFixed(4));
+                              setBuyNoAmount(amount.toFixed(4));
                             }}
                             disabled={isProcessing}
                             className="flex-1 text-xs"
@@ -370,7 +403,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setBuyAmount(userAptBalance)}
+                          onClick={() => setBuyNoAmount(userAptBalance)}
                           disabled={isProcessing}
                           className="flex-1 text-xs font-semibold"
                         >
@@ -380,8 +413,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     </div>
                     <Button
                       onClick={() => handleBuyShares(false)}
-                      disabled={isProcessing}
-                      className="w-full bg-red-600 hover:bg-red-700"
+                      disabled={isProcessing || !validation.canBuyNo}
+                      className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50"
                     >
                       {buyMutation.isPending ? "Processing..." : "BUY NO"}
                     </Button>
@@ -418,7 +451,13 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         value={sellYesAmount}
                         onChange={(e) => setSellYesAmount(e.target.value)}
                         disabled={isProcessing || dynamicData.userYesBalance === 0}
+                        className={cn(
+                          sellYesAmount && !validation.isValidAmount(sellYesAmount) && "border-destructive"
+                        )}
                       />
+                      {validation.sellYesError && (
+                        <p className="text-xs text-destructive">{validation.sellYesError}</p>
+                      )}
                       <div className="flex items-center gap-2">
                         {[50, 100].map((percentage) => (
                           <Button
@@ -439,9 +478,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     </div>
                     <Button
                       onClick={() => handleSellShares(true)}
-                      disabled={isProcessing || dynamicData.userYesBalance === 0}
+                      disabled={isProcessing || !validation.canSellYes}
                       variant="destructive"
-                      className="w-full"
+                      className="w-full disabled:opacity-50"
                     >
                       {sellMutation.isPending ? "Processing..." : "SELL YES"}
                     </Button>
@@ -466,7 +505,13 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         value={sellNoAmount}
                         onChange={(e) => setSellNoAmount(e.target.value)}
                         disabled={isProcessing || dynamicData.userNoBalance === 0}
+                        className={cn(
+                          sellNoAmount && !validation.isValidAmount(sellNoAmount) && "border-destructive"
+                        )}
                       />
+                      {validation.sellNoError && (
+                        <p className="text-xs text-destructive">{validation.sellNoError}</p>
+                      )}
                       <div className="flex items-center gap-2">
                         {[50, 100].map((percentage) => (
                           <Button
@@ -487,9 +532,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                     </div>
                     <Button
                       onClick={() => handleSellShares(false)}
-                      disabled={isProcessing || dynamicData.userNoBalance === 0}
+                      disabled={isProcessing || !validation.canSellNo}
                       variant="destructive"
-                      className="w-full"
+                      className="w-full disabled:opacity-50"
                     >
                       {sellMutation.isPending ? "Processing..." : "SELL NO"}
                     </Button>

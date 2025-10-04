@@ -37,6 +37,8 @@ async function simulateSwap(params: SwapParams) {
 
 /**
  * Serializes swap arguments for Tapp router
+ * CRITICAL: Hook expects amount_in FIRST, then yes_to_no boolean
+ * Format: pool_addr + [amount_in, yes_to_no, min_amount_out] for hook
  */
 function serializeSwapArgs(
   poolAddr: string,
@@ -44,45 +46,29 @@ function serializeSwapArgs(
   amountIn: number,
   minAmountOut: number,
 ): Uint8Array {
-  const parts: Uint8Array[] = [];
+  const { AccountAddress } = require("@aptos-labs/ts-sdk");
+  const serializer = new Serializer();
 
-  // 1. Serialize pool address (32 bytes)
-  const AccountAddress = require("@aptos-labs/ts-sdk").AccountAddress;
-  parts.push(AccountAddress.from(poolAddr).toUint8Array());
+  // 1. Argument for router: pool address (32 bytes)
+  serializer.serializeFixedBytes(AccountAddress.from(poolAddr).toUint8Array());
 
-  // 2. Serialize a2b (YES to NO) as bool
-  parts.push(new Uint8Array([yesToNo ? 1 : 0]));
+  // 2. Arguments for hook (CORRECT ORDER!)
+  // Hook expects: amount_in (u64), yes_to_no (bool), min_amount_out (u64)
 
-  // 3. Serialize amount_in as u64 (little-endian)
+  // 2a. Serialize amount_in as u64
   // YES/NO tokens have 6 decimals, so multiply by 10^6
-  const inBytes = new ArrayBuffer(8);
-  new DataView(inBytes).setBigUint64(
-    0,
-    BigInt(Math.floor(amountIn * 1_000_000)),
-    true,
-  );
-  parts.push(new Uint8Array(inBytes));
+  serializer.serializeU64(BigInt(Math.floor(amountIn * 1_000_000)));
 
-  // 4. Serialize min_amount_out as u64 (little-endian)
+  // 2b. Serialize yes_to_no as bool
+  // CRITICAL FIX: Invert the boolean because the router interprets it opposite to our UI
+  // When UI shows YES → NO (yesToNo = true), router needs false to swap assets[0] → assets[1]
+  serializer.serializeBool(!yesToNo);
+
+  // 2c. Serialize min_amount_out as u64
   // YES/NO tokens have 6 decimals, so multiply by 10^6
-  const outBytes = new ArrayBuffer(8);
-  new DataView(outBytes).setBigUint64(
-    0,
-    BigInt(Math.floor(minAmountOut * 1_000_000)),
-    true,
-  );
-  parts.push(new Uint8Array(outBytes));
+  serializer.serializeU64(BigInt(Math.floor(minAmountOut * 1_000_000)));
 
-  // Concatenate all parts
-  const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  return serializer.toUint8Array();
 }
 
 /**
@@ -98,6 +84,7 @@ async function executeSwap(
   }
 
   console.log("[useSwap] Executing swap with params:", params);
+  console.log("[useSwap] yesToNo flag:", params.yesToNo, "| Meaning:", params.yesToNo ? "YES → NO" : "NO → YES");
 
   // Get pool address from API
   const poolResponse = await fetch(
@@ -203,9 +190,21 @@ export function useSwap() {
         });
       }
 
+      // Wait a bit for indexer to catch up
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Refetch pool data to update reserves
       queryClient.refetchQueries({
         queryKey: ["pool-data", variables.marketId],
       });
+
+      // Refetch market data to update user's YES/NO token balances
+      // CRITICAL: Must use "marketData" key, not "marketDetails"
+      queryClient.invalidateQueries({
+        queryKey: ["marketData"],
+      });
+
+      console.log("[useSwap] Refetched pool and market data after swap");
     },
     onError: (error: Error) => {
       toast.error("Swap failed", {
@@ -234,7 +233,21 @@ export function calculateSwapPreview(
     const inputReserve = yesToNo ? yesReserve : noReserve;
     const outputReserve = yesToNo ? noReserve : yesReserve;
 
+    console.log("[calculateSwapPreview] Swap calculation:", {
+      direction: yesToNo ? "YES → NO" : "NO → YES",
+      amountIn,
+      inputReserve,
+      outputReserve,
+      reserveRatio: `${inputReserve.toFixed(2)} : ${outputReserve.toFixed(2)}`,
+    });
+
     const result = calculateSwapOutput(amountIn, inputReserve, outputReserve);
+
+    console.log("[calculateSwapPreview] Result:", {
+      outputAmount: result.outputAmount,
+      priceImpact: result.priceImpact.toFixed(2) + "%",
+      outputVsReserve: `${result.outputAmount.toFixed(6)} / ${outputReserve.toFixed(6)} = ${((result.outputAmount / outputReserve) * 100).toFixed(2)}%`,
+    });
 
     return {
       outputAmount: result.outputAmount,

@@ -1,10 +1,12 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { Droplet, Loader2 } from "lucide-react";
+import { Droplet } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { CreatePoolButton } from "@/components/tapp/CreatePoolButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { LiquidityPanel } from "./TappAMM/LiquidityPanel";
 import { LiquidityPositions } from "./TappAMM/LiquidityPositions";
@@ -58,10 +60,8 @@ export function PoolTabContent({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
+      <Card className="min-h-[400px] flex items-center justify-center">
+        <VeriFiLoader message="Loading liquidity pool..." />
       </Card>
     );
   }
@@ -69,57 +69,63 @@ export function PoolTabContent({
   // If pool doesn't exist, show create pool UI
   if (!poolExists) {
     return (
-      <Card className="border-dashed border-2">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Droplet className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <CardTitle className="text-lg">AMM Pool Not Created</CardTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            Create a liquidity pool to enable automated market making for this
-            market
-          </p>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <div className="w-full max-w-md">
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Pool Type:</span>
-                <span className="font-medium">Prediction Market</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Trading Fee:</span>
-                <span className="font-medium">0.3%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Assets:</span>
-                <span className="font-medium">YES / NO Tokens</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-dashed border-2">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Droplet className="h-6 w-6 text-primary" />
               </div>
             </div>
-          </div>
+            <CardTitle className="text-lg">AMM Pool Not Created</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Create a liquidity pool to enable automated market making for this
+              market
+            </p>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <div className="w-full max-w-md">
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pool Type:</span>
+                  <span className="font-medium">Prediction Market</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Trading Fee:</span>
+                  <span className="font-medium">0.3%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Assets:</span>
+                  <span className="font-medium">YES / NO Tokens</span>
+                </div>
+              </div>
+            </div>
 
-          <CreatePoolButton
-            marketAddress={marketId}
-            yesTokenAddress={yesTokenAddress}
-            noTokenAddress={noTokenAddress}
-            onPoolCreated={() => {
-              console.log("[PoolTabContent] Pool created callback triggered");
-              // Force refresh immediately, then again after 2s for indexing
-              checkPoolExists(true);
-              setTimeout(() => {
+            <CreatePoolButton
+              marketAddress={marketId}
+              yesTokenAddress={yesTokenAddress}
+              noTokenAddress={noTokenAddress}
+              onPoolCreated={() => {
+                console.log("[PoolTabContent] Pool created callback triggered");
+                // Force refresh immediately, then again after 2s for indexing
                 checkPoolExists(true);
-              }, 2000);
-            }}
-          />
+                setTimeout(() => {
+                  checkPoolExists(true);
+                }, 2000);
+              }}
+            />
 
-          <p className="text-xs text-muted-foreground text-center max-w-md">
-            Once created, you and others will be able to add liquidity and earn
-            fees from trades
-          </p>
-        </CardContent>
-      </Card>
+            <p className="text-xs text-muted-foreground text-center max-w-md">
+              Once created, you and others will be able to add liquidity and earn
+              fees from trades
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 

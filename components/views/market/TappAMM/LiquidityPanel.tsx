@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AlertTriangle, Droplets, Info, Minus, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { useTappMode } from "@/lib/tapp/context/TappModeContext";
 import {
   calculateAddLiquidityPreview,
@@ -27,6 +29,16 @@ import {
 } from "@/lib/tapp/hooks/use-liquidity";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { formatNumber, formatPercentage } from "@/lib/tapp/mock/pool-data";
+import { useLiquidityValidation } from "@/lib/hooks/use-liquidity-validation";
+import { useUserPositions } from "@/lib/tapp/hooks/use-user-positions";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface LiquidityPanelProps {
   marketId: string;
@@ -46,15 +58,34 @@ export function LiquidityPanel({
   tradingEnabled: initialTradingEnabled,
 }: LiquidityPanelProps) {
   const { account } = useWallet();
+
+  // Add liquidity state
+  const [yesAmount, setYesAmount] = useState("");
+  const [noAmount, setNoAmount] = useState("");
+
+  // Remove liquidity state
+  const [lpTokens, setLpTokens] = useState("");
+  const [positionIdx, setPositionIdx] = useState("");
+
+  const { isDemo } = useTappMode();
+  const addLiquidityMutation = useAddLiquidity();
+  const removeLiquidityMutation = useRemoveLiquidity();
+
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  const { data: poolData } = usePoolData(marketId, account?.address.toString());
+  const { data: poolData, isLoading: isLoadingPool } = usePoolData(marketId, account?.address.toString());
 
   // Fetch user's token balances
-  const { data: marketData } = useMarketData({
+  const { data: marketData, isLoading: isLoadingMarket } = useMarketData({
     id: marketId,
     yesToken: yesTokenAddress,
     noToken: noTokenAddress,
   });
+
+  // Fetch user's LP positions in this pool
+  const { data: userPositions, isLoading: isLoadingPositions } = useUserPositions(
+    poolData?.poolAddress || "",
+    account?.address.toString()
+  );
 
   // Use live data if available, fallback to initial props
   // Reserves from poolData are in on-chain format (10^6), convert to display format
@@ -71,20 +102,33 @@ export function LiquidityPanel({
   const userYesBalance = (marketData?.yesBalance || 0) / 10 ** 6;
   const userNoBalance = (marketData?.noBalance || 0) / 10 ** 6;
 
-  // Add liquidity state
-  const [yesAmount, setYesAmount] = useState("");
-  const [noAmount, setNoAmount] = useState("");
-
-  // Remove liquidity state
-  const [lpTokens, setLpTokens] = useState("");
-  const [positionIdx, setPositionIdx] = useState("");
-
-  const { isDemo } = useTappMode();
-  const addLiquidityMutation = useAddLiquidity();
-  const removeLiquidityMutation = useRemoveLiquidity();
-
   // Calculate total LP supply (geometric mean of reserves)
   const totalLpSupply = Math.sqrt(yesReserve * noReserve);
+
+  // Use validation hook
+  const validation = useLiquidityValidation(
+    yesAmount,
+    noAmount,
+    lpTokens,
+    positionIdx,
+    {
+      yesBalance: userYesBalance,
+      noBalance: userNoBalance,
+      lpSupply: totalLpSupply,
+    },
+    yesReserve === 0 || noReserve === 0, // isFirstProvider
+    tradingEnabled
+  );
+
+  // Show loading state while fetching data
+  const isLoading = isLoadingPool || isLoadingMarket;
+  if (isLoading) {
+    return (
+      <Card className="min-h-[600px] flex items-center justify-center">
+        <VeriFiLoader message="Loading liquidity panel..." />
+      </Card>
+    );
+  }
 
   // Preview calculations (using regular functions, not hooks)
   const addPreview = calculateAddLiquidityPreview(
@@ -150,6 +194,11 @@ export function LiquidityPanel({
   };
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -170,14 +219,14 @@ export function LiquidityPanel({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="add">
               <Plus className="h-4 w-4 mr-2" />
-              Add
+              Farm
             </TabsTrigger>
             <TabsTrigger
               value="remove"
               disabled={yesReserve === 0 || noReserve === 0}
             >
               <Minus className="h-4 w-4 mr-2" />
-              Remove
+              Rage Quit
             </TabsTrigger>
           </TabsList>
 
@@ -223,11 +272,23 @@ export function LiquidityPanel({
                       setNoAmount(value); // Keep them equal
                     }}
                     disabled={!tradingEnabled || addLiquidityMutation.isPending}
+                    className={cn(
+                      yesAmount &&
+                        !validation.isValidAmount(yesAmount) &&
+                        "border-destructive"
+                    )}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    You'll deposit {yesAmount || "0"} YES + {noAmount || "0"} NO
-                    tokens
-                  </p>
+                  {validation.addYesError && (
+                    <p className="text-xs text-destructive">
+                      {validation.addYesError}
+                    </p>
+                  )}
+                  {!validation.addYesError && (
+                    <p className="text-xs text-muted-foreground">
+                      You'll deposit {yesAmount || "0"} YES + {noAmount || "0"}{" "}
+                      NO tokens
+                    </p>
+                  )}
                 </div>
 
                 {/* Quick Amount Buttons */}
@@ -278,7 +339,12 @@ export function LiquidityPanel({
                       placeholder="0.00"
                       value={yesAmount}
                       onChange={(e) => setYesAmount(e.target.value)}
-                      className="pr-20"
+                      className={cn(
+                        "pr-20",
+                        yesAmount &&
+                          !validation.isValidAmount(yesAmount) &&
+                          "border-destructive"
+                      )}
                       disabled={
                         !tradingEnabled || addLiquidityMutation.isPending
                       }
@@ -287,6 +353,11 @@ export function LiquidityPanel({
                       <Badge variant="default">YES</Badge>
                     </div>
                   </div>
+                  {validation.addYesError && (
+                    <p className="text-xs text-destructive">
+                      {validation.addYesError}
+                    </p>
+                  )}
 
                   {/* Quick Amount Buttons for YES */}
                   <div className="flex items-center gap-2">
@@ -347,7 +418,12 @@ export function LiquidityPanel({
                       placeholder="0.00"
                       value={noAmount}
                       onChange={(e) => setNoAmount(e.target.value)}
-                      className="pr-20"
+                      className={cn(
+                        "pr-20",
+                        noAmount &&
+                          !validation.isValidAmount(noAmount) &&
+                          "border-destructive"
+                      )}
                       disabled={
                         !tradingEnabled || addLiquidityMutation.isPending
                       }
@@ -356,6 +432,11 @@ export function LiquidityPanel({
                       <Badge variant="secondary">NO</Badge>
                     </div>
                   </div>
+                  {validation.addNoError && (
+                    <p className="text-xs text-destructive">
+                      {validation.addNoError}
+                    </p>
+                  )}
 
                   {/* Quick Amount Buttons for NO */}
                   <div className="flex items-center gap-2">
@@ -447,11 +528,7 @@ export function LiquidityPanel({
             <Button
               onClick={handleAddLiquidity}
               disabled={
-                !tradingEnabled ||
-                !addPreview ||
-                parseFloat(yesAmount) <= 0 ||
-                parseFloat(noAmount) <= 0 ||
-                addLiquidityMutation.isPending
+                !validation.canAddLiquidity || addLiquidityMutation.isPending
               }
               className="w-full"
             >
@@ -463,23 +540,70 @@ export function LiquidityPanel({
 
           {/* Remove Liquidity Tab */}
           <TabsContent value="remove" className="space-y-4 mt-4">
-            {/* Position Index */}
-            <div className="space-y-2">
-              <Label htmlFor="position-idx">Position ID</Label>
-              <Input
-                id="position-idx"
-                type="number"
-                placeholder="Enter your position ID"
-                value={positionIdx}
-                onChange={(e) => setPositionIdx(e.target.value)}
-                disabled={removeLiquidityMutation.isPending}
-              />
-              <p className="text-xs text-muted-foreground">
-                {isDemo
-                  ? "In demo mode, use any number (e.g., 0)"
-                  : "Find your position ID in your liquidity positions"}
-              </p>
+            {/* Your Positions */}
+            <div className="space-y-3">
+              <Label>Your LP Positions</Label>
+              {isLoadingPositions ? (
+                <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg">
+                  Loading your positions...
+                </div>
+              ) : !userPositions || userPositions.length === 0 ? (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    {isDemo
+                      ? "Demo mode: No positions found. Add liquidity first."
+                      : "You don't have any LP positions in this pool yet. Add liquidity to create a position."}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="grid gap-2">
+                  {userPositions.map((position) => (
+                    <Card
+                      key={position.positionIdx}
+                      className={cn(
+                        "cursor-pointer transition-all hover:border-primary",
+                        positionIdx === position.positionIdx.toString() &&
+                          "border-primary bg-primary/5"
+                      )}
+                      onClick={() => {
+                        setPositionIdx(position.positionIdx.toString());
+                        setLpTokens(position.liquidityTokens.toString());
+                      }}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              Position #{position.positionIdx}
+                            </Badge>
+                            {positionIdx ===
+                              position.positionIdx.toString() && (
+                              <Badge className="bg-primary">Selected</Badge>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold">
+                            {formatNumber(position.liquidityTokens, 2)} LP
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div>
+                            <span className="font-medium">YES:</span>{" "}
+                            {formatNumber(position.yesAmount, 2)}
+                          </div>
+                          <div>
+                            <span className="font-medium">NO:</span>{" "}
+                            {formatNumber(position.noAmount, 2)}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <Separator />
 
             {/* LP Tokens Input */}
             <div className="space-y-2">
@@ -496,7 +620,17 @@ export function LiquidityPanel({
                 value={lpTokens}
                 onChange={(e) => setLpTokens(e.target.value)}
                 disabled={removeLiquidityMutation.isPending}
+                className={cn(
+                  lpTokens &&
+                    !validation.isValidAmount(lpTokens) &&
+                    "border-destructive"
+                )}
               />
+              {validation.removeLpError && (
+                <p className="text-xs text-destructive">
+                  {validation.removeLpError}
+                </p>
+              )}
 
               {/* Quick Amount Buttons for LP */}
               <div className="flex items-center gap-2">
@@ -546,9 +680,7 @@ export function LiquidityPanel({
             <Button
               onClick={handleRemoveLiquidity}
               disabled={
-                !removePreview ||
-                !positionIdx ||
-                parseFloat(lpTokens) <= 0 ||
+                !validation.canRemoveLiquidity ||
                 removeLiquidityMutation.isPending
               }
               className="w-full"
@@ -574,5 +706,6 @@ export function LiquidityPanel({
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }

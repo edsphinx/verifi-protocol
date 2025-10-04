@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ import {
   calculateAPY,
 } from "@/lib/tapp/mock/pool-data";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 
 interface PoolOverviewProps {
   marketId: string;
@@ -50,7 +52,11 @@ export function PoolOverview({
   const isLoading = isLoadingLive || initialLoading;
 
   if (isLoading || !data) {
-    return <PoolOverviewSkeleton />;
+    return (
+      <Card className="min-h-[500px] flex items-center justify-center">
+        <VeriFiLoader message="Loading pool overview..." />
+      </Card>
+    );
   }
 
   // Convert reserves from on-chain format (10^6) to display format
@@ -69,18 +75,23 @@ export function PoolOverview({
   const noPercentage = (noReserve / totalLiquidity) * 100;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              AMM Pool Overview
-            </CardTitle>
-            <CardDescription>
-              Automated market maker for YES/NO tokens
-            </CardDescription>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                AMM Pool Overview
+              </CardTitle>
+              <CardDescription>
+                Automated market maker for YES/NO tokens
+              </CardDescription>
+            </div>
           <Badge variant={data.tradingEnabled ? "default" : "destructive"}>
             {data.tradingEnabled ? (
               <>
@@ -138,7 +149,7 @@ export function PoolOverview({
         <Separator />
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Total Liquidity */}
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -226,54 +237,6 @@ export function PoolOverview({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function PoolOverviewSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <div className="h-6 w-48 bg-muted animate-pulse rounded" />
-            <div className="h-4 w-64 bg-muted animate-pulse rounded" />
-          </div>
-          <div className="h-6 w-20 bg-muted animate-pulse rounded" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-          <div className="space-y-2">
-            <div className="h-8 w-full bg-muted animate-pulse rounded" />
-            <div className="h-8 w-full bg-muted animate-pulse rounded" />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="grid grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-              <div className="h-8 w-32 bg-muted animate-pulse rounded" />
-            </div>
-          ))}
-        </div>
-
-        <Separator />
-
-        <div className="h-24 w-full bg-muted animate-pulse rounded-lg" />
-
-        <div className="space-y-2">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-4 w-full bg-muted animate-pulse rounded"
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    </motion.div>
   );
 }

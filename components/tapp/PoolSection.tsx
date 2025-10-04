@@ -6,9 +6,10 @@
  */
 
 import React from "react";
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { CreatePoolButton } from "./CreatePoolButton";
 import { PoolOverview } from "@/components/views/market/TappAMM/PoolOverview";
 
@@ -56,13 +57,8 @@ export function PoolSection({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>AMM Liquidity Pool</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-32 w-full" />
-        </CardContent>
+      <Card className="min-h-[280px] flex items-center justify-center">
+        <VeriFiLoader message="Checking pool..." />
       </Card>
     );
   }
@@ -89,22 +85,28 @@ export function PoolSection({
     // Only show create button if token addresses are available
     if (yesTokenAddress && noTokenAddress) {
       return (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>AMM Liquidity Pool</CardTitle>
-            <CreatePoolButton
-              marketAddress={marketAddress}
-              yesTokenAddress={yesTokenAddress}
-              noTokenAddress={noTokenAddress}
-            />
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              No AMM pool exists for this market yet. Create one to enable
-              automated trading and liquidity provision.
-            </p>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>AMM Liquidity Pool</CardTitle>
+              <CreatePoolButton
+                marketAddress={marketAddress}
+                yesTokenAddress={yesTokenAddress}
+                noTokenAddress={noTokenAddress}
+              />
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                No AMM pool exists for this market yet. Create one to enable
+                automated trading and liquidity provision.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       );
     }
 
