@@ -15,7 +15,7 @@ import client from "../lib/clients/prisma";
  * @returns The newly created TappPool object
  */
 export async function recordTappPool(
-  poolData: CreateTappPoolData
+  poolData: CreateTappPoolData,
 ): Promise<TappPool> {
   return await client.tappPool.create({
     data: poolData,
@@ -28,7 +28,7 @@ export async function recordTappPool(
  * @returns The TappPool object if found, null otherwise
  */
 export async function getTappPoolByAddress(
-  poolAddress: string
+  poolAddress: string,
 ): Promise<TappPool | null> {
   return await client.tappPool.findUnique({
     where: {
@@ -43,7 +43,7 @@ export async function getTappPoolByAddress(
  * @returns The TappPool object if found, null otherwise
  */
 export async function getTappPoolByMarket(
-  marketAddress: string
+  marketAddress: string,
 ): Promise<TappPool | null> {
   return await client.tappPool.findFirst({
     where: {
@@ -76,7 +76,7 @@ export async function getAllTappPools(limit?: number): Promise<TappPool[]> {
 export async function updatePoolStats(
   poolAddress: string,
   totalLiquidity: number,
-  volume24h?: number
+  volume24h?: number,
 ): Promise<TappPool> {
   return await client.tappPool.update({
     where: {

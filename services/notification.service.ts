@@ -14,7 +14,7 @@ import client from "../lib/clients/prisma";
  * @returns The newly created Notification object
  */
 export async function createNotification(
-  notificationData: CreateNotificationData
+  notificationData: CreateNotificationData,
 ): Promise<Notification> {
   return await client.notification.create({
     data: {
@@ -47,7 +47,7 @@ export async function createGlobalNotification(
   message: string,
   relatedAddress?: string,
   txHash?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ): Promise<Notification> {
   return createNotification({
     type,
@@ -78,7 +78,7 @@ export async function createUserNotification(
   message: string,
   relatedAddress?: string,
   txHash?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ): Promise<Notification> {
   return createNotification({
     type,
@@ -97,7 +97,9 @@ export async function createUserNotification(
  * @param limit Number of notifications to return
  * @returns Array of global notifications
  */
-export async function getGlobalNotifications(limit = 20): Promise<Notification[]> {
+export async function getGlobalNotifications(
+  limit = 20,
+): Promise<Notification[]> {
   return await client.notification.findMany({
     where: {
       isGlobal: true,
@@ -117,7 +119,7 @@ export async function getGlobalNotifications(limit = 20): Promise<Notification[]
  */
 export async function getUserNotifications(
   userAddress: string,
-  limit = 20
+  limit = 20,
 ): Promise<Notification[]> {
   return await client.notification.findMany({
     where: {
@@ -138,14 +140,11 @@ export async function getUserNotifications(
  */
 export async function getAllNotificationsForUser(
   userAddress?: string,
-  limit = 20
+  limit = 20,
 ): Promise<Notification[]> {
   const where = userAddress
     ? {
-        OR: [
-          { isGlobal: true },
-          { targetUser: userAddress },
-        ],
+        OR: [{ isGlobal: true }, { targetUser: userAddress }],
       }
     : { isGlobal: true };
 
@@ -164,7 +163,7 @@ export async function getAllNotificationsForUser(
  * @returns The updated notification
  */
 export async function markNotificationAsRead(
-  notificationId: string
+  notificationId: string,
 ): Promise<Notification> {
   return await client.notification.update({
     where: {
@@ -182,14 +181,11 @@ export async function markNotificationAsRead(
  * @returns Count of updated notifications
  */
 export async function markAllAsReadForUser(
-  userAddress: string
+  userAddress: string,
 ): Promise<number> {
   const result = await client.notification.updateMany({
     where: {
-      OR: [
-        { targetUser: userAddress },
-        { isGlobal: true },
-      ],
+      OR: [{ targetUser: userAddress }, { isGlobal: true }],
       read: false,
     },
     data: {
@@ -208,10 +204,7 @@ export async function markAllAsReadForUser(
 export async function getUnreadCount(userAddress?: string): Promise<number> {
   const where = userAddress
     ? {
-        OR: [
-          { isGlobal: true },
-          { targetUser: userAddress },
-        ],
+        OR: [{ isGlobal: true }, { targetUser: userAddress }],
         read: false,
       }
     : {

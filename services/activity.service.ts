@@ -15,7 +15,7 @@ import client from "../lib/clients/prisma";
  * @returns The newly created Activity object
  */
 export async function recordActivity(
-  activityData: CreateActivityData
+  activityData: CreateActivityData,
 ): Promise<Activity> {
   return await client.activity.create({
     data: {
@@ -38,7 +38,7 @@ export async function recordActivity(
  */
 export async function getActivitiesByMarket(
   marketAddress: string,
-  limit?: number
+  limit?: number,
 ): Promise<Activity[]> {
   return await client.activity.findMany({
     where: {
@@ -59,7 +59,7 @@ export async function getActivitiesByMarket(
  */
 export async function getActivitiesByUser(
   userAddress: string,
-  limit?: number
+  limit?: number,
 ): Promise<Activity[]> {
   return await client.activity.findMany({
     where: {
