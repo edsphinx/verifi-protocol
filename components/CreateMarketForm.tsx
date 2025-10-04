@@ -28,11 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AIMarketChat } from "@/components/AIMarketChat";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Settings } from "lucide-react";
+import { AlertCircle, Settings, RotateCcw } from "lucide-react";
 import { getCreateMarketPayload, indexNewMarket } from "@/lib/api/market";
 import { MODULE_ADDRESS } from "@/aptos/constants";
+import { recordActivity } from "@/lib/services/activity-client.service";
+import { cn } from "@/lib/utils";
 
 type OracleOption = {
   id: string; // El oracle_id que espera el contrato
@@ -60,28 +61,51 @@ const ORACLE_OPTIONS: OracleOption[] = [
   // Aquí es donde añadiremos los oráculos de los patrocinadores en el futuro.
 ];
 
-export function CreateMarketForm() {
-  const [description, setDescription] = useState("");
-  const [resolutionDate, setResolutionDate] = useState("");
+interface GeneratedMarket {
+  title: string;
+  description: string;
+  oracleId: string;
+  targetAddress: string;
+  targetValue: string;
+  operator: number;
+  resolutionDate: string;
+}
+
+interface CreateMarketFormProps {
+  initialData?: GeneratedMarket | null;
+}
+
+export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [resolutionDate, setResolutionDate] = useState(initialData?.resolutionDate || "");
   const [selectedOracleId, setSelectedOracleId] = useState<string>(
-    ORACLE_OPTIONS[0].id,
+    initialData?.oracleId || ORACLE_OPTIONS[0].id,
   );
-  const [targetAddress, setTargetAddress] = useState("");
-  const [targetValue, setTargetValue] = useState("");
-  const [operator, setOperator] = useState<number>(0);
+  const [targetAddress, setTargetAddress] = useState(initialData?.targetAddress || "");
+  const [targetValue, setTargetValue] = useState(initialData?.targetValue || "");
+  const [operator, setOperator] = useState<number>(initialData?.operator ?? 0);
   const [activeOracles, setActiveOracles] = useState<string[]>([]);
   const [checkingOracles, setCheckingOracles] = useState(true);
 
   const { signAndSubmitTransaction, account } = useWallet();
   const router = useRouter();
 
-  // Set known active oracles on mount
   useEffect(() => {
-    // Use hardcoded list of registered oracles for market creation
-    // Note: tapp_prediction is a hook, not an oracle for markets
     setActiveOracles(["aptos-balance", "usdc-total-supply"]);
     setCheckingOracles(false);
   }, []);
+
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setDescription(initialData.description);
+      setResolutionDate(initialData.resolutionDate);
+      setSelectedOracleId(initialData.oracleId);
+      setTargetAddress(initialData.targetAddress);
+      setTargetValue(initialData.targetValue);
+      setOperator(initialData.operator);
+    }
+  }, [initialData]);
 
   const selectedOracle =
     ORACLE_OPTIONS.find((opt) => opt.id === selectedOracleId) ||
@@ -133,6 +157,18 @@ export function CreateMarketForm() {
             await indexNewMarket(event.data);
 
             const marketAddress = event.data.market_address;
+
+            await recordActivity({
+              txHash: response.hash,
+              marketAddress,
+              userAddress: account.address.toString(),
+              action: "CREATE_MARKET",
+              outcome: null,
+              amount: 0,
+              price: null,
+              totalValue: null,
+            });
+
             toast.success("Market created successfully!", {
               description: "Redirecting you to the market page...",
               action: {
@@ -151,12 +187,26 @@ export function CreateMarketForm() {
         }
       } catch (e: any) {
         console.error("[CreateMarketForm] Transaction error:", e);
+        console.error("[CreateMarketForm] Full error object:", JSON.stringify(e, null, 2));
         console.error("[CreateMarketForm] Error details:", {
           message: e.message,
           stack: e.stack,
           response: e.response,
+          code: e.code,
+          type: typeof e,
+          keys: Object.keys(e || {}),
         });
-        toast.error("Transaction Failed", { description: e.message });
+
+        let errorMessage = "Transaction failed";
+        if (typeof e === "string") {
+          errorMessage = e;
+        } else if (e?.message) {
+          errorMessage = e.message;
+        } else if (e?.toString && typeof e.toString === "function") {
+          errorMessage = e.toString();
+        }
+
+        toast.error("Transaction Failed", { description: errorMessage });
       }
     },
     onError: (e: Error) => {
@@ -197,62 +247,38 @@ export function CreateMarketForm() {
   const hasNoActiveOracles = !checkingOracles && activeOracles.length === 0;
   const isPublisher = account?.address === MODULE_ADDRESS;
 
-  const handleAIMarketReady = (market: {
-    title: string;
-    description: string;
-    oracleId: string;
-    targetAddress: string;
-    targetValue: string;
-    operator: number;
-    resolutionDate: string;
-  }) => {
-    if (!account?.address) {
-      toast.error("Please connect your wallet first.");
-      return;
-    }
-
-    // Find the oracle configuration
-    const selectedOracle = ORACLE_OPTIONS.find(
-      (opt) => opt.id === market.oracleId,
-    );
-    if (!selectedOracle) {
-      toast.error("Invalid oracle configuration");
-      return;
-    }
-
-    // Convert AI-generated data to CreateMarketApiPayload format
-    const localDate = new Date(market.resolutionDate);
-    const utcTimestamp = Math.floor(localDate.getTime() / 1000);
-
-    const payload = {
-      description: market.description,
-      resolutionTimestamp: utcTimestamp,
-      resolverAddress: account.address.toString(),
-      oracleId: market.oracleId,
-      targetAddress: selectedOracle.requiresTargetAddress
-        ? market.targetAddress
-        : "0x1",
-      targetFunction: selectedOracle.targetMetric,
-      targetValue: Number(market.targetValue),
-      operator: market.operator,
-    };
-
-    mutate(payload);
+  const handleReset = () => {
+    setDescription("");
+    setResolutionDate("");
+    setSelectedOracleId(ORACLE_OPTIONS[0].id);
+    setTargetAddress("");
+    setTargetValue("");
+    setOperator(0);
   };
 
   return (
     <div className="space-y-6">
-      <AIMarketChat onMarketReady={handleAIMarketReady} />
-
       <form onSubmit={handleSubmit}>
         <Card>
-          <CardHeader>
-            <CardTitle>Create New Market</CardTitle>
-            <CardDescription>
-              Or manually fill in the details below.
+          <CardHeader className="relative pb-6">
+            <CardTitle className="text-xl">Market Details</CardTitle>
+            <CardDescription className="text-sm">
+              {initialData
+                ? "Review and adjust the AI-generated market details"
+                : "Fill in the market details manually"}
             </CardDescription>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              className="absolute top-4 right-4 h-8 px-3"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Reset
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 transition-all duration-300 ease-in-out pt-0">
             {/* Oracle Warning Alert */}
             {hasNoActiveOracles && (
               <Alert variant="destructive">
@@ -290,13 +316,15 @@ export function CreateMarketForm() {
             )}
             <div className="space-y-2">
               <Label htmlFor="description">Market Question</Label>
-              <Input
+              <textarea
                 id="description"
                 placeholder="e.g., Will USDC total supply be > 1,000,000?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 disabled={isPending}
+                rows={3}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
             </div>
 
@@ -320,22 +348,8 @@ export function CreateMarketForm() {
               </Select>
             </div>
 
-            {selectedOracle.requiresTargetAddress && (
-              <div className="space-y-2">
-                <Label htmlFor="target-address">Target Account Address</Label>
-                <Input
-                  id="target-address"
-                  placeholder="0x..."
-                  value={targetAddress}
-                  onChange={(e) => setTargetAddress(e.target.value)}
-                  required
-                  disabled={isPending}
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4 space-y-2">
                 <Label htmlFor="operator">Condition</Label>
                 <Select
                   onValueChange={(val) => setOperator(Number(val))}
@@ -351,6 +365,27 @@ export function CreateMarketForm() {
                   </SelectContent>
                 </Select>
               </div>
+              <div
+                className={cn(
+                  "col-span-8 space-y-2 transition-all duration-300 ease-in-out",
+                  selectedOracle.requiresTargetAddress
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
+                )}
+              >
+                <Label htmlFor="target-address">Target Account Address</Label>
+                <Input
+                  id="target-address"
+                  placeholder="0x..."
+                  value={targetAddress}
+                  onChange={(e) => setTargetAddress(e.target.value)}
+                  required={selectedOracle.requiresTargetAddress}
+                  disabled={isPending || !selectedOracle.requiresTargetAddress}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="target-value">
                   {selectedOracle.targetValueLabel}
@@ -365,31 +400,17 @@ export function CreateMarketForm() {
                   disabled={isPending}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="resolution-date">Resolution Date & Time</Label>
-              <Input
-                id="resolution-date"
-                type="datetime-local"
-                value={resolutionDate}
-                onChange={(e) => setResolutionDate(e.target.value)}
-                required
-                disabled={isPending}
-              />
-              <p className="text-sm text-muted-foreground">
-                Enter the time when the market should close in your local
-                timezone.
-                {resolutionDate && (
-                  <span className="block mt-1">
-                    <strong>Your time:</strong>{" "}
-                    {resolutionDate.replace("T", " at ")}
-                    <br />
-                    <strong>UTC:</strong>{" "}
-                    {new Date(resolutionDate + "Z").toUTCString()}
-                  </span>
-                )}
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="resolution-date">Resolution Date & Time</Label>
+                <Input
+                  id="resolution-date"
+                  type="datetime-local"
+                  value={resolutionDate}
+                  onChange={(e) => setResolutionDate(e.target.value)}
+                  required
+                  disabled={isPending}
+                />
+              </div>
             </div>
           </CardContent>
           <CardFooter>

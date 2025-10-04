@@ -14,9 +14,20 @@ import {
   User,
   Bot,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { VerifAIAvatar } from "@/components/VerifAIAvatar";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { isUserTransactionResponse } from "@aptos-labs/ts-sdk";
+import { aptosClient } from "@/aptos/client";
+import { VERIFI_PROTOCOL_ABI } from "@/aptos/abis";
+import { NETWORK } from "@/aptos/constants";
+import { getCreateMarketPayload, indexNewMarket } from "@/lib/api/market";
+import { recordActivity } from "@/lib/services/activity-client.service";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -35,7 +46,7 @@ interface GeneratedMarket {
 }
 
 interface AIMarketChatProps {
-  onMarketReady: (market: GeneratedMarket) => void;
+  onMarketReady?: (market: GeneratedMarket) => void;
 }
 
 export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
@@ -51,13 +62,52 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMarket, setGeneratedMarket] =
     useState<GeneratedMarket | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { signAndSubmitTransaction, account } = useWallet();
+  const router = useRouter();
+
+  const loadingMessages = [
+    "🔍 Scanning blockchain oracles...",
+    "🧠 Analyzing market conditions...",
+    "🎲 Consulting probability crystals...",
+    "🔮 Predicting the unpredictable...",
+    "🌊 Surfing liquidity pools...",
+    "🚀 Deploying prediction satellites...",
+    "🎯 Calculating FOMO coefficients...",
+    "⚡ Charging verification shields...",
+    "🌟 Channeling on-chain wisdom...",
+    "🎪 Summoning market makers...",
+    "🧙 Casting oracle spells...",
+    "🎨 Painting probability curves...",
+    "🔬 Testing market hypotheses...",
+    "🎭 Rehearsing resolution scenarios...",
+    "🌈 Finding arbitrage rainbows...",
+  ];
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Loading message rotation effect
+  useEffect(() => {
+    if (!isGenerating) {
+      setLoadingMessage("");
+      return;
+    }
+
+    let currentIndex = 0;
+    setLoadingMessage(loadingMessages[0]);
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % loadingMessages.length;
+      setLoadingMessage(loadingMessages[currentIndex]);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const handleSend = async () => {
     if (!input.trim() || isGenerating) return;
@@ -184,13 +234,117 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
     }
   };
 
+  const { mutate: createMarket, isPending: isCreatingMarket } = useMutation({
+    mutationFn: getCreateMarketPayload,
+    onSuccess: async (payload) => {
+      if (!account?.address) return;
+      try {
+        const committedTxn = await signAndSubmitTransaction({
+          sender: account.address,
+          data: payload,
+        });
+
+        toast.info("Market creation submitted, waiting for confirmation...");
+
+        const response = await aptosClient().waitForTransaction({
+          transactionHash: committedTxn.hash,
+          options: {
+            timeoutSecs: 60,
+            waitForIndexer: true,
+          },
+        });
+
+        if (isUserTransactionResponse(response)) {
+          const event = response.events.find(
+            (e) =>
+              e.type ===
+              `${VERIFI_PROTOCOL_ABI.address}::verifi_protocol::MarketCreatedEvent`,
+          );
+          if (event) {
+            await indexNewMarket(event.data);
+
+            const marketAddress = event.data.market_address;
+
+            await recordActivity({
+              txHash: response.hash,
+              marketAddress,
+              userAddress: account.address.toString(),
+              action: "CREATE_MARKET",
+              outcome: null,
+              amount: 0,
+              price: null,
+              totalValue: null,
+            });
+
+            toast.success("Market created successfully!", {
+              description: "Redirecting you to the market page...",
+              action: {
+                label: "View Transaction",
+                onClick: () =>
+                  window.open(
+                    `https://explorer.aptoslabs.com/txn/${response.hash}?network=${NETWORK.toLowerCase()}`,
+                    "_blank",
+                  ),
+              },
+            });
+            router.push(`/market/${marketAddress}`);
+          } else {
+            throw new Error("MarketCreatedEvent not found in transaction.");
+          }
+        }
+      } catch (e: any) {
+        console.error("[AIMarketChat] Transaction error:", e);
+        console.error("[AIMarketChat] Full error object:", JSON.stringify(e, null, 2));
+        console.error("[AIMarketChat] Error details:", {
+          message: e.message,
+          stack: e.stack,
+          response: e.response,
+          code: e.code,
+          type: typeof e,
+          keys: Object.keys(e || {}),
+        });
+
+        let errorMessage = "Transaction failed";
+        if (typeof e === "string") {
+          errorMessage = e;
+        } else if (e?.message) {
+          errorMessage = e.message;
+        } else if (e?.toString && typeof e.toString === "function") {
+          errorMessage = e.toString();
+        }
+
+        toast.error("Transaction Failed", { description: errorMessage });
+      }
+    },
+    onError: (e: Error) => {
+      console.error("[AIMarketChat] Payload build error:", e);
+      toast.error("Error building transaction", { description: e.message });
+    },
+  });
+
   const handleCreateMarket = () => {
-    if (generatedMarket) {
-      onMarketReady(generatedMarket);
-      // Reset for next market
-      setGeneratedMarket(null);
-      setInput("");
+    if (!generatedMarket) return;
+    if (!account?.address) {
+      toast.error("Please connect your wallet first.");
+      return;
     }
+
+    // Convert resolution date to UTC timestamp
+    const localDate = new Date(generatedMarket.resolutionDate);
+    const utcTimestamp = Math.floor(localDate.getTime() / 1000);
+
+    const payload = {
+      description: generatedMarket.description,
+      resolutionTimestamp: utcTimestamp,
+      resolverAddress: account.address.toString(),
+      oracleId: generatedMarket.oracleId,
+      targetAddress: generatedMarket.targetAddress || "0x1",
+      targetFunction: generatedMarket.oracleId === "usdc-total-supply" ? "total_supply" : "balance",
+      targetValue: Number(generatedMarket.targetValue),
+      operator: generatedMarket.operator,
+    };
+
+    createMarket(payload);
   };
 
   const handleRegenerate = () => {
@@ -202,6 +356,12 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, regenerateMessage]);
+  };
+
+  const handleReviewAndEdit = () => {
+    if (generatedMarket && onMarketReady) {
+      onMarketReady(generatedMarket);
+    }
   };
 
   const handleReset = () => {
@@ -218,27 +378,9 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Market Assistant
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="h-8"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
-          </Button>
-        </div>
-      </CardHeader>
-      <Separator />
-
-      <div className="h-[400px] overflow-y-auto p-4" ref={scrollRef}>
+    <div className="font-[family-name:var(--font-chat)] space-y-3">
+      {/* Chat Messages - Increased height */}
+      <div className="h-[500px] overflow-y-auto border border-border/40 rounded-lg bg-muted/20 p-3" ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div
@@ -253,13 +395,13 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted",
+                    : "",
                 )}
               >
                 {message.role === "user" ? (
                   <User className="h-4 w-4" />
                 ) : (
-                  <Bot className="h-4 w-4" />
+                  <VerifAIAvatar size="sm" animate />
                 )}
               </div>
               <div
@@ -289,13 +431,18 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
           ))}
           {isGenerating && (
             <div className="flex gap-3 items-start">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                <Bot className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                <VerifAIAvatar size="sm" animate />
               </div>
-              <div className="flex items-center gap-2 bg-muted rounded-lg px-4 py-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">
-                  Thinking...
+              <div className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-lg px-4 py-2.5">
+                <div className="relative">
+                  <VerifAIAvatar size="sm" animate />
+                  <div className="absolute inset-0 animate-ping opacity-20">
+                    <VerifAIAvatar size="sm" animate={false} />
+                  </div>
+                </div>
+                <span className="text-sm font-medium text-foreground animate-pulse">
+                  {loadingMessage}
                 </span>
               </div>
             </div>
@@ -303,33 +450,66 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
         </div>
       </div>
 
-      <Separator />
-
-      <CardContent className="p-4 space-y-3 bg-background">
+      {/* Input/Actions Area */}
+      <div className="space-y-2">
         {generatedMarket ? (
-          <div className="flex gap-2">
-            <Button onClick={handleCreateMarket} className="flex-1" size="lg">
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Create This Market
+          <div className="space-y-2">
+            <Button
+              onClick={handleCreateMarket}
+              className="w-full"
+              size="lg"
+              disabled={isCreatingMarket || !account}
+            >
+              {isCreatingMarket ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating Market...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Create This Market
+                </>
+              )}
             </Button>
-            <Button onClick={handleRegenerate} variant="outline" size="lg">
-              Cancel
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleReviewAndEdit}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={isCreatingMarket}
+              >
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Review & Edit
+              </Button>
+              <Button
+                onClick={handleRegenerate}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={isCreatingMarket}
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                Regenerate
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex gap-2">
             <Input
-              placeholder="Describe your prediction market..."
+              placeholder="Describe your prediction market idea..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isGenerating}
-              className="flex-1"
+              className="flex-1 h-10"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isGenerating}
               size="icon"
+              className="h-10 w-10"
             >
               {isGenerating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -339,7 +519,7 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
