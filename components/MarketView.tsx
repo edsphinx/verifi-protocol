@@ -215,6 +215,8 @@ export function MarketView({ marketId }: { marketId: string }) {
               <TabsContent value="swap" className="mt-0">
                 <SwapTabContent
                   marketId={marketId}
+                  yesTokenAddress={details.yesTokenAddress}
+                  noTokenAddress={details.noTokenAddress}
                   onNavigateToLiquidity={() => setActiveTab("liquidity")}
                 />
               </TabsContent>

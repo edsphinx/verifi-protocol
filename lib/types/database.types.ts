@@ -100,7 +100,32 @@ export interface PortfolioPosition {
   unrealizedPnL: number;
   unrealizedPnLPct: number;
   status: string;
+  pools?: Array<{
+    poolAddress: string;
+    fee: number;
+    totalLiquidity: number;
+  }>;
 }
+
+export interface LiquidityPositionData {
+  id: string;
+  poolAddress: string;
+  marketAddress: string;
+  marketDescription: string;
+  lpTokens: number;
+  liquidityProvided: number;
+  yesAmount: number;
+  noAmount: number;
+  currentValue: number;
+  feesEarned: number;
+  unrealizedPnL: number;
+  apr: number;
+  status: string;
+  createdAt: string;
+}
+
+// LP Position ownership map (for localStorage)
+export type LpPositionOwnershipMap = Record<string, string>;
 
 export interface PortfolioData {
   totalValue: number;
@@ -111,6 +136,7 @@ export interface PortfolioData {
   openPositions: PortfolioPosition[];
   closedPositions: PortfolioPosition[];
   totalPositions: number;
+  liquidityPositions?: LiquidityPositionData[];
   stats: {
     totalTrades: number;
     totalVolume: number;
