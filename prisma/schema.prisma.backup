@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Market {
+  id                 String   @id @default(uuid())
+  marketAddress      String   @unique @map("market_address")
+  creatorAddress     String   @map("creator_address")
+  description        String
+  resolutionTimestamp DateTime @map("resolution_timestamp")
+  status             String   @default("active")
+  totalVolume        Float    @default(0) @map("total_volume")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("markets")
+}
+
+model Activity {
+  id            String   @id @default(uuid())
+  txHash        String   @unique @map("tx_hash")
+  marketAddress String   @map("market_address")
+  userAddress   String   @map("user_address")
+  action        String   // "BUY", "SELL", "LIQUIDITY_ADD", "SWAP"
+  outcome       String?  // "YES" or "NO" (optional for liquidity/swap)
+  amount        Float
+  timestamp     DateTime @default(now())
+
+  @@map("activities")
+}
+
+model TappPool {
+  id              String   @id @default(uuid())
+  poolAddress     String   @unique @map("pool_address")
+  marketAddress   String   @map("market_address")
+  hookType        Int      @map("hook_type") // 4 = prediction hook
+  yesTokenAddress String   @map("yes_token_address")
+  noTokenAddress  String   @map("no_token_address")
+  fee             Int      // Fee in basis points (e.g., 3000 = 0.3%)
+  creatorAddress  String   @map("creator_address")
+  totalLiquidity  Float    @default(0) @map("total_liquidity")
+  volume24h       Float    @default(0) @map("volume_24h")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("tapp_pools")
+}
+
+model Notification {
+  id              String   @id @default(uuid())
+  type            String   // "NEW_MARKET", "POOL_CREATED", "LARGE_TRADE", "MARKET_RESOLVED"
+  title           String
+  message         String
+  relatedAddress  String?  @map("related_address") // Market or pool address
+  txHash          String?  @map("tx_hash")
+  metadata        Json?    // Additional data (creator, amounts, etc.)
+  isGlobal        Boolean  @default(false) @map("is_global") // Global notifications for all users
+  targetUser      String?  @map("target_user") // Specific user (null = global)
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([targetUser, createdAt])
+  @@index([isGlobal, createdAt])
+  @@map("notifications")
+}
