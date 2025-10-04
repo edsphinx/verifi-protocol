@@ -62,6 +62,15 @@ export const VERIFI_PROTOCOL_ABI = {
       return: ["u64", "u64", "u8", "u64", "u64", "u8"],
     },
     {
+      name: "get_active_market_addresses",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: [],
+      return: ["vector<address>"],
+    },
+    {
       name: "get_all_market_addresses",
       visibility: "public",
       is_entry: false,
@@ -94,6 +103,17 @@ export const VERIFI_PROTOCOL_ABI = {
       return: ["u64", "u64"],
     },
     {
+      name: "get_batch_market_summaries",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["vector<address>"],
+      return: [
+        "vector<0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::MarketSummary>",
+      ],
+    },
+    {
       name: "get_fa_balance",
       visibility: "public",
       is_entry: false,
@@ -119,6 +139,15 @@ export const VERIFI_PROTOCOL_ABI = {
       generic_type_params: [],
       params: [],
       return: ["bool", "bool"],
+    },
+    {
+      name: "get_market_counts",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: [],
+      return: ["u64", "u64", "u64", "u64", "u64"],
     },
     {
       name: "get_market_info",
@@ -171,6 +200,17 @@ export const VERIFI_PROTOCOL_ABI = {
       return: ["u8"],
     },
     {
+      name: "get_market_summary",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["address"],
+      return: [
+        "0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::MarketSummary",
+      ],
+    },
+    {
       name: "get_market_tokens",
       visibility: "public",
       is_entry: false,
@@ -198,6 +238,17 @@ export const VERIFI_PROTOCOL_ABI = {
       ],
     },
     {
+      name: "get_protocol_stats",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: [],
+      return: [
+        "0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::ProtocolStats",
+      ],
+    },
+    {
       name: "get_resolution_timestamp",
       visibility: "public",
       is_entry: false,
@@ -207,6 +258,68 @@ export const VERIFI_PROTOCOL_ABI = {
         "0x1::object::Object<0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::Market>",
       ],
       return: ["u64"],
+    },
+    {
+      name: "get_resolved_market_addresses",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: [],
+      return: ["vector<address>"],
+    },
+    {
+      name: "get_token_addresses",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: [
+        "0x1::object::Object<0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::Market>",
+      ],
+      return: ["address", "address"],
+    },
+    {
+      name: "get_user_active_markets",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["address"],
+      return: ["vector<address>"],
+    },
+    {
+      name: "get_user_portfolio_value",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["address"],
+      return: [
+        "0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::PortfolioValue",
+      ],
+    },
+    {
+      name: "get_user_position",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["address", "address"],
+      return: [
+        "0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::UserPosition",
+      ],
+    },
+    {
+      name: "get_user_positions",
+      visibility: "public",
+      is_entry: false,
+      is_view: true,
+      generic_type_params: [],
+      params: ["address", "vector<address>"],
+      return: [
+        "vector<0x227a26b2dbd6093f6f779dcae84254f5dc40b461859a49b2eae6562db0434b15::verifi_protocol::UserPosition>",
+      ],
     },
     {
       name: "is_factory_initialized",
@@ -459,6 +572,59 @@ export const VERIFI_PROTOCOL_ABI = {
       ],
     },
     {
+      name: "MarketSummary",
+      is_native: false,
+      is_event: false,
+      abilities: ["drop"],
+      generic_type_params: [],
+      fields: [
+        {
+          name: "market_address",
+          type: "address",
+        },
+        {
+          name: "description",
+          type: "0x1::string::String",
+        },
+        {
+          name: "status",
+          type: "u8",
+        },
+        {
+          name: "resolution_timestamp",
+          type: "u64",
+        },
+        {
+          name: "yes_price",
+          type: "u64",
+        },
+        {
+          name: "no_price",
+          type: "u64",
+        },
+        {
+          name: "yes_supply",
+          type: "u64",
+        },
+        {
+          name: "no_supply",
+          type: "u64",
+        },
+        {
+          name: "total_supply",
+          type: "u64",
+        },
+        {
+          name: "pool_yes_tokens",
+          type: "u64",
+        },
+        {
+          name: "pool_no_tokens",
+          type: "u64",
+        },
+      ],
+    },
+    {
       name: "MarketView",
       is_native: false,
       is_event: false,
@@ -491,6 +657,68 @@ export const VERIFI_PROTOCOL_ABI = {
         },
         {
           name: "total_supply_no",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "PortfolioValue",
+      is_native: false,
+      is_event: false,
+      abilities: ["drop"],
+      generic_type_params: [],
+      fields: [
+        {
+          name: "total_positions",
+          type: "u64",
+        },
+        {
+          name: "total_value_yes",
+          type: "u64",
+        },
+        {
+          name: "total_value_no",
+          type: "u64",
+        },
+        {
+          name: "total_value",
+          type: "u64",
+        },
+        {
+          name: "market_count",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "ProtocolStats",
+      is_native: false,
+      is_event: false,
+      abilities: ["drop"],
+      generic_type_params: [],
+      fields: [
+        {
+          name: "total_markets",
+          type: "u64",
+        },
+        {
+          name: "active_markets",
+          type: "u64",
+        },
+        {
+          name: "resolved_markets",
+          type: "u64",
+        },
+        {
+          name: "total_yes_supply",
+          type: "u64",
+        },
+        {
+          name: "total_no_supply",
+          type: "u64",
+        },
+        {
+          name: "total_supply",
           type: "u64",
         },
       ],
@@ -549,6 +777,39 @@ export const VERIFI_PROTOCOL_ABI = {
         },
         {
           name: "apt_amount_out",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "UserPosition",
+      is_native: false,
+      is_event: false,
+      abilities: ["drop"],
+      generic_type_params: [],
+      fields: [
+        {
+          name: "market_address",
+          type: "address",
+        },
+        {
+          name: "yes_balance",
+          type: "u64",
+        },
+        {
+          name: "no_balance",
+          type: "u64",
+        },
+        {
+          name: "yes_value",
+          type: "u64",
+        },
+        {
+          name: "no_value",
+          type: "u64",
+        },
+        {
+          name: "total_value",
           type: "u64",
         },
       ],

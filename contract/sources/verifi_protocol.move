@@ -158,6 +158,58 @@ module VeriFiPublisher::verifi_protocol {
         total_supply_no: u64,
     }
 
+    /**
+     * @dev Enhanced market summary with calculated prices and analytics data.
+     */
+    struct MarketSummary has drop {
+        market_address: address,
+        description: String,
+        status: u8,
+        resolution_timestamp: u64,
+        yes_price: u64,          // Price in basis points (1000000 = 100%)
+        no_price: u64,           // Price in basis points
+        yes_supply: u64,
+        no_supply: u64,
+        total_supply: u64,
+        pool_yes_tokens: u64,
+        pool_no_tokens: u64,
+    }
+
+    /**
+     * @dev User position in a specific market.
+     */
+    struct UserPosition has drop {
+        market_address: address,
+        yes_balance: u64,
+        no_balance: u64,
+        yes_value: u64,          // Current value in octas
+        no_value: u64,           // Current value in octas
+        total_value: u64,        // Total portfolio value
+    }
+
+    /**
+     * @dev Portfolio summary for a user across all markets.
+     */
+    struct PortfolioValue has drop {
+        total_positions: u64,
+        total_value_yes: u64,
+        total_value_no: u64,
+        total_value: u64,
+        market_count: u64,
+    }
+
+    /**
+     * @dev High-level protocol statistics.
+     */
+    struct ProtocolStats has drop {
+        total_markets: u64,
+        active_markets: u64,
+        resolved_markets: u64,
+        total_yes_supply: u64,
+        total_no_supply: u64,
+        total_supply: u64,
+    }
+
     // === Initialization Function ===
 
     /**
@@ -856,6 +908,339 @@ module VeriFiPublisher::verifi_protocol {
             timestamp::now_seconds(),
             market.status
         )
+    }
+
+    // === DeFi Dashboard Analytics View Functions ===
+
+    #[view]
+    /**
+     * @notice Gets comprehensive market summary with calculated prices.
+     * @dev Priority 1: Essential for market cards and analytics dashboard.
+     * Calculates YES/NO prices based on supply ratio (1:1 pricing model for MVP).
+     * @param market_address The address of the market
+     * @return MarketSummary struct with all relevant data
+     */
+    public fun get_market_summary(market_address: address): MarketSummary acquires Market {
+        let market = borrow_global<Market>(market_address);
+
+        let total_supply = market.total_supply_yes + market.total_supply_no;
+
+        // Calculate prices based on supply ratio (basis points: 1000000 = 100%)
+        let (yes_price, no_price) = if (total_supply > 0) {
+            let yes_ratio = ((market.total_supply_yes as u128) * 1000000) / (total_supply as u128);
+            let no_ratio = ((market.total_supply_no as u128) * 1000000) / (total_supply as u128);
+            ((yes_ratio as u64), (no_ratio as u64))
+        } else {
+            (500000, 500000) // 50% each if no supply
+        };
+
+        MarketSummary {
+            market_address,
+            description: market.description,
+            status: market.status,
+            resolution_timestamp: market.resolution_timestamp,
+            yes_price,
+            no_price,
+            yes_supply: market.total_supply_yes,
+            no_supply: market.total_supply_no,
+            total_supply,
+            pool_yes_tokens: market.pool_yes_tokens,
+            pool_no_tokens: market.pool_no_tokens,
+        }
+    }
+
+    #[view]
+    /**
+     * @notice Gets market summaries for multiple markets in a single call.
+     * @dev Priority 1: Gas-efficient batch operation for dashboard loading.
+     * @param market_addresses Vector of market addresses to query
+     * @return Vector of MarketSummary structs
+     */
+    public fun get_batch_market_summaries(market_addresses: vector<address>): vector<MarketSummary> acquires Market {
+        let summaries = vector::empty<MarketSummary>();
+        let len = vector::length(&market_addresses);
+        let i = 0;
+
+        while (i < len) {
+            let addr = *vector::borrow(&market_addresses, i);
+            if (exists<Market>(addr)) {
+                let summary = get_market_summary(addr);
+                vector::push_back(&mut summaries, summary);
+            };
+            i = i + 1;
+        };
+
+        summaries
+    }
+
+    #[view]
+    /**
+     * @notice Gets user position in a specific market with calculated values.
+     * @dev Priority 2: Essential for portfolio tracking.
+     * @param user The user's address
+     * @param market_address The market address
+     * @return UserPosition struct with balances and values
+     */
+    public fun get_user_position(user: address, market_address: address): UserPosition acquires Market {
+        let market = borrow_global<Market>(market_address);
+
+        let yes_balance = primary_fungible_store::balance(user, market.yes_token_metadata);
+        let no_balance = primary_fungible_store::balance(user, market.no_token_metadata);
+
+        // In MVP with 1:1 pricing, value = balance
+        let yes_value = yes_balance;
+        let no_value = no_balance;
+        let total_value = yes_value + no_value;
+
+        UserPosition {
+            market_address,
+            yes_balance,
+            no_balance,
+            yes_value,
+            no_value,
+            total_value,
+        }
+    }
+
+    #[view]
+    /**
+     * @notice Gets user positions across multiple markets.
+     * @dev Priority 2: Batch operation for complete portfolio view.
+     * @param user The user's address
+     * @param market_addresses Vector of market addresses
+     * @return Vector of UserPosition structs
+     */
+    public fun get_user_positions(user: address, market_addresses: vector<address>): vector<UserPosition> acquires Market {
+        let positions = vector::empty<UserPosition>();
+        let len = vector::length(&market_addresses);
+        let i = 0;
+
+        while (i < len) {
+            let addr = *vector::borrow(&market_addresses, i);
+            if (exists<Market>(addr)) {
+                let position = get_user_position(user, addr);
+                // Only include if user has a position
+                if (position.yes_balance > 0 || position.no_balance > 0) {
+                    vector::push_back(&mut positions, position);
+                };
+            };
+            i = i + 1;
+        };
+
+        positions
+    }
+
+    #[view]
+    /**
+     * @notice Gets total portfolio value for a user across all markets.
+     * @dev Priority 2: Summary for portfolio dashboard header.
+     * @param user The user's address
+     * @return PortfolioValue struct with aggregated data
+     */
+    public fun get_user_portfolio_value(user: address): PortfolioValue acquires Market, MarketFactory {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let len = vector::length(markets);
+
+        let total_value_yes: u64 = 0;
+        let total_value_no: u64 = 0;
+        let market_count: u64 = 0;
+        let total_positions: u64 = 0;
+
+        let i = 0;
+        while (i < len) {
+            let market_obj = *vector::borrow(markets, i);
+            let market_addr = object::object_address(&market_obj);
+            let market = borrow_global<Market>(market_addr);
+
+            let yes_balance = primary_fungible_store::balance(user, market.yes_token_metadata);
+            let no_balance = primary_fungible_store::balance(user, market.no_token_metadata);
+
+            if (yes_balance > 0 || no_balance > 0) {
+                total_value_yes = total_value_yes + yes_balance;
+                total_value_no = total_value_no + no_balance;
+                market_count = market_count + 1;
+
+                if (yes_balance > 0) total_positions = total_positions + 1;
+                if (no_balance > 0) total_positions = total_positions + 1;
+            };
+
+            i = i + 1;
+        };
+
+        PortfolioValue {
+            total_positions,
+            total_value_yes,
+            total_value_no,
+            total_value: total_value_yes + total_value_no,
+            market_count,
+        }
+    }
+
+    #[view]
+    /**
+     * @notice Gets protocol-wide statistics.
+     * @dev Priority 3: High-level metrics for protocol dashboard.
+     * @return ProtocolStats struct with aggregated protocol data
+     */
+    public fun get_protocol_stats(): ProtocolStats acquires MarketFactory, Market {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let total_markets = vector::length(markets);
+
+        let active_markets: u64 = 0;
+        let resolved_markets: u64 = 0;
+        let total_yes_supply: u64 = 0;
+        let total_no_supply: u64 = 0;
+
+        let i = 0;
+        while (i < total_markets) {
+            let market_obj = *vector::borrow(markets, i);
+            let market = borrow_global<Market>(object::object_address(&market_obj));
+
+            if (market.status == STATUS_OPEN) {
+                active_markets = active_markets + 1;
+            } else if (market.status == STATUS_RESOLVED_YES || market.status == STATUS_RESOLVED_NO) {
+                resolved_markets = resolved_markets + 1;
+            };
+
+            total_yes_supply = total_yes_supply + market.total_supply_yes;
+            total_no_supply = total_no_supply + market.total_supply_no;
+
+            i = i + 1;
+        };
+
+        ProtocolStats {
+            total_markets,
+            active_markets,
+            resolved_markets,
+            total_yes_supply,
+            total_no_supply,
+            total_supply: total_yes_supply + total_no_supply,
+        }
+    }
+
+    #[view]
+    /**
+     * @notice Gets active markets for discovery/listing.
+     * @dev Priority 2: Filtered view for markets hub.
+     * @return Vector of active market addresses
+     */
+    public fun get_active_market_addresses(): vector<address> acquires MarketFactory, Market {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let active_addresses = vector::empty<address>();
+        let len = vector::length(markets);
+
+        let i = 0;
+        while (i < len) {
+            let market_obj = *vector::borrow(markets, i);
+            let market_addr = object::object_address(&market_obj);
+            let market = borrow_global<Market>(market_addr);
+
+            if (market.status == STATUS_OPEN) {
+                vector::push_back(&mut active_addresses, market_addr);
+            };
+            i = i + 1;
+        };
+
+        active_addresses
+    }
+
+    #[view]
+    /**
+     * @notice Gets resolved markets for history view.
+     * @dev Priority 3: For historical data and leaderboards.
+     * @return Vector of resolved market addresses
+     */
+    public fun get_resolved_market_addresses(): vector<address> acquires MarketFactory, Market {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let resolved_addresses = vector::empty<address>();
+        let len = vector::length(markets);
+
+        let i = 0;
+        while (i < len) {
+            let market_obj = *vector::borrow(markets, i);
+            let market_addr = object::object_address(&market_obj);
+            let market = borrow_global<Market>(market_addr);
+
+            if (market.status == STATUS_RESOLVED_YES || market.status == STATUS_RESOLVED_NO) {
+                vector::push_back(&mut resolved_addresses, market_addr);
+            };
+            i = i + 1;
+        };
+
+        resolved_addresses
+    }
+
+    #[view]
+    /**
+     * @notice Gets market count by status.
+     * @dev Priority 3: Quick stats for analytics.
+     * @return (total, active, resolved_yes, resolved_no, closed)
+     */
+    public fun get_market_counts(): (u64, u64, u64, u64, u64) acquires MarketFactory, Market {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let total = vector::length(markets);
+
+        let active: u64 = 0;
+        let resolved_yes: u64 = 0;
+        let resolved_no: u64 = 0;
+        let closed: u64 = 0;
+
+        let i = 0;
+        while (i < total) {
+            let market_obj = *vector::borrow(markets, i);
+            let market = borrow_global<Market>(object::object_address(&market_obj));
+
+            if (market.status == STATUS_OPEN) {
+                active = active + 1;
+            } else if (market.status == STATUS_RESOLVED_YES) {
+                resolved_yes = resolved_yes + 1;
+            } else if (market.status == STATUS_RESOLVED_NO) {
+                resolved_no = resolved_no + 1;
+            } else if (market.status == STATUS_CLOSED) {
+                closed = closed + 1;
+            };
+
+            i = i + 1;
+        };
+
+        (total, active, resolved_yes, resolved_no, closed)
+    }
+
+    #[view]
+    /**
+     * @notice Gets user's active positions (markets where they hold shares).
+     * @dev Priority 2: Quick query for "My Positions" tab.
+     * @param user The user's address
+     * @return Vector of market addresses where user has positions
+     */
+    public fun get_user_active_markets(user: address): vector<address> acquires MarketFactory, Market {
+        let factory = borrow_global<MarketFactory>(get_factory_address());
+        let markets = &factory.markets;
+        let active_markets = vector::empty<address>();
+        let len = vector::length(markets);
+
+        let i = 0;
+        while (i < len) {
+            let market_obj = *vector::borrow(markets, i);
+            let market_addr = object::object_address(&market_obj);
+            let market = borrow_global<Market>(market_addr);
+
+            let yes_balance = primary_fungible_store::balance(user, market.yes_token_metadata);
+            let no_balance = primary_fungible_store::balance(user, market.no_token_metadata);
+
+            if (yes_balance > 0 || no_balance > 0) {
+                vector::push_back(&mut active_markets, market_addr);
+            };
+
+            i = i + 1;
+        };
+
+        active_markets
     }
 
     // === Tapp Hook Integration Functions ===
