@@ -46,7 +46,9 @@ async function main() {
   logAllAccounts();
 
   console.log("\n🧪 Starting Redeem Flow Test...");
-  console.log(`📝 Market Creator: ${marketCreatorAccount.accountAddress.toString()}`);
+  console.log(
+    `📝 Market Creator: ${marketCreatorAccount.accountAddress.toString()}`,
+  );
   console.log(`👤 Trader 1 (YES): ${trader1Account.accountAddress.toString()}`);
   console.log(`👤 Trader 2 (NO): ${trader2Account.accountAddress.toString()}`);
 
@@ -83,7 +85,8 @@ async function main() {
 
     if (isUserTransactionResponse(response)) {
       const event = response.events.find(
-        (e) => e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`
+        (e) =>
+          e.type === `${MODULE_ADDRESS}::verifi_protocol::MarketCreatedEvent`,
       );
       if (event) {
         marketAddress = event.data.market_address;
@@ -118,7 +121,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader1Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader1Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
 
@@ -151,7 +157,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader2Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader2Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
 
@@ -176,18 +185,22 @@ async function main() {
     console.log(`📊 Market Stats:`);
     console.log(`   - YES Pool: ${stats[0]}`);
     console.log(`   - NO Pool: ${stats[1]}`);
-    console.log(`   - Status: ${stats[2]} (0=OPEN, 1=CLOSED, 2=RESOLVED_YES, 3=RESOLVED_NO)`);
+    console.log(
+      `   - Status: ${stats[2]} (0=OPEN, 1=CLOSED, 2=RESOLVED_YES, 3=RESOLVED_NO)`,
+    );
   } catch (error) {
     console.error("❌ Failed to get market stats:", error);
     process.exit(1);
   }
 
   // === Step 5: Wait for Resolution Timestamp & Resolve Market ===
-  console.log("\n[5/6] Waiting for resolution timestamp and resolving market...");
+  console.log(
+    "\n[5/6] Waiting for resolution timestamp and resolving market...",
+  );
   try {
     // Wait 35 seconds to ensure resolution_timestamp has passed
     console.log("   ⏳ Waiting 35 seconds for market to expire...");
-    await new Promise(resolve => setTimeout(resolve, 35000));
+    await new Promise((resolve) => setTimeout(resolve, 35000));
 
     console.log("   📝 Market expired, now resolving as YES...");
     const resolveTxn = await aptos.transaction.build.simple({
@@ -226,7 +239,10 @@ async function main() {
     const balancesBefore = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader1Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader1Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
 
@@ -273,11 +289,16 @@ async function main() {
     const balancesAfter = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader1Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader1Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
 
-    console.log(`   - YES shares after redeem: ${balancesAfter[0]} (should be 0)`);
+    console.log(
+      `   - YES shares after redeem: ${balancesAfter[0]} (should be 0)`,
+    );
   } catch (error) {
     console.error("❌ Failed to redeem winnings:", error);
     process.exit(1);
@@ -289,7 +310,10 @@ async function main() {
     const balances = await aptos.view({
       payload: {
         function: `${MODULE_ADDRESS}::verifi_protocol::get_balances`,
-        functionArguments: [trader2Account.accountAddress.toString(), marketAddress],
+        functionArguments: [
+          trader2Account.accountAddress.toString(),
+          marketAddress,
+        ],
       },
     });
 
@@ -297,7 +321,9 @@ async function main() {
     console.log(`   - Trader 2 NO shares: ${noBalance}`);
 
     if (noBalance > 0) {
-      console.log(`   ℹ️  Trader 2 has NO shares but market resolved YES - cannot redeem`);
+      console.log(
+        `   ℹ️  Trader 2 has NO shares but market resolved YES - cannot redeem`,
+      );
     }
   } catch (error) {
     console.error("❌ Failed to check loser balance:", error);

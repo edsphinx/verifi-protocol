@@ -1,8 +1,4 @@
-import {
-  Aptos,
-  AptosConfig,
-  type Network,
-} from "@aptos-labs/ts-sdk";
+import { Aptos, AptosConfig, type Network } from "@aptos-labs/ts-sdk";
 import { networkName, nodeUrl } from "../_config";
 import { publisherAccount } from "../_test-accounts";
 

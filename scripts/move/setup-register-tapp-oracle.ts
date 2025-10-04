@@ -54,9 +54,7 @@ async function main() {
     );
 
     console.log(" Oracle registration completed!");
-    console.log(
-      " You can now create markets with oracle_id='tapp_prediction'",
-    );
+    console.log(" You can now create markets with oracle_id='tapp_prediction'");
   } catch (error: any) {
     if (error.message && error.message.includes("EORACLE_ALREADY_EXISTS")) {
       console.log(

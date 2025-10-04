@@ -49,9 +49,7 @@ for (const file of filesToUpdate) {
     const templatePath = isTestMode ? file.devTemplate : file.prodTemplate;
 
     if (!fs.existsSync(templatePath)) {
-      console.warn(
-        `  Template not found: ${templatePath}, using current file`,
-      );
+      console.warn(`  Template not found: ${templatePath}, using current file`);
       // Fallback to updating current file
       let content = fs.readFileSync(file.path, "utf-8");
 

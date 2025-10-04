@@ -107,9 +107,9 @@ function serializeSwapArgs(
   serializer.serializeFixedBytes(AccountAddress.from(poolAddr).toUint8Array());
 
   // Arguments for hook (CORRECT ORDER!)
-  serializer.serializeU64(amountIn);      // 1. amount_in (u64)
-  serializer.serializeBool(yesToNo);      // 2. yes_to_no (bool)
-  serializer.serializeU64(minAmountOut);  // 3. min_amount_out (u64)
+  serializer.serializeU64(amountIn); // 1. amount_in (u64)
+  serializer.serializeBool(yesToNo); // 2. yes_to_no (bool)
+  serializer.serializeU64(minAmountOut); // 3. min_amount_out (u64)
 
   return serializer.toUint8Array();
 }
@@ -198,10 +198,7 @@ async function main() {
       }
     }
   } catch (error: any) {
-    console.error(
-      " Failed to check/register oracle:",
-      error.message || error,
-    );
+    console.error(" Failed to check/register oracle:", error.message || error);
     process.exit(1);
   }
 
@@ -572,7 +569,9 @@ async function main() {
   try {
     // Use smaller amount for swap (100k tokens = 0.001 APT)
     const swapAmount = 100_000n; // 0.001 APT worth of YES tokens (BigInt for u64)
-    console.log(`    Attempting to swap ${swapAmount} YES tokens (0.001 APT)...`);
+    console.log(
+      `    Attempting to swap ${swapAmount} YES tokens (0.001 APT)...`,
+    );
 
     const swapArgs = serializeSwapArgs(
       poolAddress!,
