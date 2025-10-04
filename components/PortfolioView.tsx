@@ -6,17 +6,20 @@
  */
 
 import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, RefreshCw, TrendingUp, Target, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { usePortfolio } from "@/lib/hooks";
 import { ActivityFeed } from "@/components/portfolio/ActivityFeed";
-import { UserPositions } from "@/components/portfolio/UserPositions";
+import { MarketPositionCard } from "@/components/portfolio/MarketPositionCard";
+import { LiquidityPositions } from "@/components/portfolio/LiquidityPositions";
 import { StatCard } from "@/components/ui/stat-card";
 import { CSSDonut } from "@/components/ui/css-donut";
 import { useUserActivities } from "@/lib/hooks/use-user-activities";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function PortfolioView() {
   const { account } = useWallet();
@@ -28,6 +31,7 @@ export function PortfolioView() {
     totalPnL,
     totalPnLPct,
     roi,
+    openPositionsCount,
     refetch: refetchPortfolio,
   } = usePortfolio(account?.address?.toString());
 
@@ -57,18 +61,32 @@ export function PortfolioView() {
     ];
   }, [portfolio?.openPositions]);
 
-  // Adapt PortfolioPosition to Position type for UserPositions component - ALWAYS call hooks
-  const adaptedPositions = useMemo(() => {
+  // Group positions by market for MarketPositionCard component
+  const groupedPositions = useMemo(() => {
     if (!portfolio?.openPositions) return [];
 
-    return portfolio.openPositions.map((pos) => ({
-      marketAddress: pos.marketAddress,
-      marketTitle: pos.marketDescription,
-      yesBalance: pos.outcome === 'YES' ? pos.sharesOwned : 0,
-      noBalance: pos.outcome === 'NO' ? pos.sharesOwned : 0,
-      totalValue: pos.currentValue,
-      marketStatus: pos.status === 'OPEN' ? 0 : 1,
-    }));
+    const marketGroups = new Map<string, {
+      marketAddress: string;
+      marketTitle: string;
+      positions: typeof portfolio.openPositions;
+      marketStatus: number;
+    }>();
+
+    portfolio.openPositions.forEach(pos => {
+      if (!marketGroups.has(pos.marketAddress)) {
+        marketGroups.set(pos.marketAddress, {
+          marketAddress: pos.marketAddress,
+          marketTitle: pos.marketDescription,
+          positions: [],
+          marketStatus: pos.status === 'OPEN' ? 0 : 1,
+        });
+      }
+
+      const group = marketGroups.get(pos.marketAddress)!;
+      group.positions.push(pos);
+    });
+
+    return Array.from(marketGroups.values());
   }, [portfolio?.openPositions]);
 
   const handleRefresh = () => {
@@ -90,27 +108,16 @@ export function PortfolioView() {
     );
   }
 
-  if (isLoadingPortfolio) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold tracking-tight">Portfolio</h1>
-          <Button variant="outline" size="sm" disabled>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-[300px] lg:col-span-2" />
-          <Skeleton className="h-[300px]" />
-        </div>
-        <Skeleton className="h-[450px]" />
-      </div>
-    );
-  }
+  // Don't block rendering - show content with loading indicator instead
+  // The UserPositions and ActivityFeed components handle their own loading states
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-bold tracking-tight">Portfolio</h1>
@@ -128,28 +135,28 @@ export function PortfolioView() {
       {/* Performance Metrics - Lightweight Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          label="Return on Investment"
-          value={`${roi.toFixed(2)}%`}
-          trend={roi > 0 ? "up" : roi < 0 ? "down" : "neutral"}
-          color={roi > 0 ? "green" : roi < 0 ? "red" : "gray"}
+          label="Total Portfolio Value"
+          value={`${totalValue.toFixed(2)} APT`}
+          trend={totalValue > 0 ? "up" : "neutral"}
+          color={totalValue > 0 ? "green" : "gray"}
           icon={<TrendingUp className="w-5 h-5" />}
-          subtitle="Total portfolio performance"
+          subtitle={`${openPositionsCount} active positions`}
         />
         <StatCard
-          label="Win Rate"
-          value={`${winRate.toFixed(1)}%`}
-          trend={winRate > 50 ? "up" : "down"}
-          color={winRate > 50 ? "green" : "red"}
+          label="Total Markets"
+          value={`${portfolio?.openPositions ? new Set(portfolio.openPositions.map(p => p.marketAddress)).size : 0}`}
+          trend="neutral"
+          color="blue"
           icon={<Target className="w-5 h-5" />}
-          subtitle="Winning positions ratio"
+          subtitle="Markets with positions"
         />
         <StatCard
-          label="Unrealized P&L"
-          value={`${totalPnLPct > 0 ? "+" : ""}${totalPnLPct.toFixed(2)}%`}
-          trend={totalPnLPct > 0 ? "up" : totalPnLPct < 0 ? "down" : "neutral"}
-          color={totalPnLPct > 0 ? "green" : totalPnLPct < 0 ? "red" : "gray"}
+          label="Total Trades"
+          value={`${portfolio?.stats?.totalTrades || 0}`}
+          trend={portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0 ? "up" : "neutral"}
+          color={portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0 ? "green" : "gray"}
           icon={<Trophy className="w-5 h-5" />}
-          subtitle={`$${totalPnL.toFixed(2)} total`}
+          subtitle={`${portfolio?.stats?.totalVolume.toFixed(2) || '0.00'} APT volume`}
         />
       </div>
 
@@ -161,9 +168,37 @@ export function PortfolioView() {
         </div>
       )}
 
-      {/* Active Positions Table */}
-      <UserPositions
-        positions={adaptedPositions}
+      {/* Pure Plays - VeriFi Trading Positions */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">🎯 Pure Plays</h2>
+        {isLoadingPortfolio ? (
+          <Card className="min-h-[200px] flex items-center justify-center">
+            <VeriFiLoader message="Loading positions..." />
+          </Card>
+        ) : groupedPositions.length === 0 ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground text-center">
+              No pure plays yet. Browse markets to start betting!
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {groupedPositions.map((group) => (
+              <MarketPositionCard
+                key={group.marketAddress}
+                marketAddress={group.marketAddress}
+                marketTitle={group.marketTitle}
+                positions={group.positions}
+                marketStatus={group.marketStatus}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* LP Farms - AMM Liquidity Positions */}
+      <LiquidityPositions
+        positions={portfolio?.liquidityPositions || []}
         isLoading={isLoadingPortfolio}
       />
 
@@ -172,6 +207,6 @@ export function PortfolioView() {
         activities={activitiesData?.activities || []}
         isLoading={isLoadingActivities}
       />
-    </div>
+    </motion.div>
   );
 }

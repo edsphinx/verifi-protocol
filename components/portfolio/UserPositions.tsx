@@ -25,6 +25,11 @@ interface Position {
   noBalance: number;
   totalValue: number;
   marketStatus?: number; // 0: OPEN, 1: CLOSED, 2: RESOLVED_YES, 3: RESOLVED_NO
+  pools?: Array<{
+    poolAddress: string;
+    fee: number;
+    totalLiquidity: number;
+  }>;
 }
 
 interface UserPositionsProps {
@@ -177,6 +182,21 @@ export function UserPositions({ positions, isLoading }: UserPositionsProps) {
                   <p className="text-xs text-muted-foreground">
                     {position.marketAddress.substring(0, 12)}...
                   </p>
+                  {position.pools && position.pools.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {position.pools.map((pool) => (
+                        <Badge
+                          key={pool.poolAddress}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          Pool: {pool.poolAddress.substring(0, 8)}...
+                          {" | "}
+                          {pool.fee / 100}% fee
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Link href={`/market/${position.marketAddress}`}>
                   <Button variant="ghost" size="sm" className="gap-2">

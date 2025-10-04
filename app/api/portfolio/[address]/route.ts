@@ -1,8 +1,38 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import type { PortfolioData, PortfolioPosition } from '@/lib/types/database.types';
+import { aptosClient } from '@/aptos/client';
+import { MODULE_ADDRESS } from '@/aptos/constants';
+import type { InputViewFunctionData } from '@aptos-labs/ts-sdk';
 
 const prisma = new PrismaClient();
+
+// Helper to fetch positions from blockchain
+async function fetchBlockchainPositions(userAddress: string, marketAddresses: string[]) {
+  try {
+    const payload: InputViewFunctionData = {
+      function: `${MODULE_ADDRESS}::verifi_protocol::get_user_positions`,
+      functionArguments: [userAddress, marketAddresses],
+    };
+
+    const result = await aptosClient().view({ payload });
+
+    // Result is an array of UserPosition structs
+    const positions = result[0] as any[];
+
+    return positions.map((pos: any) => ({
+      marketAddress: pos.market_address,
+      yesBalance: Number(pos.yes_balance) / 1_000_000, // Convert from octas
+      noBalance: Number(pos.no_balance) / 1_000_000,
+      yesValue: Number(pos.yes_value) / 100_000_000, // APT is 8 decimals
+      noValue: Number(pos.no_value) / 100_000_000,
+      totalValue: Number(pos.total_value) / 100_000_000,
+    }));
+  } catch (error) {
+    console.error('Error fetching blockchain positions:', error);
+    return [];
+  }
+}
 
 export async function GET(
   request: Request,
@@ -25,11 +55,30 @@ export async function GET(
         status: { in: ['OPEN', 'RESOLVED'] },
       },
       include: {
-        market: true,
+        market: {
+          include: {
+            pools: true,
+          },
+        },
       },
     });
 
-    // Use DB positions if available, otherwise calculate from activities
+    // Get liquidity positions
+    const liquidityPositions = await prisma.liquidityPosition.findMany({
+      where: {
+        userAddress: address,
+        status: 'ACTIVE',
+      },
+      include: {
+        pool: {
+          include: {
+            market: true,
+          },
+        },
+      },
+    });
+
+    // Use DB positions if available, otherwise fetch from blockchain
     let positions: any[] = [];
 
     if (dbPositions.length > 0) {
@@ -48,78 +97,68 @@ export async function GET(
         status: p.status,
       }));
     } else {
-      // Calculate from activities if no positions in DB
-        // Get user's trading activities
-        const activities = await prisma.activity.findMany({
-          where: {
-            userAddress: address,
-            action: { in: ['BUY', 'SELL'] },
-          },
-          orderBy: { timestamp: 'asc' },
-          include: {
-            market: true,
-          },
-        });
+      // Fetch positions directly from blockchain
+      console.log('[Portfolio API] No DB positions, fetching from blockchain...');
 
-        // Group by market + outcome
-        const positionMap = new Map<string, any>();
+      // Get all active markets
+      const allMarkets = await prisma.market.findMany({
+        select: { marketAddress: true, description: true, status: true },
+      });
 
-        for (const activity of activities) {
-          if (!activity.market) continue;
+      if (allMarkets.length > 0) {
+        const marketAddresses = allMarkets.map((m) => m.marketAddress);
+        const blockchainPositions = await fetchBlockchainPositions(
+          address,
+          marketAddresses
+        );
 
-          const key = `${activity.marketAddress}-${activity.outcome}`;
+        console.log('[Portfolio API] Blockchain positions:', blockchainPositions);
 
-          if (!positionMap.has(key)) {
-            positionMap.set(key, {
-              marketAddress: activity.marketAddress,
-              market: activity.market,
-              outcome: activity.outcome,
-              sharesOwned: 0,
-              totalInvested: 0,
-              trades: [],
-            });
-          }
+        // Convert blockchain positions to portfolio format
+        positions = blockchainPositions
+          .filter((bp) => bp.yesBalance > 0 || bp.noBalance > 0)
+          .flatMap((bp) => {
+            const market = allMarkets.find((m) => m.marketAddress === bp.marketAddress);
+            const results = [];
 
-          const position = positionMap.get(key);
+            // Create YES position if user has YES shares
+            if (bp.yesBalance > 0) {
+              results.push({
+                marketAddress: bp.marketAddress,
+                market,
+                outcome: 'YES',
+                sharesOwned: bp.yesBalance,
+                avgEntryPrice: 0, // We don't have historical data
+                totalInvested: 0, // We don't have historical data
+                currentPrice: bp.yesBalance > 0 ? bp.yesValue / bp.yesBalance : 0,
+                currentValue: bp.yesValue,
+                unrealizedPnL: 0, // Can't calculate without totalInvested
+                unrealizedPnLPct: 0,
+                status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+              });
+            }
 
-          if (activity.action === 'BUY') {
-            position.sharesOwned += activity.amount;
-            position.totalInvested += activity.totalValue || 0;
-          } else if (activity.action === 'SELL') {
-            position.sharesOwned -= activity.amount;
-          }
+            // Create NO position if user has NO shares
+            if (bp.noBalance > 0) {
+              results.push({
+                marketAddress: bp.marketAddress,
+                market,
+                outcome: 'NO',
+                sharesOwned: bp.noBalance,
+                avgEntryPrice: 0,
+                totalInvested: 0,
+                currentPrice: bp.noBalance > 0 ? bp.noValue / bp.noBalance : 0,
+                currentValue: bp.noValue,
+                unrealizedPnL: 0,
+                unrealizedPnLPct: 0,
+                status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+              });
+            }
 
-          position.trades.push(activity);
-        }
-
-        // Convert to position format
-        positions = Array.from(positionMap.values())
-          .filter((p) => p.sharesOwned > 0)
-          .map((p) => {
-            const avgEntryPrice =
-              p.sharesOwned > 0 ? p.totalInvested / p.sharesOwned : 0;
-            const currentPrice =
-              p.outcome === 'YES' ? (p.market.yesPrice || 0.5) : (p.market.noPrice || 0.5);
-            const currentValue = p.sharesOwned * currentPrice;
-            const unrealizedPnL = currentValue - p.totalInvested;
-            const unrealizedPnLPct =
-              p.totalInvested > 0 ? (unrealizedPnL / p.totalInvested) * 100 : 0;
-
-            return {
-              marketAddress: p.marketAddress,
-              market: p.market,
-              outcome: p.outcome,
-              sharesOwned: p.sharesOwned,
-              avgEntryPrice,
-              totalInvested: p.totalInvested,
-              currentPrice,
-              currentValue,
-              unrealizedPnL,
-              unrealizedPnLPct,
-              status: p.market.status === 'active' ? 'OPEN' : 'RESOLVED',
-            };
+            return results;
           });
       }
+    }
 
     // Calculate portfolio totals
     const totalValue = positions.reduce((sum, p) => sum + p.currentValue, 0);
@@ -158,6 +197,13 @@ export async function GET(
       unrealizedPnL: p.unrealizedPnL,
       unrealizedPnLPct: p.unrealizedPnLPct,
       status: p.status,
+      pools: 'market' in p && (p as any).market?.pools
+        ? (p as any).market.pools.map((pool: any) => ({
+            poolAddress: pool.poolAddress,
+            fee: pool.fee,
+            totalLiquidity: pool.totalLiquidity,
+          }))
+        : [],
     }));
 
     // Separate open and closed positions
@@ -166,10 +212,20 @@ export async function GET(
       (p) => p.status === 'CLOSED' || p.status === 'RESOLVED'
     );
 
+    // Calculate LP totals
+    const lpTotalValue = liquidityPositions.reduce(
+      (sum, lp) => sum + lp.currentValue,
+      0
+    );
+    const lpTotalInvested = liquidityPositions.reduce(
+      (sum, lp) => sum + lp.liquidityProvided,
+      0
+    );
+
     const portfolio: PortfolioData = {
       // Overview
-      totalValue,
-      totalInvested,
+      totalValue: totalValue + lpTotalValue,
+      totalInvested: totalInvested + lpTotalInvested,
       unrealizedPnL,
       unrealizedPnLPct,
       realizedPnL: 0, // TODO: Calculate from closed positions
@@ -178,6 +234,24 @@ export async function GET(
       openPositions,
       closedPositions,
       totalPositions: positions.length,
+
+      // Liquidity Positions
+      liquidityPositions: liquidityPositions.map((lp) => ({
+        id: lp.id,
+        poolAddress: lp.poolAddress,
+        marketAddress: lp.marketAddress,
+        marketDescription: lp.pool.market?.description || '',
+        lpTokens: lp.lpTokens,
+        liquidityProvided: lp.liquidityProvided,
+        yesAmount: lp.yesAmount,
+        noAmount: lp.noAmount,
+        currentValue: lp.currentValue,
+        feesEarned: lp.feesEarned,
+        unrealizedPnL: lp.unrealizedPnL,
+        apr: lp.apr,
+        status: lp.status,
+        createdAt: lp.createdAt.toISOString(),
+      })),
 
       // Stats
       stats: {

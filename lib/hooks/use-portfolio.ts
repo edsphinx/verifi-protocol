@@ -30,10 +30,10 @@ export function usePortfolio(userAddress?: string) {
 
   // Auto-fetch when user address is provided
   useEffect(() => {
-    if (userAddress && !isLoading) {
+    if (userAddress) {
       fetchPortfolio(userAddress);
     }
-  }, [userAddress, isLoading, fetchPortfolio]);
+  }, [userAddress, fetchPortfolio]);
 
   return {
     portfolio,
