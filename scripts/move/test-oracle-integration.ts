@@ -56,7 +56,7 @@ async function registerOracle(
     await aptos.waitForTransaction({ transactionHash: committed.hash });
     console.log(`- Oracle "${id}" registered successfully.`);
   } catch (e: any) {
-    if (e.message?.includes("0x6407")) {
+    if (e.message?.includes("E_ORACLE_ALREADY_EXISTS") || e.message?.includes("0x800ca") || e.message?.includes("0x6407")) {
       console.log(`- Oracle "${id}" is already registered. Skipping.`);
     } else {
       throw e;
