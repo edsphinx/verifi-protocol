@@ -48,3 +48,6 @@ next-env.d.ts
 .DS_Store
 *.DS_Store
 /lib/generated/prisma
+
+# Documentation archive (not committed)
+docs/

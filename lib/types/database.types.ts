@@ -200,3 +200,14 @@ export interface TraderMetrics {
   winningTrades: number;
   losingTrades: number;
 }
+
+export interface Activity {
+  id: string;
+  type: string;
+  user: string;
+  marketAddress: string;
+  marketDescription: string;
+  amount: number;
+  price: number | null;
+  timestamp: string;
+}

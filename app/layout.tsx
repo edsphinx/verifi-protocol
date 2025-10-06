@@ -37,7 +37,8 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata = {
   title: "VeriFi Protocol | On-Chain Derivatives on Aptos",
-  description: "Create and trade markets on any verifiable on-chain event, oracle-free.",
+  description:
+    "Create and trade markets on any verifiable on-chain event, oracle-free.",
   icons: {
     icon: "/assets/svg/verifai-mascot.svg",
     apple: "/assets/svg/verifai-mascot.svg",
