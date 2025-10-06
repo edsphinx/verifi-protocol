@@ -13,7 +13,7 @@ VeriFi is a decentralized derivatives protocol that empowers anyone to create pr
 
 Imagine a financial ecosystem where **any on-chain truth** can become a liquid, tradable market. Where creating financial instruments isn't restricted to experts, but open to the entire community. That's VeriFi Protocol.
 
-##  The Problem
+## The Problem
 
 Current prediction markets face two critical barriers:
 
@@ -22,14 +22,14 @@ Current prediction markets face two critical barriers:
 
 These limitations prevent Aptos from realizing its vision of trustless, frictionless value movement.
 
-##  Our Solution
+## Our Solution
 
 VeriFi solves both problems with:
 
-###  Oracle-less Architecture
+### Oracle-less Architecture
 Markets resolve **100% programmatically** by directly querying other Aptos contracts. Check a protocol's TVL, a DAO proposal's outcome, or any on-chain metric—without external dependencies.
 
-###  AI-Powered Market Creation
+### AI-Powered Market Creation
 Our intelligent dashboard makes market creation trivial:
 1. **Natural Language Input**: Describe your market in plain English
 2. **AI Validation**: Claude analyzes feasibility and suggests improvements
@@ -38,12 +38,12 @@ Our intelligent dashboard makes market creation trivial:
 
 Example: "Will Circle USDC total supply exceed 5M by March 15th?" → Fully configured market in seconds.
 
-###  The "Market Creator" Economy
+### The "Market Creator" Economy
 Every user can become a market creator, monetizing their ecosystem insights and knowledge.
 
 ---
 
-##  Technical Architecture
+## Technical Architecture
 
 ```mermaid
 graph TB
@@ -81,22 +81,32 @@ graph TB
 
 ---
 
-##  What We've Built
+## What We've Built
 
-###  Core Features
-- [x] Oracle-less market creation and resolution
-- [x] AI-powered market creation with natural language input
-- [x] Buy/sell YES/NO outcome tokens
-- [x] Portfolio tracking with P&L
-- [x] AMM pools with liquidity provision (Tapp integration)
-- [x] Swap YES/NO tokens with real-time price impact
-- [x] Liquidity positions dashboard with PnL tracking
-- [x] Transaction explorer links for on-chain verification
-- [x] Real-time notifications with clickable transaction links
-- [x] Admin control panel
-- [x] Comprehensive test suite (90%+ coverage)
+### Core Features
+- Oracle-less market creation and resolution
+- AI-powered market creation with natural language input
+- Buy/sell YES/NO outcome tokens
+- Portfolio tracking with P&L
+- AMM pools with liquidity provision (Tapp integration)
+- Swap YES/NO tokens with real-time price impact
+- Liquidity positions dashboard with PnL tracking
+- Transaction explorer links for on-chain verification
+- Real-time notifications with clickable transaction links
+- Admin control panel
+- Comprehensive test suite (90%+ coverage)
 
-###  Supported Oracles
+### Professional UI/UX Enhancements
+- **Skeleton-first loading pattern**: Progressive loading with skeleton → loader → content (400ms transitions)
+- **Bouncy animations**: Professional cubic-bezier easing [0.34, 1.56, 0.64, 1] throughout the application
+- **Staggered entrance animations**: Progressive reveals with calculated delays for smooth user experience
+- **Hover interactions**: Scale and translate effects on interactive elements
+- **Real-time market pulse monitor**: Live market activity tracking with momentum indicators
+- **Featured markets grid**: AI-powered ranking engine with activity, volatility, and urgency scores
+- **Analytics dashboard**: Protocol overview, top traders, volume charts, and market intelligence
+- **Responsive design**: Mobile-first approach with Tailwind CSS and shadcn/ui components
+
+### Supported Oracles
 - **Aptos Balance Oracle**: Track any account's APT holdings
 - **USDC Total Supply**: Monitor USDC circulation
 - **Extensible**: Add custom oracles via registry
@@ -115,20 +125,20 @@ VeriFi integrates with **[Tapp.Exchange](https://tapp.exchange)**, a modular AMM
 - **Tapp Dependencies**: `contract/test-deps/` - Deployed Tapp contracts for local testing
 - **Open Source Contribution**: [Pull Request #3](https://github.com/tapp-exchange/hook-documentation/pull/3) submitted to Tapp's official repo
 
-####  Smart Contract Hook (`tapp_prediction_hook.move`)
--  **Full Hook Interface**: Implements create_pool, add_liquidity, remove_liquidity, swap, collect_fee
--  **Dynamic Fees**: 0.3% base fee, 0.5% during high volatility (< 1h to resolution)
--  **Auto-disable Trading**: Pools stop trading when market resolves
--  **NFT-based Positions**: Liquidity providers receive Tapp position NFTs
--  **Market-Aware**: Directly queries VeriFi markets to validate tokens and disable trading on resolution
+#### Smart Contract Hook (`tapp_prediction_hook.move`)
+- **Full Hook Interface**: Implements create_pool, add_liquidity, remove_liquidity, swap, collect_fee
+- **Dynamic Fees**: 0.3% base fee, 0.5% during high volatility (< 1h to resolution)
+- **Auto-disable Trading**: Pools stop trading when market resolves
+- **NFT-based Positions**: Liquidity providers receive Tapp position NFTs
+- **Market-Aware**: Directly queries VeriFi markets to validate tokens and disable trading on resolution
 
-####  Integrated AMM UI (Production Ready)
--  **Pool Creation**: One-click pool deployment from market page
--  **Add Liquidity**: Deposit YES/NO tokens, receive LP tokens with position NFTs
--  **Swap Interface**: Trade tokens with live price impact preview
--  **Liquidity Dashboard**: View positions with real-time PnL calculations
--  **Transaction Links**: Direct links to Aptos Explorer for verification
--  **React Query Optimistic Updates**: Instant UI updates after transactions
+#### Integrated AMM UI (Production Ready)
+- **Pool Creation**: One-click pool deployment from market page
+- **Add Liquidity**: Deposit YES/NO tokens, receive LP tokens with position NFTs
+- **Swap Interface**: Trade tokens with live price impact preview
+- **Liquidity Dashboard**: View positions with real-time PnL calculations
+- **Transaction Links**: Direct links to Aptos Explorer for verification
+- **React Query Optimistic Updates**: Instant UI updates after transactions
 
 **Current Status:**
 - **UI/Frontend**: Fully functional on testnet with complete AMM flow
@@ -147,7 +157,7 @@ See [TAPP_INTEGRATION_COMPLETE.md](./TAPP_INTEGRATION_COMPLETE.md) for technical
 
 ---
 
-##  Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -201,13 +211,70 @@ pnpm test:full-flow
 
 ---
 
-## Open Source Contribution: Aptos Move Boilerplate
+## Open Source Contributions
 
-During the development of VeriFi, we encountered significant challenges with outdated Aptos development tooling. The official boilerplates were not updated for Next.js 15, React 19, or the latest Aptos SDK changes, leading to weeks of debugging and configuration issues.
+### 1. VeriFi SDK - Authentication & Core Utilities
 
-**To help the community, we created an open-source, production-ready boilerplate:**
+During development, we identified the need for lightweight, modular authentication and core utilities for Aptos. We extracted and open-sourced these as standalone npm packages:
 
-### [aptos-move-boilerplate-nextjs15](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15)
+#### [@verifi-sdk/auth-core](https://www.npmjs.com/package/@verifi-sdk/auth-core) (v0.1.0)
+**Universal authentication primitives** - Framework & blockchain agnostic
+
+**Features:**
+- JWE Session Encryption (AES-256-GCM) - More secure than JWT
+- Pluggable storage adapters
+- Zero blockchain dependencies
+- Works with Aptos, Solana, EVM, etc.
+- ~17kb package size
+
+**Usage:**
+```typescript
+import { initJWE, encryptSession, decryptSession } from '@verifi-sdk/auth-core';
+
+initJWE({ secret: process.env.JWT_SECRET });
+const token = await encryptSession({ address, publicKey, loginTime: Date.now() });
+```
+
+#### [@verifi-sdk/auth-aptos](https://www.npmjs.com/package/@verifi-sdk/auth-aptos) (v0.1.0)
+**Aptos-specific SIWA authentication** - Lightweight, no heavy SDK dependencies
+
+**Features:**
+- Sign In With Aptos (SIWA) - Full implementation
+- Dual signature schemes: Ed25519 (wallets) + BLS12-381 (ZK-ready)
+- Wallet adapter (minimal, no React coupling)
+- ~44kb package size (vs 800kb+ with full Aptos SDK)
+- Extracted only necessary cryptography from `@noble/curves`
+
+**Usage:**
+```typescript
+import { generateNonce, verifyEd25519, encryptSession } from '@verifi-sdk/auth-aptos';
+
+// Backend SIWA verification
+const nonce = generateNonce();
+const isValid = await verifyEd25519(signature, message, publicKey);
+const token = await encryptSession({ address, publicKey, loginTime: Date.now() });
+```
+
+**Why We Built This:**
+- **Lightweight**: No 800kb+ Aptos SDK dependency for simple auth
+- **Modular**: Core utilities separated from chain-specific logic
+- **Professional**: Follows industry patterns (stateless auth, storage adapters)
+- **ZK-Ready**: BLS12-381 support for future ZK integrations
+
+**Install:**
+```bash
+npm install @verifi-sdk/auth-aptos
+# or
+pnpm add @verifi-sdk/auth-aptos
+```
+
+---
+
+### 2. Aptos Move Boilerplate
+
+During development, we also encountered significant challenges with outdated Aptos development tooling. The official boilerplates were not updated for Next.js 15, React 19, or the latest Aptos SDK changes.
+
+#### [aptos-move-boilerplate-nextjs15](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15)
 
 **Features:**
 - **Next.js 15 + React 19** - Latest framework versions with proper TypeScript configuration
@@ -233,7 +300,7 @@ pnpm dev
 
 ---
 
-##  Documentation
+## Documentation
 
 - [Architecture Overview](./ARCHITECTURE.md)
 - [Smart Contract Guide](./contract/README.md)
@@ -242,30 +309,32 @@ pnpm dev
 
 ---
 
-##  Hackathon Deliverables
+## Hackathon Deliverables
 
 ### Aptos Ctrl+MOVE Hackathon 2025
 
 **Track**: DeFi & Payments
 
 **Bounties Targeted**:
--  **Best DeFi Protocol**: Novel oracle-less architecture for trustless markets
--  **Best Use of Aptos Primitives**: Resource accounts, Object model, Fungible Assets
--  **Best UX**: Guided market creation democratizes DeFi innovation
+- **Best DeFi Protocol**: Novel oracle-less architecture for trustless markets
+- **Best Use of Aptos Primitives**: Resource accounts, Object model, Fungible Assets
+- **Best UX**: Guided market creation democratizes DeFi innovation
 
 **Key Differentiators**:
 1. **First oracle-less prediction market on Aptos** - Programmatic resolution eliminates trust assumptions
 2. **First prediction market with Tapp AMM integration** - Full UI/UX for swap and liquidity provision with custom hook
 3. **AI-powered market creation** - Natural language input with Claude validation and smart parameter extraction
 4. **Production-ready architecture** - Comprehensive testing, proper error handling, event-driven indexing
-5. **Best-in-class UX** - Real-time updates, transaction explorer links, liquidity position tracking
-6. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
-7. **Open Source Contribution** - Created modern [Aptos boilerplate](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15) for Next.js 15 + React 19
-8. **Modular DeFi Integration** - [Contributed custom hook](https://github.com/tapp-exchange/hook-documentation/pull/3) to Tapp.Exchange ecosystem
+5. **Best-in-class UX** - Professional animations, skeleton-first loading, real-time updates with transaction explorer links
+6. **Advanced analytics** - Market pulse monitoring, AI-powered featured markets ranking, trader intelligence
+7. **Composable by design** - YES/NO tokens are standard Fungible Assets, work with any DEX
+8. **Open Source Contribution** - Created modern [Aptos boilerplate](https://github.com/edsphinx/aptos-move-boilerplate-nextjs15) for Next.js 15 + React 19
+9. **Modular DeFi Integration** - [Contributed custom hook](https://github.com/tapp-exchange/hook-documentation/pull/3) to Tapp.Exchange ecosystem
+10. **TypeScript strict mode** - Full type safety with comprehensive type definitions across the application
 
 ---
 
-##  Roadmap
+## Roadmap
 
 ### Phase 1: Foundation (Complete)
 - Core protocol implementation
@@ -288,23 +357,23 @@ pnpm dev
 
 ---
 
-##  The Team
+## The Team
 
 **EdSphinx** - Full-stack Web3 Developer
--  Winner: Veritas Protocol (Infinita DeSci Hackathon)
--  Winner: SocialDrop (Base MiniApp Hackathon)
--  5+ years blockchain development
--  [GitHub](https://github.com/edsphinx) | [Twitter](https://twitter.com/edsphinx)
+- Winner: Veritas Protocol (Infinita DeSci Hackathon)
+- Winner: SocialDrop (Base MiniApp Hackathon)
+- 5+ years blockchain development
+- [GitHub](https://github.com/edsphinx) | [Twitter](https://twitter.com/edsphinx)
 
 ---
 
-##  License
+## License
 
 MIT License - see [LICENSE](./LICENSE) for details
 
 ---
 
-##  Links
+## Links
 
 - **Live Demo**: [verifi-protocol.vercel.app](https://verifi-protocol.vercel.app)
 - **Demo Video**: [Coming Soon]
