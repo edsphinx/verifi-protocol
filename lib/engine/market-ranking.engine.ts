@@ -12,8 +12,8 @@
  * - FOMO: Recent activity = don't miss out
  */
 
-import type { PoolReserves } from './data-integrity.engine';
-import { calculatePrices } from './data-integrity.engine';
+import type { PoolReserves } from "./data-integrity.engine";
+import { calculatePrices } from "./data-integrity.engine";
 
 // ============================================================================
 // TYPES
@@ -23,20 +23,20 @@ export interface MarketMetrics {
   marketId: string;
 
   // Liquidity metrics
-  totalLiquidity: number;       // Total tokens in pool
-  liquidityGrowth24h: number;   // % change in 24h
+  totalLiquidity: number; // Total tokens in pool
+  liquidityGrowth24h: number; // % change in 24h
 
   // Trading metrics
-  volume24h: number;            // Trading volume last 24h
-  volume7d: number;             // Trading volume last 7 days
-  volumeGrowth24h: number;      // % change in 24h
-  tradeCount24h: number;        // Number of trades
-  uniqueTraders24h: number;     // Unique addresses trading
+  volume24h: number; // Trading volume last 24h
+  volume7d: number; // Trading volume last 7 days
+  volumeGrowth24h: number; // % change in 24h
+  tradeCount24h: number; // Number of trades
+  uniqueTraders24h: number; // Unique addresses trading
 
   // Price metrics
-  yesPrice: number;             // Current YES price (0-1)
-  priceChange24h: number;       // % change in 24h
-  volatility24h: number;        // Price volatility (std dev)
+  yesPrice: number; // Current YES price (0-1)
+  priceChange24h: number; // % change in 24h
+  volatility24h: number; // Price volatility (std dev)
 
   // Arbitrage metrics
   arbitrageOpportunity: number; // Size of arb opportunity (%)
@@ -45,47 +45,47 @@ export interface MarketMetrics {
   hoursUntilResolution: number; // Hours until market resolves
 
   // Social metrics
-  commentCount: number;         // Number of comments/discussion
-  shareCount: number;           // Times shared on social
+  commentCount: number; // Number of comments/discussion
+  shareCount: number; // Times shared on social
 }
 
 export interface RankingFactors {
-  liquidityScore: number;       // 0-100
-  activityScore: number;        // 0-100
-  volatilityScore: number;      // 0-100
-  urgencyScore: number;         // 0-100
-  socialScore: number;          // 0-100
-  arbitrageScore: number;       // 0-100
-  totalScore: number;           // Weighted average
-  rank: number;                 // Final ranking position
+  liquidityScore: number; // 0-100
+  activityScore: number; // 0-100
+  volatilityScore: number; // 0-100
+  urgencyScore: number; // 0-100
+  socialScore: number; // 0-100
+  arbitrageScore: number; // 0-100
+  totalScore: number; // Weighted average
+  rank: number; // Final ranking position
 }
 
 export interface FeaturedMarket extends MarketMetrics, RankingFactors {
-  featuredReason: string;       // Why this market is featured
-  fomoTriggers: string[];       // List of FOMO triggers
-  badge: FeaturedBadge;         // Badge to display
+  featuredReason: string; // Why this market is featured
+  fomoTriggers: string[]; // List of FOMO triggers
+  badge: FeaturedBadge; // Badge to display
 }
 
 export type FeaturedBadge =
-  | '🔥 HOT'           // High activity
-  | '⚡ VOLATILE'      // Price swinging
-  | '💰 HIGH LIQUIDITY' // Large pool
-  | '⏰ CLOSING SOON'  // About to resolve
-  | '📈 TRENDING'     // Growing fast
-  | '🎯 ARB OPPORTUNITY' // Arbitrage available
-  | '👥 POPULAR';     // Many traders
+  | "🔥 HOT" // High activity
+  | "⚡ VOLATILE" // Price swinging
+  | "💰 HIGH LIQUIDITY" // Large pool
+  | "⏰ CLOSING SOON" // About to resolve
+  | "📈 TRENDING" // Growing fast
+  | "🎯 ARB OPPORTUNITY" // Arbitrage available
+  | "👥 POPULAR"; // Many traders
 
 // ============================================================================
 // SCORING WEIGHTS
 // ============================================================================
 
 const WEIGHTS = {
-  LIQUIDITY: 0.25,    // 25% - Credibility
-  ACTIVITY: 0.25,     // 25% - Social proof
-  VOLATILITY: 0.15,   // 15% - Opportunity
-  URGENCY: 0.15,      // 15% - Time pressure
-  SOCIAL: 0.10,       // 10% - Community engagement
-  ARBITRAGE: 0.10,    // 10% - Profit opportunity
+  LIQUIDITY: 0.25, // 25% - Credibility
+  ACTIVITY: 0.25, // 25% - Social proof
+  VOLATILITY: 0.15, // 15% - Opportunity
+  URGENCY: 0.15, // 15% - Time pressure
+  SOCIAL: 0.1, // 10% - Community engagement
+  ARBITRAGE: 0.1, // 10% - Profit opportunity
 } as const;
 
 // ============================================================================
@@ -106,10 +106,7 @@ function calculateLiquidityScore(metrics: MarketMetrics): number {
 
   // Base score from total liquidity
   // 0 tokens = 0, 1000 tokens = 50, 10000+ tokens = 100
-  const liquidityPoints = Math.min(
-    (metrics.totalLiquidity / 10000) * 100,
-    70
-  );
+  const liquidityPoints = Math.min((metrics.totalLiquidity / 10000) * 100, 70);
   score += liquidityPoints;
 
   // Bonus for growth
@@ -206,11 +203,11 @@ function calculateUrgencyScore(metrics: MarketMetrics): number {
 
   if (hours < 0) return 0; // Already resolved
 
-  if (hours < 6) return 100;   // <6 hours = max urgency
-  if (hours < 12) return 90;   // <12 hours
-  if (hours < 24) return 75;   // <1 day
-  if (hours < 48) return 60;   // <2 days
-  if (hours < 168) return 40;  // <1 week
+  if (hours < 6) return 100; // <6 hours = max urgency
+  if (hours < 12) return 90; // <12 hours
+  if (hours < 24) return 75; // <1 day
+  if (hours < 48) return 60; // <2 days
+  if (hours < 168) return 40; // <1 week
 
   // Longer term markets get low urgency
   return Math.max(20 - (hours / 168) * 20, 0);
@@ -250,10 +247,10 @@ function calculateSocialScore(metrics: MarketMetrics): number {
 function calculateArbitrageScore(metrics: MarketMetrics): number {
   const opportunity = metrics.arbitrageOpportunity;
 
-  if (opportunity > 10) return 100;  // >10% = huge arb
-  if (opportunity > 5) return 80;    // >5% = good arb
-  if (opportunity > 3) return 60;    // >3% = decent arb
-  if (opportunity > 1) return 40;    // >1% = small arb
+  if (opportunity > 10) return 100; // >10% = huge arb
+  if (opportunity > 5) return 80; // >5% = good arb
+  if (opportunity > 3) return 60; // >3% = decent arb
+  if (opportunity > 1) return 40; // >1% = small arb
 
   return 0;
 }
@@ -267,23 +264,26 @@ function calculateArbitrageScore(metrics: MarketMetrics): number {
  */
 function determineBadge(scores: RankingFactors): FeaturedBadge {
   // Priority order (first match wins)
-  if (scores.urgencyScore > 85) return '⏰ CLOSING SOON';
-  if (scores.arbitrageScore > 70) return '🎯 ARB OPPORTUNITY';
-  if (scores.activityScore > 80) return '🔥 HOT';
-  if (scores.volatilityScore > 75) return '⚡ VOLATILE';
-  if (scores.liquidityScore > 85) return '💰 HIGH LIQUIDITY';
-  if (scores.socialScore > 70) return '👥 POPULAR';
+  if (scores.urgencyScore > 85) return "⏰ CLOSING SOON";
+  if (scores.arbitrageScore > 70) return "🎯 ARB OPPORTUNITY";
+  if (scores.activityScore > 80) return "🔥 HOT";
+  if (scores.volatilityScore > 75) return "⚡ VOLATILE";
+  if (scores.liquidityScore > 85) return "💰 HIGH LIQUIDITY";
+  if (scores.socialScore > 70) return "👥 POPULAR";
 
   // Default: trending if anything is happening
-  if (scores.totalScore > 60) return '📈 TRENDING';
+  if (scores.totalScore > 60) return "📈 TRENDING";
 
-  return '🔥 HOT'; // Fallback
+  return "🔥 HOT"; // Fallback
 }
 
 /**
  * Generate FOMO triggers based on metrics
  */
-function generateFOMOTriggers(metrics: MarketMetrics, scores: RankingFactors): string[] {
+function generateFOMOTriggers(
+  metrics: MarketMetrics,
+  scores: RankingFactors,
+): string[] {
   const triggers: string[] = [];
 
   // Activity triggers
@@ -296,8 +296,10 @@ function generateFOMOTriggers(metrics: MarketMetrics, scores: RankingFactors): s
 
   // Volatility triggers
   if (Math.abs(metrics.priceChange24h) > 15) {
-    const direction = metrics.priceChange24h > 0 ? '📈' : '📉';
-    triggers.push(`${direction} ${Math.abs(metrics.priceChange24h).toFixed(1)}% price move`);
+    const direction = metrics.priceChange24h > 0 ? "📈" : "📉";
+    triggers.push(
+      `${direction} ${Math.abs(metrics.priceChange24h).toFixed(1)}% price move`,
+    );
   }
 
   // Urgency triggers
@@ -315,7 +317,9 @@ function generateFOMOTriggers(metrics: MarketMetrics, scores: RankingFactors): s
 
   // Arbitrage triggers
   if (metrics.arbitrageOpportunity > 3) {
-    triggers.push(`💰 ${metrics.arbitrageOpportunity.toFixed(1)}% arb opportunity`);
+    triggers.push(
+      `💰 ${metrics.arbitrageOpportunity.toFixed(1)}% arb opportunity`,
+    );
   }
 
   // Social triggers
@@ -331,41 +335,41 @@ function generateFOMOTriggers(metrics: MarketMetrics, scores: RankingFactors): s
  */
 function generateFeaturedReason(
   metrics: MarketMetrics,
-  scores: RankingFactors
+  scores: RankingFactors,
 ): string {
   // Find the highest scoring factor
   const factorScores = [
-    { name: 'high activity', score: scores.activityScore },
-    { name: 'extreme volatility', score: scores.volatilityScore },
-    { name: 'closing soon', score: scores.urgencyScore },
-    { name: 'deep liquidity', score: scores.liquidityScore },
-    { name: 'community buzz', score: scores.socialScore },
-    { name: 'arbitrage opportunity', score: scores.arbitrageScore },
+    { name: "high activity", score: scores.activityScore },
+    { name: "extreme volatility", score: scores.volatilityScore },
+    { name: "closing soon", score: scores.urgencyScore },
+    { name: "deep liquidity", score: scores.liquidityScore },
+    { name: "community buzz", score: scores.socialScore },
+    { name: "arbitrage opportunity", score: scores.arbitrageScore },
   ];
 
   const topFactor = factorScores.reduce((a, b) => (a.score > b.score ? a : b));
 
   // Add specific details
-  if (topFactor.name === 'high activity') {
+  if (topFactor.name === "high activity") {
     return `${metrics.tradeCount24h} trades and ${metrics.uniqueTraders24h} active traders in 24h`;
   }
-  if (topFactor.name === 'extreme volatility') {
+  if (topFactor.name === "extreme volatility") {
     return `Price moved ${Math.abs(metrics.priceChange24h).toFixed(1)}% in 24h`;
   }
-  if (topFactor.name === 'closing soon') {
+  if (topFactor.name === "closing soon") {
     return `Resolves in ${Math.floor(metrics.hoursUntilResolution)} hours`;
   }
-  if (topFactor.name === 'deep liquidity') {
+  if (topFactor.name === "deep liquidity") {
     return `${metrics.totalLiquidity.toLocaleString()} tokens in liquidity pool`;
   }
-  if (topFactor.name === 'community buzz') {
+  if (topFactor.name === "community buzz") {
     return `${metrics.commentCount} comments and ${metrics.shareCount} shares`;
   }
-  if (topFactor.name === 'arbitrage opportunity') {
+  if (topFactor.name === "arbitrage opportunity") {
     return `${metrics.arbitrageOpportunity.toFixed(1)}% arbitrage spread available`;
   }
 
-  return 'High engagement and trading activity';
+  return "High engagement and trading activity";
 }
 
 // ============================================================================
@@ -441,7 +445,7 @@ export function rankMarkets(marketsList: MarketMetrics[]): FeaturedMarket[] {
  */
 export function getFeaturedMarkets(
   marketsList: MarketMetrics[],
-  count: number = 3
+  count: number = 3,
 ): FeaturedMarket[] {
   const ranked = rankMarkets(marketsList);
   return ranked.slice(0, count);

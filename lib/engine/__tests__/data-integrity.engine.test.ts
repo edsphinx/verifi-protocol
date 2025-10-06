@@ -4,7 +4,7 @@
  * Comprehensive test suite to ensure all calculations are correct
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from "@jest/globals";
 import {
   calculatePrices,
   calculateProbabilities,
@@ -14,15 +14,15 @@ import {
   toRawUnits,
   validateComplementaryPrices,
   type PoolReserves,
-} from '../data-integrity.engine';
+} from "../data-integrity.engine";
 
-describe('Data Integrity Engine', () => {
+describe("Data Integrity Engine", () => {
   // ============================================================================
   // PRICE CALCULATIONS
   // ============================================================================
 
-  describe('calculatePrices', () => {
-    it('should calculate equal prices for balanced pool', () => {
+  describe("calculatePrices", () => {
+    it("should calculate equal prices for balanced pool", () => {
       const reserves: PoolReserves = {
         yesReserve: 1_000_000, // 1.0 token (6 decimals)
         noReserve: 1_000_000,
@@ -37,10 +37,10 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should calculate skewed prices for imbalanced pool', () => {
+    it("should calculate skewed prices for imbalanced pool", () => {
       const reserves: PoolReserves = {
         yesReserve: 400_000, // 0.4 tokens
-        noReserve: 600_000,  // 0.6 tokens
+        noReserve: 600_000, // 0.6 tokens
       };
 
       const result = calculatePrices(reserves);
@@ -52,10 +52,10 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should handle extreme ratios', () => {
+    it("should handle extreme ratios", () => {
       const reserves: PoolReserves = {
         yesReserve: 100_000, // 0.1 tokens (10%)
-        noReserve: 900_000,  // 0.9 tokens (90%)
+        noReserve: 900_000, // 0.9 tokens (90%)
       };
 
       const result = calculatePrices(reserves);
@@ -67,7 +67,7 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should return 50/50 for empty pool', () => {
+    it("should return 50/50 for empty pool", () => {
       const reserves: PoolReserves = {
         yesReserve: 0,
         noReserve: 0,
@@ -82,7 +82,7 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should reject negative reserves', () => {
+    it("should reject negative reserves", () => {
       const reserves: PoolReserves = {
         yesReserve: -100,
         noReserve: 1000,
@@ -93,11 +93,11 @@ describe('Data Integrity Engine', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.errors).toHaveLength(1);
-        expect(result.errors[0].code).toBe('INVALID_YES_RESERVE');
+        expect(result.errors[0].code).toBe("INVALID_YES_RESERVE");
       }
     });
 
-    it('should ensure prices sum to 1.0', () => {
+    it("should ensure prices sum to 1.0", () => {
       const reserves: PoolReserves = {
         yesReserve: 333_333,
         noReserve: 666_667,
@@ -117,11 +117,11 @@ describe('Data Integrity Engine', () => {
   // PROBABILITY CALCULATIONS
   // ============================================================================
 
-  describe('calculateProbabilities', () => {
-    it('should convert prices to percentages', () => {
+  describe("calculateProbabilities", () => {
+    it("should convert prices to percentages", () => {
       const reserves: PoolReserves = {
         yesReserve: 650_000, // 65%
-        noReserve: 350_000,  // 35%
+        noReserve: 350_000, // 35%
       };
 
       const result = calculateProbabilities(reserves);
@@ -133,10 +133,10 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should round to nearest integer', () => {
+    it("should round to nearest integer", () => {
       const reserves: PoolReserves = {
         yesReserve: 666_666, // ~66.67%
-        noReserve: 333_334,  // ~33.33%
+        noReserve: 333_334, // ~33.33%
       };
 
       const result = calculateProbabilities(reserves);
@@ -153,13 +153,17 @@ describe('Data Integrity Engine', () => {
   // SWAP CALCULATIONS
   // ============================================================================
 
-  describe('calculateSwapOutput', () => {
-    it('should calculate swap with 0.3% fee', () => {
+  describe("calculateSwapOutput", () => {
+    it("should calculate swap with 0.3% fee", () => {
       const inputAmount = 100_000; // 0.1 tokens
       const inputReserve = 1_000_000; // 1.0 tokens
       const outputReserve = 1_000_000; // 1.0 tokens
 
-      const result = calculateSwapOutput(inputAmount, inputReserve, outputReserve);
+      const result = calculateSwapOutput(
+        inputAmount,
+        inputReserve,
+        outputReserve,
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -171,12 +175,16 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should calculate price impact', () => {
+    it("should calculate price impact", () => {
       const inputAmount = 200_000; // 0.2 tokens (20% of pool)
       const inputReserve = 1_000_000;
       const outputReserve = 1_000_000;
 
-      const result = calculateSwapOutput(inputAmount, inputReserve, outputReserve);
+      const result = calculateSwapOutput(
+        inputAmount,
+        inputReserve,
+        outputReserve,
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -186,25 +194,33 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should reject swaps with excessive price impact', () => {
+    it("should reject swaps with excessive price impact", () => {
       const inputAmount = 5_000_000; // 5x the pool size
       const inputReserve = 1_000_000;
       const outputReserve = 1_000_000;
 
-      const result = calculateSwapOutput(inputAmount, inputReserve, outputReserve);
+      const result = calculateSwapOutput(
+        inputAmount,
+        inputReserve,
+        outputReserve,
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.errors[0].code).toBe('EXCESSIVE_PRICE_IMPACT');
+        expect(result.errors[0].code).toBe("EXCESSIVE_PRICE_IMPACT");
       }
     });
 
-    it('should calculate minimum output with slippage', () => {
+    it("should calculate minimum output with slippage", () => {
       const inputAmount = 100_000;
       const inputReserve = 1_000_000;
       const outputReserve = 1_000_000;
 
-      const result = calculateSwapOutput(inputAmount, inputReserve, outputReserve);
+      const result = calculateSwapOutput(
+        inputAmount,
+        inputReserve,
+        outputReserve,
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -216,12 +232,16 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should handle small trades efficiently', () => {
+    it("should handle small trades efficiently", () => {
       const inputAmount = 1_000; // 0.001 tokens
       const inputReserve = 1_000_000;
       const outputReserve = 1_000_000;
 
-      const result = calculateSwapOutput(inputAmount, inputReserve, outputReserve);
+      const result = calculateSwapOutput(
+        inputAmount,
+        inputReserve,
+        outputReserve,
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -235,8 +255,8 @@ describe('Data Integrity Engine', () => {
   // LIQUIDITY CALCULATIONS
   // ============================================================================
 
-  describe('calculateLiquidityQuote', () => {
-    it('should allow equal deposits for first liquidity', () => {
+  describe("calculateLiquidityQuote", () => {
+    it("should allow equal deposits for first liquidity", () => {
       const yesAmount = 1_000_000; // 1.0 tokens
       const reserves: PoolReserves = {
         yesReserve: 0,
@@ -253,15 +273,19 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should enforce ratio for subsequent deposits', () => {
+    it("should enforce ratio for subsequent deposits", () => {
       const yesAmount = 100_000; // 0.1 tokens
       const reserves: PoolReserves = {
         yesReserve: 400_000, // 40%
-        noReserve: 600_000,  // 60%
+        noReserve: 600_000, // 60%
       };
       const totalLpSupply = 489_897; // sqrt(400000 * 600000)
 
-      const result = calculateLiquidityQuote(yesAmount, reserves, totalLpSupply);
+      const result = calculateLiquidityQuote(
+        yesAmount,
+        reserves,
+        totalLpSupply,
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -274,7 +298,7 @@ describe('Data Integrity Engine', () => {
       }
     });
 
-    it('should reject amounts below minimum', () => {
+    it("should reject amounts below minimum", () => {
       const yesAmount = 100; // Too small
       const reserves: PoolReserves = {
         yesReserve: 1_000_000,
@@ -285,7 +309,7 @@ describe('Data Integrity Engine', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.errors[0].code).toBe('AMOUNT_TOO_SMALL');
+        expect(result.errors[0].code).toBe("AMOUNT_TOO_SMALL");
       }
     });
   });
@@ -294,8 +318,8 @@ describe('Data Integrity Engine', () => {
   // UTILITY FUNCTIONS
   // ============================================================================
 
-  describe('Utility Functions', () => {
-    it('should convert between raw and display units', () => {
+  describe("Utility Functions", () => {
+    it("should convert between raw and display units", () => {
       const raw = 1_234_567; // 1.234567 tokens
       const display = toDisplayUnits(raw, 6);
       const backToRaw = toRawUnits(display, 6);
@@ -304,7 +328,7 @@ describe('Data Integrity Engine', () => {
       expect(backToRaw).toBe(1_234_567);
     });
 
-    it('should validate complementary prices', () => {
+    it("should validate complementary prices", () => {
       expect(validateComplementaryPrices(0.65, 0.35)).toBe(true);
       expect(validateComplementaryPrices(0.5, 0.5)).toBe(true);
       expect(validateComplementaryPrices(0.7, 0.2)).toBe(false);
@@ -315,15 +339,19 @@ describe('Data Integrity Engine', () => {
   // INTEGRATION TESTS
   // ============================================================================
 
-  describe('Integration: Full Trading Scenario', () => {
-    it('should maintain price invariants through multiple swaps', () => {
+  describe("Integration: Full Trading Scenario", () => {
+    it("should maintain price invariants through multiple swaps", () => {
       let reserves: PoolReserves = {
         yesReserve: 1_000_000,
         noReserve: 1_000_000,
       };
 
       // Swap 1: Buy YES (sell NO)
-      const swap1 = calculateSwapOutput(100_000, reserves.noReserve, reserves.yesReserve);
+      const swap1 = calculateSwapOutput(
+        100_000,
+        reserves.noReserve,
+        reserves.yesReserve,
+      );
       expect(swap1.success).toBe(true);
 
       if (swap1.success) {
@@ -344,7 +372,11 @@ describe('Data Integrity Engine', () => {
       }
 
       // Swap 2: Buy NO (sell YES)
-      const swap2 = calculateSwapOutput(50_000, reserves.yesReserve, reserves.noReserve);
+      const swap2 = calculateSwapOutput(
+        50_000,
+        reserves.yesReserve,
+        reserves.noReserve,
+      );
       expect(swap2.success).toBe(true);
 
       if (swap2.success) {
@@ -358,7 +390,9 @@ describe('Data Integrity Engine', () => {
         expect(prices2.success).toBe(true);
         if (prices2.success) {
           // Prices should still be complementary
-          expect(validateComplementaryPrices(prices2.data.yes, prices2.data.no)).toBe(true);
+          expect(
+            validateComplementaryPrices(prices2.data.yes, prices2.data.no),
+          ).toBe(true);
         }
       }
     });

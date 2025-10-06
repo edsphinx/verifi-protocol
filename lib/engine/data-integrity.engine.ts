@@ -18,17 +18,17 @@
 
 export interface PoolReserves {
   yesReserve: number; // YES token balance in pool (raw units, e.g., 1_000_000 = 1 token with 6 decimals)
-  noReserve: number;  // NO token balance in pool (raw units)
+  noReserve: number; // NO token balance in pool (raw units)
 }
 
 export interface TokenPrice {
   yes: number; // Price in APT (0-1 range, e.g., 0.65 means 0.65 APT per YES)
-  no: number;  // Price in APT (0-1 range, should equal 1 - yes)
+  no: number; // Price in APT (0-1 range, should equal 1 - yes)
 }
 
 export interface MarketProbability {
   yes: number; // Probability percentage (0-100, e.g., 65 means 65%)
-  no: number;  // Probability percentage (0-100, should equal 100 - yes)
+  no: number; // Probability percentage (0-100, should equal 100 - yes)
 }
 
 export interface SwapQuote {
@@ -62,21 +62,21 @@ export type CalculationResult<T> =
 // ============================================================================
 
 const DECIMALS = {
-  YES_NO_TOKEN: 6,     // YES/NO tokens use 6 decimals
-  APT: 8,              // APT uses 8 decimals
-  LP_TOKEN: 6,         // LP tokens use 6 decimals
+  YES_NO_TOKEN: 6, // YES/NO tokens use 6 decimals
+  APT: 8, // APT uses 8 decimals
+  LP_TOKEN: 6, // LP tokens use 6 decimals
 };
 
 const FEES = {
-  POOL_FEE_BPS: 30,    // 0.3% pool fee (30 basis points)
+  POOL_FEE_BPS: 30, // 0.3% pool fee (30 basis points)
   PROTOCOL_FEE_BPS: 20, // 0.2% protocol fee (20 basis points)
-  TOTAL_FEE_BPS: 50,   // 0.5% total fee (50 basis points)
+  TOTAL_FEE_BPS: 50, // 0.5% total fee (50 basis points)
 };
 
 const LIMITS = {
-  MIN_LIQUIDITY: 1000,        // Minimum 0.001 tokens (with 6 decimals)
-  MAX_PRICE_IMPACT: 50,       // Maximum 50% price impact allowed
-  DEFAULT_SLIPPAGE_BPS: 100,  // 1% default slippage tolerance
+  MIN_LIQUIDITY: 1000, // Minimum 0.001 tokens (with 6 decimals)
+  MAX_PRICE_IMPACT: 50, // Maximum 50% price impact allowed
+  DEFAULT_SLIPPAGE_BPS: 100, // 1% default slippage tolerance
 };
 
 // ============================================================================
@@ -88,25 +88,25 @@ function validateReserves(reserves: PoolReserves): ValidationError[] {
 
   if (!Number.isFinite(reserves.yesReserve) || reserves.yesReserve < 0) {
     errors.push({
-      field: 'yesReserve',
-      message: 'YES reserve must be a non-negative finite number',
-      code: 'INVALID_YES_RESERVE',
+      field: "yesReserve",
+      message: "YES reserve must be a non-negative finite number",
+      code: "INVALID_YES_RESERVE",
     });
   }
 
   if (!Number.isFinite(reserves.noReserve) || reserves.noReserve < 0) {
     errors.push({
-      field: 'noReserve',
-      message: 'NO reserve must be a non-negative finite number',
-      code: 'INVALID_NO_RESERVE',
+      field: "noReserve",
+      message: "NO reserve must be a non-negative finite number",
+      code: "INVALID_NO_RESERVE",
     });
   }
 
   if (reserves.yesReserve === 0 && reserves.noReserve === 0) {
     errors.push({
-      field: 'reserves',
-      message: 'Pool has no liquidity',
-      code: 'NO_LIQUIDITY',
+      field: "reserves",
+      message: "Pool has no liquidity",
+      code: "NO_LIQUIDITY",
     });
   }
 
@@ -120,7 +120,7 @@ function validateAmount(amount: number, field: string): ValidationError[] {
     errors.push({
       field,
       message: `${field} must be a positive finite number`,
-      code: 'INVALID_AMOUNT',
+      code: "INVALID_AMOUNT",
     });
   }
 
@@ -151,7 +151,9 @@ function validateAmount(amount: number, field: string): ValidationError[] {
  * @param reserves - Pool reserves in raw token units
  * @returns Token prices in APT (0-1 range)
  */
-export function calculatePrices(reserves: PoolReserves): CalculationResult<TokenPrice> {
+export function calculatePrices(
+  reserves: PoolReserves,
+): CalculationResult<TokenPrice> {
   const errors = validateReserves(reserves);
   if (errors.length > 0) {
     return { success: false, errors };
@@ -175,11 +177,13 @@ export function calculatePrices(reserves: PoolReserves): CalculationResult<Token
   if (Math.abs(priceSum - 1.0) > 0.0001) {
     return {
       success: false,
-      errors: [{
-        field: 'prices',
-        message: `Price calculation error: sum=${priceSum} (expected 1.0)`,
-        code: 'PRICE_SUM_MISMATCH',
-      }],
+      errors: [
+        {
+          field: "prices",
+          message: `Price calculation error: sum=${priceSum} (expected 1.0)`,
+          code: "PRICE_SUM_MISMATCH",
+        },
+      ],
     };
   }
 
@@ -197,7 +201,9 @@ export function calculatePrices(reserves: PoolReserves): CalculationResult<Token
  * @param reserves - Pool reserves in raw token units
  * @returns Market probabilities as percentages (0-100)
  */
-export function calculateProbabilities(reserves: PoolReserves): CalculationResult<MarketProbability> {
+export function calculateProbabilities(
+  reserves: PoolReserves,
+): CalculationResult<MarketProbability> {
   const priceResult = calculatePrices(reserves);
 
   if (!priceResult.success) {
@@ -245,22 +251,23 @@ export function calculateSwapOutput(
 ): CalculationResult<SwapQuote> {
   // Validate inputs
   let errors: ValidationError[] = [];
-  errors = errors.concat(validateAmount(inputAmount, 'inputAmount'));
-  errors = errors.concat(validateAmount(inputReserve, 'inputReserve'));
-  errors = errors.concat(validateAmount(outputReserve, 'outputReserve'));
+  errors = errors.concat(validateAmount(inputAmount, "inputAmount"));
+  errors = errors.concat(validateAmount(inputReserve, "inputReserve"));
+  errors = errors.concat(validateAmount(outputReserve, "outputReserve"));
 
   if (errors.length > 0) {
     return { success: false, errors };
   }
 
   // Calculate fee multiplier (e.g., 30 bps = 0.997)
-  const feeMultiplier = 1 - (feeBps / 10000);
+  const feeMultiplier = 1 - feeBps / 10000;
 
   // Input after fee
   const inputAfterFee = inputAmount * feeMultiplier;
 
   // Calculate output using CPMM formula
-  const outputAmount = (outputReserve * inputAfterFee) / (inputReserve + inputAfterFee);
+  const outputAmount =
+    (outputReserve * inputAfterFee) / (inputReserve + inputAfterFee);
 
   // Calculate effective price
   const effectivePrice = outputAmount / inputAmount;
@@ -269,23 +276,27 @@ export function calculateSwapOutput(
   const priceBefore = outputReserve / (inputReserve + outputReserve);
 
   // Price impact as percentage
-  const priceImpact = Math.abs((effectivePrice - priceBefore) / priceBefore) * 100;
+  const priceImpact =
+    Math.abs((effectivePrice - priceBefore) / priceBefore) * 100;
 
   // Fee amount in input token
   const fee = inputAmount - inputAfterFee;
 
   // Minimum output with default slippage tolerance (1%)
-  const minimumOutput = outputAmount * (1 - LIMITS.DEFAULT_SLIPPAGE_BPS / 10000);
+  const minimumOutput =
+    outputAmount * (1 - LIMITS.DEFAULT_SLIPPAGE_BPS / 10000);
 
   // Check if price impact exceeds limit
   if (priceImpact > LIMITS.MAX_PRICE_IMPACT) {
     return {
       success: false,
-      errors: [{
-        field: 'priceImpact',
-        message: `Price impact too high: ${priceImpact.toFixed(2)}% (max: ${LIMITS.MAX_PRICE_IMPACT}%)`,
-        code: 'EXCESSIVE_PRICE_IMPACT',
-      }],
+      errors: [
+        {
+          field: "priceImpact",
+          message: `Price impact too high: ${priceImpact.toFixed(2)}% (max: ${LIMITS.MAX_PRICE_IMPACT}%)`,
+          code: "EXCESSIVE_PRICE_IMPACT",
+        },
+      ],
     };
   }
 
@@ -323,7 +334,7 @@ export function calculateLiquidityQuote(
   reserves: PoolReserves,
   totalLpSupply: number = 0,
 ): CalculationResult<LiquidityQuote> {
-  const errors = validateAmount(yesAmount, 'yesAmount');
+  const errors = validateAmount(yesAmount, "yesAmount");
   if (errors.length > 0) {
     return { success: false, errors };
   }
@@ -337,11 +348,13 @@ export function calculateLiquidityQuote(
   if (yesAmount < LIMITS.MIN_LIQUIDITY) {
     return {
       success: false,
-      errors: [{
-        field: 'yesAmount',
-        message: `Amount too small. Minimum: ${LIMITS.MIN_LIQUIDITY / 1_000_000} tokens`,
-        code: 'AMOUNT_TOO_SMALL',
-      }],
+      errors: [
+        {
+          field: "yesAmount",
+          message: `Amount too small. Minimum: ${LIMITS.MIN_LIQUIDITY / 1_000_000} tokens`,
+          code: "AMOUNT_TOO_SMALL",
+        },
+      ],
     };
   }
 
@@ -395,7 +408,10 @@ export function calculateLiquidityQuote(
  * @param decimals - Token decimals (default: 6)
  * @returns Display amount (e.g., 1.0)
  */
-export function toDisplayUnits(rawAmount: number, decimals: number = DECIMALS.YES_NO_TOKEN): number {
+export function toDisplayUnits(
+  rawAmount: number,
+  decimals: number = DECIMALS.YES_NO_TOKEN,
+): number {
   return rawAmount / Math.pow(10, decimals);
 }
 
@@ -405,7 +421,10 @@ export function toDisplayUnits(rawAmount: number, decimals: number = DECIMALS.YE
  * @param decimals - Token decimals (default: 6)
  * @returns Raw amount (e.g., 1000000)
  */
-export function toRawUnits(displayAmount: number, decimals: number = DECIMALS.YES_NO_TOKEN): number {
+export function toRawUnits(
+  displayAmount: number,
+  decimals: number = DECIMALS.YES_NO_TOKEN,
+): number {
   return Math.floor(displayAmount * Math.pow(10, decimals));
 }
 
