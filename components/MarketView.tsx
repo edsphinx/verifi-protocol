@@ -14,18 +14,34 @@ import { TappPoolStats } from "@/components/TappPoolStats";
 import { TrendingUp, Users, BarChart3 } from "lucide-react";
 import { calculateMarketPsychology } from "@/lib/services/market-psychology.service";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
+
+// Bouncy "degen" easing for professional animations
+const bouncy = [0.34, 1.56, 0.64, 1] as const;
 
 // This component is now a Client Component and can use hooks.
 export function MarketView({ marketId }: { marketId: string }) {
   const [activeTab, setActiveTab] = useState("primary");
   const [cachedData, setCachedData] = useState<any>(null);
   const [marketInfo, setMarketInfo] = useState<any>(null);
+  const [showLoader, setShowLoader] = useState(false);
 
   const {
     data: marketDetails,
     isLoading,
     isError,
   } = useMarketDetails(marketId);
+
+  // Show loader after skeleton appears (400ms delay)
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => setShowLoader(true), 400);
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoader(false);
+    }
+  }, [isLoading]);
 
   // Use cached data while loading, then switch to fresh data
   const displayData = marketDetails || cachedData;
@@ -69,20 +85,61 @@ export function MarketView({ marketId }: { marketId: string }) {
   if (!displayData) {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-3">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-sm text-muted-foreground">
-              Loading market data...
-            </p>
-          </div>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+            className="container mx-auto px-4 py-6 max-w-7xl space-y-6"
+          >
+            {showLoader ? (
+              <Card className="min-h-[500px] flex items-center justify-center">
+                <VeriFiLoader message="Loading market..." />
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {/* Header Skeleton */}
+                <div className="space-y-3">
+                  <div className="h-8 w-32 bg-slate-700/50 rounded animate-pulse" />
+                  <div className="h-6 w-3/4 bg-slate-700/50 rounded animate-pulse" />
+                  <div className="space-y-2">
+                    <div className="h-10 w-full bg-slate-700/50 rounded animate-pulse" />
+                    <div className="h-8 w-2/3 bg-slate-700/50 rounded animate-pulse opacity-70" />
+                  </div>
+                  <div className="flex gap-6 pt-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-4 w-24 bg-slate-700/50 rounded animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Two Column Layout Skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="h-12 bg-slate-700/50 rounded animate-pulse" />
+                    <div className="h-96 bg-slate-700/50 rounded animate-pulse" />
+                  </div>
+                  <div className="lg:col-span-1">
+                    <div className="h-80 bg-slate-700/50 rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       );
     }
     return (
-      <div className="text-center py-12 text-destructive">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: bouncy }}
+        className="text-center py-12 text-destructive"
+      >
         Failed to load market data.
-      </div>
+      </motion.div>
     );
   }
 
@@ -93,35 +150,60 @@ export function MarketView({ marketId }: { marketId: string }) {
   // Psychology was calculated earlier with useMemo
   if (!psychology) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-muted-foreground">
-            Loading market data...
-          </p>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center min-h-[400px]"
+      >
+        <VeriFiLoader message="Calculating market psychology..." />
+      </motion.div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6 animate-in fade-in duration-500">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: bouncy }}
+      className="container mx-auto px-4 py-6 max-w-7xl space-y-6"
+    >
       {/* Header Section */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Badge className="text-xs font-semibold px-3 py-1">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: bouncy }}
+          className="flex items-center gap-2"
+        >
+          <Badge className="text-xs font-semibold px-3 py-1 bg-gradient-to-r from-primary to-primary/80">
             On-Chain Oracle
           </Badge>
-        </div>
+        </motion.div>
         <div className="space-y-2">
-          <h1 className="text-lg md:text-xl text-muted-foreground">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: bouncy }}
+            className="text-lg md:text-xl text-muted-foreground"
+          >
             {marketInfo?.description || "Loading market details..."}
-          </h1>
+          </motion.h1>
 
           {/* YES/NO Outcomes with Dynamic Hierarchy */}
-          <div className="flex flex-col gap-1">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: bouncy }}
+            className="flex flex-col gap-1"
+          >
             {/* Primary Outcome (Winning) */}
-            <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4, ease: bouncy }}
+              whileHover={{ scale: 1.02, x: 4 }}
+              className="flex items-center gap-3"
+            >
               <span
                 className={cn(
                   "font-mono tracking-tight transition-all",
@@ -151,10 +233,16 @@ export function MarketView({ marketId }: { marketId: string }) {
               >
                 {psychology.primaryOutcome.percentage.toFixed(1)}%
               </span>
-            </div>
+            </motion.div>
 
             {/* Secondary Outcome (Underdog) */}
-            <div className="flex items-center gap-3 opacity-70">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.5, ease: bouncy }}
+              whileHover={{ scale: 1.02, x: 4 }}
+              className="flex items-center gap-3 opacity-70"
+            >
               <span
                 className={cn(
                   "font-mono tracking-tight transition-all",
@@ -184,40 +272,62 @@ export function MarketView({ marketId }: { marketId: string }) {
               >
                 {psychology.secondaryOutcome.percentage.toFixed(1)}%
               </span>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Stats Row */}
-        <div className="flex items-center gap-6 text-sm flex-wrap pt-2">
-          <div className="flex items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6, ease: bouncy }}
+          className="flex items-center gap-6 text-sm flex-wrap pt-2"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2"
+          >
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">Volume:</span>
             <span className="font-mono font-semibold">
               {totalVolume.toFixed(2)} APT
             </span>
-          </div>
-          <div className="flex items-center gap-2">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2"
+          >
             <Users className="h-4 w-4 text-green-500" />
             <span className="text-muted-foreground">YES Supply:</span>
             <span className="font-mono font-semibold text-green-500">
               {(details.totalSupplyYes / 10 ** 6).toLocaleString()}
             </span>
-          </div>
-          <div className="flex items-center gap-2">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2"
+          >
             <Users className="h-4 w-4 text-red-500" />
             <span className="text-muted-foreground">NO Supply:</span>
             <span className="font-mono font-semibold text-red-500">
               {(details.totalSupplyNo / 10 ** 6).toLocaleString()}
             </span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Main Content - 2 Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Trading Interface */}
-        <div className="lg:col-span-2">
+        <motion.div
+          initial={{ opacity: 0, x: -20, scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.7, ease: bouncy }}
+          className="lg:col-span-2"
+        >
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -260,10 +370,15 @@ export function MarketView({ marketId }: { marketId: string }) {
               </TabsContent>
             </div>
           </Tabs>
-        </div>
+        </motion.div>
 
         {/* Right Column - Market Details */}
-        <div className="lg:col-span-1 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20, scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.8, ease: bouncy }}
+          className="lg:col-span-1 space-y-6"
+        >
           <div>
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="h-5 w-5 text-muted-foreground" />
@@ -278,8 +393,8 @@ export function MarketView({ marketId }: { marketId: string }) {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

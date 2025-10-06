@@ -1,11 +1,12 @@
 "use client";
 
 /**
- * Liquidity Positions Component
- * Shows user's LP positions (NFTs from providing liquidity)
+ * Liquidity Positions Component - Degen DX Edition
+ * Professional LP positions with bouncy animations
  */
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { LiquidityPositionData } from "@/lib/types/database.types";
+
+// Bouncy "degen" easing for professional animations
+const bouncy = [0.34, 1.56, 0.64, 1] as const;
 
 interface LiquidityPositionsProps {
   positions: LiquidityPositionData[];
@@ -43,7 +47,11 @@ function LPPositionCard({ lp }: { lp: LiquidityPositionData }) {
       : 0;
 
   return (
-    <div className="p-4 border rounded-lg hover:bg-accent/20 transition-colors">
+    <motion.div
+      whileHover={{ scale: 1.01, x: 4 }}
+      transition={{ duration: 0.2, ease: bouncy }}
+      className="p-4 border rounded-lg hover:bg-accent/20 transition-colors"
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -105,7 +113,7 @@ function LPPositionCard({ lp }: { lp: LiquidityPositionData }) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -123,7 +131,11 @@ function MarketLPGroup({ group }: { group: GroupedLPPosition }) {
   );
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2, ease: bouncy }}
+      className="border rounded-lg overflow-hidden"
+    >
       <div className="p-4 bg-card">
         <div className="flex items-start justify-between gap-4">
           <button
@@ -184,14 +196,31 @@ function MarketLPGroup({ group }: { group: GroupedLPPosition }) {
         </div>
       </div>
 
-      {isOpen && (
-        <div className="border-t bg-accent/5 p-4 space-y-3">
-          {group.positions.map((lp) => (
-            <LPPositionCard key={lp.id} lp={lp} />
-          ))}
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: bouncy }}
+            className="border-t bg-accent/5 overflow-hidden"
+          >
+            <div className="p-4 space-y-3">
+              {group.positions.map((lp, index) => (
+                <motion.div
+                  key={lp.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05, ease: bouncy }}
+                >
+                  <LPPositionCard lp={lp} />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -201,29 +230,41 @@ export function LiquidityPositions({
 }: LiquidityPositionsProps) {
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Loading farms...</p>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: bouncy }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Loading farms...</p>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
   if (!positions || positions.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center">
-            No farms yet. Add liquidity to start farming fees! 🚜
-          </p>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: bouncy }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground text-center">
+              No farms yet. Add liquidity to start farming fees! 🚜
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
@@ -249,26 +290,56 @@ export function LiquidityPositions({
   const totalFees = positions.reduce((sum, lp) => sum + lp.feesEarned, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: bouncy }}
+      className="space-y-4"
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: bouncy }}
+        className="flex items-center justify-between"
+      >
+        <h2 className="text-2xl font-bold flex items-center gap-2 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-primary">
           🌾 LP Farms
         </h2>
-        <div className="text-right">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: bouncy }}
+          className="text-right"
+        >
           <p className="text-sm text-muted-foreground">Total Farm Value</p>
           <p className="text-2xl font-bold">{totalValue.toFixed(2)} APT</p>
           <p className="text-xs text-green-500">
             <TrendingUp className="h-3 w-3 inline mr-1" />+
             {totalFees.toFixed(2)} APT farmed
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="space-y-3">
-        {groups.map((group) => (
-          <MarketLPGroup key={group.marketAddress} group={group} />
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="space-y-3"
+      >
+        {groups.map((group, index) => (
+          <motion.div
+            key={group.marketAddress}
+            initial={{ opacity: 0, x: -20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{
+              duration: 0.4,
+              delay: 0.3 + index * 0.08,
+              ease: bouncy,
+            }}
+          >
+            <MarketLPGroup group={group} />
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

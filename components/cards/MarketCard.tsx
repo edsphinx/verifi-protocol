@@ -19,6 +19,8 @@ export interface Market {
   title: string;
   category: string;
   totalVolume: number;
+  volume24h?: number;
+  uniqueTraders?: number;
   resolvesOn: string;
   resolvesOnDate: Date;
   resolutionTimestamp: number;

@@ -126,31 +126,35 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
                 </div>
               </div>
 
-              {/* Volume (Mock for now) */}
+              {/* 24h Volume */}
               <div className="p-3 bg-muted/40 rounded-lg border border-border/40 group-hover:border-primary/20 transition-colors">
                 <div className="text-xs text-muted-foreground mb-1">
                   24h Volume
                 </div>
                 <div className="text-sm font-bold font-mono">
-                  {market.totalVolume ? (
+                  {market.volume24h && market.volume24h > 0 ? (
                     <>
-                      {market.totalVolume.toFixed(0)}
+                      {market.volume24h.toFixed(2)}
                       <span className="text-xs ml-1 text-primary">APT</span>
                     </>
                   ) : (
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-muted-foreground">0 APT</span>
                   )}
                 </div>
               </div>
 
-              {/* Traders (Mock for now) */}
+              {/* Traders */}
               <div className="p-3 bg-muted/40 rounded-lg border border-border/40 group-hover:border-primary/20 transition-colors">
                 <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                   <Users className="h-3 w-3" />
                   Traders
                 </div>
                 <div className="text-sm font-bold font-mono">
-                  <span className="text-muted-foreground">-</span>
+                  {market.uniqueTraders && market.uniqueTraders > 0 ? (
+                    market.uniqueTraders
+                  ) : (
+                    <span className="text-muted-foreground">0</span>
+                  )}
                 </div>
               </div>
             </div>

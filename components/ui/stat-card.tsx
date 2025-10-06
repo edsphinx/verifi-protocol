@@ -41,16 +41,16 @@ export function StatCard({
   };
 
   return (
-    <Card className={cn("p-6 transition-all hover:shadow-md", className)}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-2 flex-1">
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl font-bold tracking-tight">{value}</h3>
+    <Card className={cn("p-4 transition-all hover:shadow-md", className)}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 flex-1 min-w-0">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">{label}</p>
+          <div className="flex items-baseline gap-1 flex-wrap">
+            <h3 className="text-xl font-bold tracking-tight break-words">{value}</h3>
             {trend && (
               <span
                 className={cn(
-                  "flex items-center gap-1 text-sm font-medium",
+                  "flex items-center gap-0.5 text-xs font-medium shrink-0",
                   trend === "up" && "text-green-600 dark:text-green-400",
                   trend === "down" && "text-red-600 dark:text-red-400",
                   trend === "neutral" && "text-gray-600 dark:text-gray-400",
@@ -61,11 +61,11 @@ export function StatCard({
             )}
           </div>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground truncate" title={subtitle}>{subtitle}</p>
           )}
         </div>
         {icon && (
-          <div className={cn("p-3 rounded-lg", colorClasses[color])}>
+          <div className={cn("p-2 rounded-lg shrink-0", colorClasses[color])}>
             {icon}
           </div>
         )}
