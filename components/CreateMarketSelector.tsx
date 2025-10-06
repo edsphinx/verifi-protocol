@@ -1,14 +1,14 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { FileText, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, FileText, RotateCcw } from "lucide-react";
-import { CreateMarketForm } from "./CreateMarketForm";
+import { cn } from "@/lib/utils";
 import { AIMarketChat } from "./AIMarketChat";
+import { CreateMarketForm } from "./CreateMarketForm";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { VerifAIAvatar } from "./VerifAIAvatar";
-import { cn } from "@/lib/utils";
 
 type Mode = "ai" | "manual";
 
@@ -80,6 +80,7 @@ export function CreateMarketSelector() {
                   fill="none"
                   className="mr-1.5 h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity"
                 >
+                  <title>Manual Mode</title>
                   <circle
                     cx="12"
                     cy="12"

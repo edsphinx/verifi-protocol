@@ -18,23 +18,36 @@ import {
 import { Card, Badge } from "@tremor/react";
 import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
 import { useTopMarkets } from "@/lib/hooks";
+import { VeriFiLoader } from "@/components/ui/verifi-loader";
+import { TableSkeleton } from "@/components/analytics/skeletons/TableSkeleton";
+import { motion, AnimatePresence } from "framer-motion";
 import type { MarketMetrics } from "@/lib/types/database.types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const columnHelper = createColumnHelper<MarketMetrics>();
 
 export function TopMarketsTable() {
-  const { topMarkets, isLoading } = useTopMarkets(10);
+  const { topMarkets, isLoading } = useTopMarkets(5);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "totalVolume", desc: true },
   ]);
+  const [showLoader, setShowLoader] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => setShowLoader(true), 400);
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoader(false);
+    }
+  }, [isLoading]);
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("description", {
         header: "Market",
         cell: (info) => (
-          <div className="max-w-xs truncate font-medium">{info.getValue()}</div>
+          <div className="max-w-md truncate font-medium" title={info.getValue()}>{info.getValue()}</div>
         ),
       }),
       columnHelper.accessor("status", {
@@ -144,12 +157,23 @@ export function TopMarketsTable() {
 
   if (isLoading) {
     return (
-      <Card>
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-          <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded" />
-        </div>
-      </Card>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.3 }}
+        >
+          {showLoader ? (
+            <Card className="min-h-[400px] flex items-center justify-center">
+              <VeriFiLoader message="Loading top markets..." />
+            </Card>
+          ) : (
+            <TableSkeleton rows={5} />
+          )}
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -165,10 +189,20 @@ export function TopMarketsTable() {
   }
 
   return (
-    <Card>
-      <h3 className="text-lg font-semibold mb-4">Top Markets by Volume</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="content"
+        initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
+        animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.34, 1.56, 0.64, 1],
+        }}
+      >
+        <Card>
+          <h3 className="text-lg font-semibold mb-4">Top Markets by Volume</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
@@ -205,8 +239,10 @@ export function TopMarketsTable() {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
-    </Card>
+            </table>
+          </div>
+        </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 }

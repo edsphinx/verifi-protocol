@@ -19,8 +19,12 @@ import type { ActionPanelProps } from "@/lib/types";
 import { recordActivity } from "@/lib/services/activity-client.service";
 import { calculateMarketPsychology } from "@/lib/services/market-psychology.service";
 import { cn } from "@/lib/utils";
-import { getAnimationConfig, type AnimationStyle } from "@/lib/animations/panel-transitions";
+import {
+  getAnimationConfig,
+  type AnimationStyle,
+} from "@/lib/animations/panel-transitions";
 import { useTradeValidation } from "@/lib/hooks/use-trade-validation";
+import { useSessionTransaction } from "@/lib/hooks/use-session-transaction";
 
 type TradeMode = "buy" | "sell";
 
@@ -34,7 +38,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [buyNoAmount, setBuyNoAmount] = useState("");
   const [sellYesAmount, setSellYesAmount] = useState("");
   const [sellNoAmount, setSellNoAmount] = useState("");
-  const { signAndSubmitTransaction, account } = useWallet();
+  const { account } = useWallet();
+  const { submitTransaction, hasSession } = useSessionTransaction();
   const queryClient = useQueryClient();
 
   const handleTransactionSuccess = (
@@ -67,10 +72,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
     onSuccess: async (payload, variables) => {
       if (!account?.address) return;
       try {
-        const { hash } = await signAndSubmitTransaction({
-          sender: account.address,
-          data: payload,
-        });
+        const { hash } = await submitTransaction(payload);
 
         await aptosClient().waitForTransaction({
           transactionHash: hash,
@@ -121,10 +123,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
     onSuccess: async (payload, variables) => {
       if (!account?.address) return;
       try {
-        const { hash } = await signAndSubmitTransaction({
-          sender: account.address,
-          data: payload,
-        });
+        const { hash } = await submitTransaction(payload);
 
         await aptosClient().waitForTransaction({
           transactionHash: hash,
@@ -217,7 +216,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
 
   const psychology = useMemo(
     () => calculateMarketPsychology(dynamicData),
-    [dynamicData]
+    [dynamicData],
   );
 
   const primaryIsYes = psychology.primaryOutcome.name === "YES";
@@ -235,7 +234,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
       aptBalance: dynamicData.userAptBalance,
       yesBalance: dynamicData.userYesBalance,
       noBalance: dynamicData.userNoBalance,
-    }
+    },
   );
 
   return (
@@ -249,18 +248,30 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
           </div>
           <div className="flex items-center gap-2">
             <div className="text-center">
-              <div className="text-[9px] text-muted-foreground/70 uppercase tracking-wider font-medium">APT</div>
-              <div className="font-mono font-bold text-sm">{userAptBalance}</div>
+              <div className="text-[9px] text-muted-foreground/70 uppercase tracking-wider font-medium">
+                APT
+              </div>
+              <div className="font-mono font-bold text-sm">
+                {userAptBalance}
+              </div>
             </div>
             <Separator orientation="vertical" className="h-5" />
             <div className="text-center">
-              <div className="text-[9px] text-green-400/80 uppercase tracking-wider font-medium">YES</div>
-              <div className="font-mono font-bold text-sm text-green-400">{userYesBalance}</div>
+              <div className="text-[9px] text-green-400/80 uppercase tracking-wider font-medium">
+                YES
+              </div>
+              <div className="font-mono font-bold text-sm text-green-400">
+                {userYesBalance}
+              </div>
             </div>
             <Separator orientation="vertical" className="h-5" />
             <div className="text-center">
-              <div className="text-[9px] text-red-400/80 uppercase tracking-wider font-medium">NO</div>
-              <div className="font-mono font-bold text-sm text-red-400">{userNoBalance}</div>
+              <div className="text-[9px] text-red-400/80 uppercase tracking-wider font-medium">
+                NO
+              </div>
+              <div className="font-mono font-bold text-sm text-red-400">
+                {userNoBalance}
+              </div>
             </div>
           </div>
         </div>
@@ -275,16 +286,21 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
             "h-8 px-3 text-xs font-bold transition-all relative overflow-hidden group",
             tradeMode === "buy"
               ? "border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300"
-              : "border-green-500/30 hover:border-green-500/50 text-green-400 hover:text-green-300"
+              : "border-green-500/30 hover:border-green-500/50 text-green-400 hover:text-green-300",
           )}
         >
           <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
-          <span>{tradeMode === "buy" ? "Switch to SELL" : "Switch to BUY"}</span>
+          <span>
+            {tradeMode === "buy" ? "Switch to SELL" : "Switch to BUY"}
+          </span>
         </Button>
       </div>
 
       {/* Dynamic Trading Panels - Satisfying Animations */}
-      <div className="relative min-h-[400px]" style={animationConfig.containerStyle}>
+      <div
+        className="relative min-h-[400px]"
+        style={animationConfig.containerStyle}
+      >
         <AnimatePresence mode="wait">
           {tradeMode === "buy" ? (
             <motion.div
@@ -316,11 +332,15 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         onChange={(e) => setBuyYesAmount(e.target.value)}
                         disabled={isProcessing}
                         className={cn(
-                          buyYesAmount && !validation.isValidAmount(buyYesAmount) && "border-destructive"
+                          buyYesAmount &&
+                            !validation.isValidAmount(buyYesAmount) &&
+                            "border-destructive",
                         )}
                       />
                       {validation.buyYesError && (
-                        <p className="text-xs text-destructive">{validation.buyYesError}</p>
+                        <p className="text-xs text-destructive">
+                          {validation.buyYesError}
+                        </p>
                       )}
                       <div className="flex items-center gap-2">
                         {[25, 50, 75].map((percentage) => (
@@ -329,7 +349,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                              const amount =
+                                (parseFloat(userAptBalance) * percentage) / 100;
                               setBuyYesAmount(amount.toFixed(4));
                             }}
                             disabled={isProcessing}
@@ -378,11 +399,15 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         onChange={(e) => setBuyNoAmount(e.target.value)}
                         disabled={isProcessing}
                         className={cn(
-                          buyNoAmount && !validation.isValidAmount(buyNoAmount) && "border-destructive"
+                          buyNoAmount &&
+                            !validation.isValidAmount(buyNoAmount) &&
+                            "border-destructive",
                         )}
                       />
                       {validation.buyNoError && (
-                        <p className="text-xs text-destructive">{validation.buyNoError}</p>
+                        <p className="text-xs text-destructive">
+                          {validation.buyNoError}
+                        </p>
                       )}
                       <div className="flex items-center gap-2">
                         {[25, 50, 75].map((percentage) => (
@@ -391,7 +416,8 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const amount = (parseFloat(userAptBalance) * percentage) / 100;
+                              const amount =
+                                (parseFloat(userAptBalance) * percentage) / 100;
                               setBuyNoAmount(amount.toFixed(4));
                             }}
                             disabled={isProcessing}
@@ -450,13 +476,19 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         placeholder="0.0"
                         value={sellYesAmount}
                         onChange={(e) => setSellYesAmount(e.target.value)}
-                        disabled={isProcessing || dynamicData.userYesBalance === 0}
+                        disabled={
+                          isProcessing || dynamicData.userYesBalance === 0
+                        }
                         className={cn(
-                          sellYesAmount && !validation.isValidAmount(sellYesAmount) && "border-destructive"
+                          sellYesAmount &&
+                            !validation.isValidAmount(sellYesAmount) &&
+                            "border-destructive",
                         )}
                       />
                       {validation.sellYesError && (
-                        <p className="text-xs text-destructive">{validation.sellYesError}</p>
+                        <p className="text-xs text-destructive">
+                          {validation.sellYesError}
+                        </p>
                       )}
                       <div className="flex items-center gap-2">
                         {[50, 100].map((percentage) => (
@@ -465,10 +497,13 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const amount = (parseFloat(userYesBalance) * percentage) / 100;
+                              const amount =
+                                (parseFloat(userYesBalance) * percentage) / 100;
                               setSellYesAmount(amount.toFixed(2));
                             }}
-                            disabled={isProcessing || dynamicData.userYesBalance === 0}
+                            disabled={
+                              isProcessing || dynamicData.userYesBalance === 0
+                            }
                             className="flex-1 text-xs"
                           >
                             {percentage === 100 ? "MAX" : `${percentage}%`}
@@ -504,13 +539,19 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                         placeholder="0.0"
                         value={sellNoAmount}
                         onChange={(e) => setSellNoAmount(e.target.value)}
-                        disabled={isProcessing || dynamicData.userNoBalance === 0}
+                        disabled={
+                          isProcessing || dynamicData.userNoBalance === 0
+                        }
                         className={cn(
-                          sellNoAmount && !validation.isValidAmount(sellNoAmount) && "border-destructive"
+                          sellNoAmount &&
+                            !validation.isValidAmount(sellNoAmount) &&
+                            "border-destructive",
                         )}
                       />
                       {validation.sellNoError && (
-                        <p className="text-xs text-destructive">{validation.sellNoError}</p>
+                        <p className="text-xs text-destructive">
+                          {validation.sellNoError}
+                        </p>
                       )}
                       <div className="flex items-center gap-2">
                         {[50, 100].map((percentage) => (
@@ -519,10 +560,13 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const amount = (parseFloat(userNoBalance) * percentage) / 100;
+                              const amount =
+                                (parseFloat(userNoBalance) * percentage) / 100;
                               setSellNoAmount(amount.toFixed(2));
                             }}
-                            disabled={isProcessing || dynamicData.userNoBalance === 0}
+                            disabled={
+                              isProcessing || dynamicData.userNoBalance === 0
+                            }
                             className="flex-1 text-xs"
                           >
                             {percentage === 100 ? "MAX" : `${percentage}%`}

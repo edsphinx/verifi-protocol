@@ -10,6 +10,7 @@ import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { usePoolData } from "@/lib/tapp/hooks/use-pool-data";
 import { LiquidityPanel } from "./TappAMM/LiquidityPanel";
 import { LiquidityPositions } from "./TappAMM/LiquidityPositions";
+import { PoweredByBadge } from "@/components/branding/PoweredByBadge";
 
 interface PoolTabContentProps {
   marketId: string;
@@ -120,8 +121,8 @@ export function PoolTabContent({
             />
 
             <p className="text-xs text-muted-foreground text-center max-w-md">
-              Once created, you and others will be able to add liquidity and earn
-              fees from trades
+              Once created, you and others will be able to add liquidity and
+              earn fees from trades
             </p>
           </CardContent>
         </Card>

@@ -148,7 +148,8 @@ export function useMarkets() {
         // CLOSED status OR past resolution date but not resolved yet
         return (
           market.onChainStatus === MARKET_STATUS.CLOSED ||
-          (market.onChainStatus === MARKET_STATUS.OPEN && market.resolvesOnDate <= now)
+          (market.onChainStatus === MARKET_STATUS.OPEN &&
+            market.resolvesOnDate <= now)
         );
       });
 

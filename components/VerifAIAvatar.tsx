@@ -232,14 +232,7 @@ export function VerifAIAvatar({
 
         {/* Cheeks */}
         <ellipse cx="70" cy="75" rx="8" ry="5" fill="#FF6B9D" opacity="0.3" />
-        <ellipse
-          cx="130"
-          cy="75"
-          rx="8"
-          ry="5"
-          fill="#FF6B9D"
-          opacity="0.3"
-        />
+        <ellipse cx="130" cy="75" rx="8" ry="5" fill="#FF6B9D" opacity="0.3" />
 
         {/* Arms */}
         <g opacity="0.9">
@@ -301,7 +294,13 @@ export function VerifAIAvatar({
         </g>
 
         {/* Belly Badge */}
-        <circle cx="100" cy="125" r="15" fill="url(#badgeGradient)" opacity="0.3" />
+        <circle
+          cx="100"
+          cy="125"
+          r="15"
+          fill="url(#badgeGradient)"
+          opacity="0.3"
+        />
         <path
           d="M92 125 L97 130 L108 119"
           stroke="#10B981"
@@ -385,7 +384,13 @@ export function VerifAIAvatar({
             <stop offset="100%" stopColor="#3B82F6" stopOpacity="1" />
           </linearGradient>
 
-          <linearGradient id="antennaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient
+            id="antennaGradient"
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor="#A78BFA" stopOpacity="1" />
             <stop offset="100%" stopColor="#8B5CF6" stopOpacity="1" />
           </linearGradient>
