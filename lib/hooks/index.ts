@@ -9,7 +9,7 @@ export { useTopTraders } from "./use-top-traders";
 export { usePortfolio } from "./use-portfolio";
 export { useMarketIntelligence } from "./use-market-intelligence";
 export { useAlerts } from "./use-alerts";
-export { useSIWAAuth } from "./use-siwa-auth";
+// export { useSIWAAuth } from "./use-siwa-auth"; // Excluded from production build
 export { useRecentActivity } from "./use-recent-activity";
 export { useMarketCategories } from "./use-market-categories";
 export { useVolumeHistory } from "./use-volume-history";

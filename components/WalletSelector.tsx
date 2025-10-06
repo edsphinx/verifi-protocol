@@ -44,12 +44,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NETWORK } from "@/aptos/constants";
-import { useSIWAAuth } from "@/lib/hooks/use-siwa-auth";
-import { UnifiedAuthButton } from "@/components/UnifiedAuthButton";
+// import { useSIWAAuth } from "@/lib/hooks/use-siwa-auth"; // Excluded from production build
+// import { UnifiedAuthButton } from "@/components/UnifiedAuthButton"; // Excluded from production build
 
 export function WalletSelector() {
   const { account, connected, disconnect, wallet } = useWallet();
-  const { signIn, signOut, isAuthenticating, isAuthenticated } = useSIWAAuth();
+  // const { signIn, signOut, isAuthenticating, isAuthenticated } = useSIWAAuth(); // Excluded from production build
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [hasTriggeredSignIn, setHasTriggeredSignIn] = useState(false);
@@ -115,7 +115,7 @@ export function WalletSelector() {
 
   return connected ? (
     <div className="flex items-center gap-2">
-      <UnifiedAuthButton />
+      {/* <UnifiedAuthButton /> - Excluded from production build */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -123,7 +123,7 @@ export function WalletSelector() {
             className="gap-2 font-mono text-sm border-border/40 hover:border-primary/40"
           >
             <div
-              className={`h-2 w-2 rounded-full ${isAuthenticated ? "bg-green-400" : loadingTimeout ? "bg-red-400" : "bg-yellow-400"}`}
+              className={`h-2 w-2 rounded-full ${connected && account?.address ? "bg-green-400" : loadingTimeout ? "bg-red-400" : "bg-yellow-400"}`}
             />
             {account?.ansName ||
               (account?.address
@@ -168,11 +168,11 @@ export function WalletSelector() {
               </a>
             </DropdownMenuItem>
           )}
-          {isAuthenticated && (
+          {/* {isAuthenticated && (
             <DropdownMenuItem onSelect={signOut} className="gap-2">
               <LogOut className="h-4 w-4" /> Sign Out
             </DropdownMenuItem>
-          )}
+          )} - Excluded from production build */}
           <DropdownMenuItem
             onSelect={disconnect}
             className="gap-2 text-destructive focus:text-destructive"

@@ -391,7 +391,81 @@ https://explorer.aptoslabs.com/account/0x227a26b2dbd6093f6f779dcae84254f5dc40b46
 
 ## 8. Innovation Highlights
 
-### 8.1 Zero-Oracle Prediction Markets
+### 8.1 Real-Time Intelligence Engine (NEW - Advanced Nodit Integration)
+
+**Feature:** Market intelligence and predictive analytics powered by Nodit's real-time event indexing
+
+**Implementation:** `lib/engine/nodit-intelligence.engine.ts`
+
+**Capabilities:**
+
+1. **🐋 Whale Detection**
+   - Analyzes Nodit event streams to identify large traders
+   - Classifies traders: Mega Whale (>1000 APT), Whale (>500 APT), Large Trader (>100 APT)
+   - Tracks trading patterns, average trade size, and market preferences
+   - **Use Case:** Alert users when whales enter/exit markets
+
+   ```typescript
+   // Powered by Nodit GraphQL queries
+   const whales = await detectWhales(100); // min 100 APT volume
+   // Returns: address, totalVolume, tradeCount, markets[], classification
+   ```
+
+2. **📊 Market Momentum Analysis**
+   - Calculates real-time momentum scores (0-100) for all markets
+   - Metrics: velocity (trades/hour), acceleration, volume growth
+   - Classifications: Explosive, Hot, Warm, Cooling, Cold
+   - **Use Case:** Surface trending markets to users
+
+   ```typescript
+   const topMarkets = await getTopMomentumMarkets(10);
+   // Returns markets sorted by momentum score with signals
+   ```
+
+3. **💭 Sentiment Analysis**
+   - Analyzes YES vs NO trading flow from Nodit events
+   - Calculates directional sentiment (-100 to +100)
+   - Measures conviction strength (0-100)
+   - **Use Case:** Show market bias and trend direction
+
+   ```typescript
+   const sentiment = await analyzeMarketSentiment(marketAddress);
+   // Returns: score, yesFlowRatio, noFlowRatio, conviction, direction
+   ```
+
+4. **🔔 Smart Alerts System**
+   - Context-aware notifications based on market intelligence
+   - Alert types: whale_entry, momentum_spike, sentiment_shift, volume_surge
+   - Severity levels: critical, high, medium, low
+   - **Use Case:** Proactive user notifications for trading opportunities
+
+   ```typescript
+   const alerts = await generateSmartAlerts();
+   // Returns actionable alerts with suggested actions
+   ```
+
+**API Endpoints:**
+- `GET /api/intelligence/whales?minVolume=100`
+- `GET /api/intelligence/momentum?limit=10`
+- `GET /api/intelligence/sentiment?market=<address>`
+- `GET /api/intelligence/alerts`
+
+**Testing:**
+```bash
+pnpm test:intelligence
+```
+
+**Nodit Integration Points:**
+- GraphQL queries for historical event analysis
+- Real-time webhook data for instant updates
+- Cross-market correlation analysis
+- Time-series data aggregation
+
+**Impact:** Transforms raw blockchain events into actionable trading intelligence
+
+---
+
+### 8.2 Zero-Oracle Prediction Markets
 
 **Problem:** Traditional prediction markets rely on external oracles (Chainlink, Pyth) which add:
 - Single points of failure

@@ -1,5 +1,5 @@
 # Exclude auth-related files (not ready for production)
-app/api/auth/
+app/api/auth/**/*
 app/auth-test/
 app/approval-test/
 lib/auth/

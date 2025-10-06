@@ -24,7 +24,7 @@ import {
   type AnimationStyle,
 } from "@/lib/animations/panel-transitions";
 import { useTradeValidation } from "@/lib/hooks/use-trade-validation";
-import { useSessionTransaction } from "@/lib/hooks/use-session-transaction";
+// import { useSessionTransaction } from "@/lib/hooks/use-session-transaction"; // Excluded from production build
 
 type TradeMode = "buy" | "sell";
 
@@ -38,8 +38,7 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
   const [buyNoAmount, setBuyNoAmount] = useState("");
   const [sellYesAmount, setSellYesAmount] = useState("");
   const [sellNoAmount, setSellNoAmount] = useState("");
-  const { account } = useWallet();
-  const { submitTransaction, hasSession } = useSessionTransaction();
+  const { account, signAndSubmitTransaction } = useWallet();
   const queryClient = useQueryClient();
 
   const handleTransactionSuccess = (
@@ -72,7 +71,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
     onSuccess: async (payload, variables) => {
       if (!account?.address) return;
       try {
-        const { hash } = await submitTransaction(payload);
+        const { hash } = await signAndSubmitTransaction({
+          data: payload,
+        });
 
         await aptosClient().waitForTransaction({
           transactionHash: hash,
@@ -123,7 +124,9 @@ export function ActionPanel({ marketId, dynamicData }: ActionPanelProps) {
     onSuccess: async (payload, variables) => {
       if (!account?.address) return;
       try {
-        const { hash } = await submitTransaction(payload);
+        const { hash } = await signAndSubmitTransaction({
+          data: payload,
+        });
 
         await aptosClient().waitForTransaction({
           transactionHash: hash,
