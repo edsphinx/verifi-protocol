@@ -3,15 +3,15 @@
  * @description Zustand store for protocol-wide analytics and metrics
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 import type {
   ProtocolMetrics,
   MarketMetrics,
   TraderMetrics,
-} from '@/lib/types/database.types';
-import { AnalyticsService } from '@/lib/services';
+} from "@/lib/types/database.types";
+import { AnalyticsService } from "@/lib/services";
 
 interface AnalyticsStore {
   // Protocol Metrics
@@ -99,7 +99,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             state.error =
               error instanceof Error
                 ? error.message
-                : 'Failed to fetch protocol metrics';
+                : "Failed to fetch protocol metrics";
           });
         } finally {
           set((state) => {
@@ -122,7 +122,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             state.error =
               error instanceof Error
                 ? error.message
-                : 'Failed to fetch top markets';
+                : "Failed to fetch top markets";
           });
         } finally {
           set((state) => {
@@ -145,7 +145,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             state.error =
               error instanceof Error
                 ? error.message
-                : 'Failed to fetch top traders';
+                : "Failed to fetch top traders";
           });
         } finally {
           set((state) => {
@@ -186,6 +186,6 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         return topTraders[0];
       },
     })),
-    { name: 'AnalyticsStore' }
-  )
+    { name: "AnalyticsStore" },
+  ),
 );

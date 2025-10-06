@@ -4,9 +4,9 @@
  * Calculates real-time metrics for markets to feed into the ranking engine
  */
 
-import type { MarketMetrics } from '@/lib/engine/market-ranking.engine';
-import { calculatePrices } from '@/lib/engine/data-integrity.engine';
-import client from '@/lib/clients/prisma';
+import type { MarketMetrics } from "@/lib/engine/market-ranking.engine";
+import { calculatePrices } from "@/lib/engine/data-integrity.engine";
+import client from "@/lib/clients/prisma";
 
 interface PoolData {
   poolAddress: string;
@@ -71,8 +71,10 @@ export async function calculateMarketMetrics(
   const arbitrageOpportunity = calculateArbitrageOpportunity(yesPrice);
 
   // Calculate time until resolution
-  const resolutionTimestamp = marketData.resolutionTimestamp || marketData.resolvesOnDate?.getTime() || 0;
-  const hoursUntilResolution = (resolutionTimestamp - Date.now()) / (1000 * 60 * 60);
+  const resolutionTimestamp =
+    marketData.resolutionTimestamp || marketData.resolvesOnDate?.getTime() || 0;
+  const hoursUntilResolution =
+    (resolutionTimestamp - Date.now()) / (1000 * 60 * 60);
 
   // Get social metrics (mock for now - would integrate with comments/shares)
   const social = getSocialMetrics(marketId);
@@ -110,7 +112,7 @@ async function getActivityData(marketId: string): Promise<ActivityData> {
       where: {
         marketAddress: marketId,
         timestamp: { gte: oneDayAgo },
-        action: { in: ['BUY', 'SELL', 'SWAP'] },
+        action: { in: ["BUY", "SELL", "SWAP"] },
       },
       select: {
         userAddress: true,
@@ -122,7 +124,7 @@ async function getActivityData(marketId: string): Promise<ActivityData> {
       where: {
         marketAddress: marketId,
         timestamp: { gte: sevenDaysAgo },
-        action: { in: ['BUY', 'SELL', 'SWAP'] },
+        action: { in: ["BUY", "SELL", "SWAP"] },
       },
       select: {
         amount: true,
@@ -130,8 +132,11 @@ async function getActivityData(marketId: string): Promise<ActivityData> {
     });
 
     // Calculate metrics
-    const uniqueTraders = new Set(activities24h.map(a => a.userAddress)).size;
-    const volume24h = activities24h.reduce((sum, a) => sum + (a.amount || 0), 0);
+    const uniqueTraders = new Set(activities24h.map((a) => a.userAddress)).size;
+    const volume24h = activities24h.reduce(
+      (sum, a) => sum + (a.amount || 0),
+      0,
+    );
     const volume7d = activities7d.reduce((sum, a) => sum + (a.amount || 0), 0);
 
     return {
@@ -141,7 +146,7 @@ async function getActivityData(marketId: string): Promise<ActivityData> {
       volume7d,
     };
   } catch (error) {
-    console.error('[MarketMetrics] Error getting activity data:', error);
+    console.error("[MarketMetrics] Error getting activity data:", error);
     return {
       tradeCount24h: 0,
       uniqueTraders24h: 0,
@@ -205,7 +210,7 @@ function calculatePriceChange(marketId: string, currentPrice: number): number {
 function calculateVolatility(tradeCount: number): number {
   // More trades = more volatility (rough proxy)
   if (tradeCount > 100) return 0.15;
-  if (tradeCount > 50) return 0.10;
+  if (tradeCount > 50) return 0.1;
   if (tradeCount > 20) return 0.06;
   if (tradeCount > 5) return 0.03;
   return 0.01;
@@ -229,7 +234,10 @@ function calculateArbitrageOpportunity(yesPrice: number): number {
  * Get social metrics (mock implementation)
  * TODO: Integrate with comments/shares system
  */
-function getSocialMetrics(marketId: string): { commentCount: number; shareCount: number } {
+function getSocialMetrics(marketId: string): {
+  commentCount: number;
+  shareCount: number;
+} {
   // Mock data - would query from database
   return {
     commentCount: Math.floor(Math.random() * 50),
@@ -247,7 +255,10 @@ export async function calculateAllMarketMetrics(
     try {
       return await calculateMarketMetrics(market.id || market.address, market);
     } catch (error) {
-      console.error(`[MarketMetrics] Error calculating metrics for ${market.id}:`, error);
+      console.error(
+        `[MarketMetrics] Error calculating metrics for ${market.id}:`,
+        error,
+      );
       // Return default metrics on error
       return {
         marketId: market.id || market.address,

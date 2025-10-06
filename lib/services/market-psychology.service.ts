@@ -36,7 +36,12 @@ export interface MarketPsychologyData {
   };
 
   // Market sentiment
-  sentiment: "STRONG_YES" | "LEANING_YES" | "BALANCED" | "LEANING_NO" | "STRONG_NO";
+  sentiment:
+    | "STRONG_YES"
+    | "LEANING_YES"
+    | "BALANCED"
+    | "LEANING_NO"
+    | "STRONG_NO";
   sentimentIntensity: number; // 0-100
 
   // User positioning
@@ -59,7 +64,7 @@ export interface MarketDynamicData {
  * Calculate market psychology and presentation strategy
  */
 export function calculateMarketPsychology(
-  dynamicData: MarketDynamicData
+  dynamicData: MarketDynamicData,
 ): MarketPsychologyData {
   const totalSupply = dynamicData.totalSupplyYes + dynamicData.totalSupplyNo;
 
@@ -95,8 +100,12 @@ export function calculateMarketPsychology(
     name: (yesDominates ? "YES" : "NO") as "YES" | "NO",
     color: yesDominates ? "green" : "red",
     percentage: yesDominates ? yesPercentage : noPercentage,
-    supply: yesDominates ? dynamicData.totalSupplyYes : dynamicData.totalSupplyNo,
-    userBalance: yesDominates ? dynamicData.userYesBalance : dynamicData.userNoBalance,
+    supply: yesDominates
+      ? dynamicData.totalSupplyYes
+      : dynamicData.totalSupplyNo,
+    userBalance: yesDominates
+      ? dynamicData.userYesBalance
+      : dynamicData.userNoBalance,
     scale: calculateScale(dominancePercentage, true),
     weight: calculateWeight(dominancePercentage, true),
     glow: calculateGlow(dominancePercentage, true),
@@ -106,8 +115,12 @@ export function calculateMarketPsychology(
     name: (yesDominates ? "NO" : "YES") as "YES" | "NO",
     color: yesDominates ? "red" : "green",
     percentage: yesDominates ? noPercentage : yesPercentage,
-    supply: yesDominates ? dynamicData.totalSupplyNo : dynamicData.totalSupplyYes,
-    userBalance: yesDominates ? dynamicData.userNoBalance : dynamicData.userYesBalance,
+    supply: yesDominates
+      ? dynamicData.totalSupplyNo
+      : dynamicData.totalSupplyYes,
+    userBalance: yesDominates
+      ? dynamicData.userNoBalance
+      : dynamicData.userYesBalance,
     scale: calculateScale(dominancePercentage, false),
     weight: calculateWeight(dominancePercentage, false),
     glow: calculateGlow(dominancePercentage, false),
@@ -125,7 +138,7 @@ export function calculateMarketPsychology(
     dominantOutcome,
     userYesValue,
     userNoValue,
-    dominancePercentage
+    dominancePercentage,
   );
 
   return {
@@ -145,7 +158,9 @@ export function calculateMarketPsychology(
 /**
  * Calculate sentiment based on YES percentage
  */
-function calculateSentiment(yesPercentage: number): MarketPsychologyData["sentiment"] {
+function calculateSentiment(
+  yesPercentage: number,
+): MarketPsychologyData["sentiment"] {
   if (yesPercentage >= 70) return "STRONG_YES";
   if (yesPercentage >= 55) return "LEANING_YES";
   if (yesPercentage >= 45 && yesPercentage <= 55) return "BALANCED";
@@ -157,7 +172,10 @@ function calculateSentiment(yesPercentage: number): MarketPsychologyData["sentim
  * Calculate visual scale based on dominance
  * Primary outcome gets larger, secondary gets slightly smaller
  */
-function calculateScale(dominancePercentage: number, isPrimary: boolean): number {
+function calculateScale(
+  dominancePercentage: number,
+  isPrimary: boolean,
+): number {
   if (isPrimary) {
     // Primary scales from 1.0 (balanced) to 1.5 (extreme dominance)
     return 1.0 + (dominancePercentage / 100) * 0.5;
@@ -172,7 +190,7 @@ function calculateScale(dominancePercentage: number, isPrimary: boolean): number
  */
 function calculateWeight(
   dominancePercentage: number,
-  isPrimary: boolean
+  isPrimary: boolean,
 ): "normal" | "medium" | "semibold" | "bold" | "extrabold" {
   if (isPrimary) {
     if (dominancePercentage >= 30) return "extrabold";
@@ -190,7 +208,7 @@ function calculateWeight(
  */
 function calculateGlow(
   dominancePercentage: number,
-  isPrimary: boolean
+  isPrimary: boolean,
 ): "none" | "sm" | "md" | "lg" {
   if (isPrimary) {
     if (dominancePercentage >= 30) return "lg";
@@ -209,7 +227,7 @@ function calculateUserAdvantage(
   dominantOutcome: "YES" | "NO" | "BALANCED",
   userYesBalance: number,
   userNoBalance: number,
-  dominancePercentage: number
+  dominancePercentage: number,
 ): "HIGH" | "MODERATE" | "LOW" | "NONE" {
   if (dominantOutcome === "BALANCED") return "NONE";
 
@@ -219,8 +237,10 @@ function calculateUserAdvantage(
 
   if (!userHoldsDominant) return "NONE";
 
-  const dominantBalance = dominantOutcome === "YES" ? userYesBalance : userNoBalance;
-  const otherBalance = dominantOutcome === "YES" ? userNoBalance : userYesBalance;
+  const dominantBalance =
+    dominantOutcome === "YES" ? userYesBalance : userNoBalance;
+  const otherBalance =
+    dominantOutcome === "YES" ? userNoBalance : userYesBalance;
 
   const balanceRatio = dominantBalance / (otherBalance + 1); // +1 to avoid division by zero
 
@@ -232,7 +252,9 @@ function calculateUserAdvantage(
 /**
  * Get balanced market state (when total supply is 0 or near equal)
  */
-function getBalancedMarket(dynamicData: MarketDynamicData): MarketPsychologyData {
+function getBalancedMarket(
+  dynamicData: MarketDynamicData,
+): MarketPsychologyData {
   return {
     dominantOutcome: "BALANCED",
     dominancePercentage: 0,
@@ -269,7 +291,9 @@ function getBalancedMarket(dynamicData: MarketDynamicData): MarketPsychologyData
  * Get CSS classes for outcome styling
  */
 export function getOutcomeClasses(
-  outcome: MarketPsychologyData["primaryOutcome"] | MarketPsychologyData["secondaryOutcome"]
+  outcome:
+    | MarketPsychologyData["primaryOutcome"]
+    | MarketPsychologyData["secondaryOutcome"],
 ) {
   const colorBase = outcome.color === "green" ? "green" : "red";
 
@@ -282,10 +306,12 @@ export function getOutcomeClasses(
 
   return {
     textColor: outcome.color === "green" ? "text-green-400" : "text-red-400",
-    borderColor: outcome.color === "green" ? "border-green-500/30" : "border-red-500/30",
-    bgGradient: outcome.color === "green"
-      ? "bg-gradient-to-br from-green-500/5 via-background to-background"
-      : "bg-gradient-to-br from-red-500/5 via-background to-background",
+    borderColor:
+      outcome.color === "green" ? "border-green-500/30" : "border-red-500/30",
+    bgGradient:
+      outcome.color === "green"
+        ? "bg-gradient-to-br from-green-500/5 via-background to-background"
+        : "bg-gradient-to-br from-red-500/5 via-background to-background",
     glowClass: glowClasses[outcome.glow],
     fontWeight: `font-${outcome.weight}`,
   };
