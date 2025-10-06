@@ -65,20 +65,23 @@ export function PortfolioView() {
   const groupedPositions = useMemo(() => {
     if (!portfolio?.openPositions) return [];
 
-    const marketGroups = new Map<string, {
-      marketAddress: string;
-      marketTitle: string;
-      positions: typeof portfolio.openPositions;
-      marketStatus: number;
-    }>();
+    const marketGroups = new Map<
+      string,
+      {
+        marketAddress: string;
+        marketTitle: string;
+        positions: typeof portfolio.openPositions;
+        marketStatus: number;
+      }
+    >();
 
-    portfolio.openPositions.forEach(pos => {
+    portfolio.openPositions.forEach((pos) => {
       if (!marketGroups.has(pos.marketAddress)) {
         marketGroups.set(pos.marketAddress, {
           marketAddress: pos.marketAddress,
           marketTitle: pos.marketDescription,
           positions: [],
-          marketStatus: pos.status === 'OPEN' ? 0 : 1,
+          marketStatus: pos.status === "OPEN" ? 0 : 1,
         });
       }
 
@@ -144,7 +147,7 @@ export function PortfolioView() {
         />
         <StatCard
           label="Total Markets"
-          value={`${portfolio?.openPositions ? new Set(portfolio.openPositions.map(p => p.marketAddress)).size : 0}`}
+          value={`${portfolio?.openPositions ? new Set(portfolio.openPositions.map((p) => p.marketAddress)).size : 0}`}
           trend="neutral"
           color="blue"
           icon={<Target className="w-5 h-5" />}
@@ -153,10 +156,18 @@ export function PortfolioView() {
         <StatCard
           label="Total Trades"
           value={`${portfolio?.stats?.totalTrades || 0}`}
-          trend={portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0 ? "up" : "neutral"}
-          color={portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0 ? "green" : "gray"}
+          trend={
+            portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0
+              ? "up"
+              : "neutral"
+          }
+          color={
+            portfolio?.stats?.totalTrades && portfolio.stats.totalTrades > 0
+              ? "green"
+              : "gray"
+          }
           icon={<Trophy className="w-5 h-5" />}
-          subtitle={`${portfolio?.stats?.totalVolume.toFixed(2) || '0.00'} APT volume`}
+          subtitle={`${portfolio?.stats?.totalVolume.toFixed(2) || "0.00"} APT volume`}
         />
       </div>
 

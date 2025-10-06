@@ -3,12 +3,12 @@
  * @description Zustand store for AI-powered market intelligence
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import type { MarketIntelligence, ProactiveAlert } from '@/lib/services';
-import { IntelligenceService } from '@/lib/services';
-import type { MarketMetrics } from '@/lib/types/database.types';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import type { MarketIntelligence, ProactiveAlert } from "@/lib/services";
+import { IntelligenceService } from "@/lib/services";
+import type { MarketMetrics } from "@/lib/types/database.types";
 
 interface IntelligenceStore {
   // Intelligence by Market
@@ -23,7 +23,10 @@ interface IntelligenceStore {
   error: string | null;
 
   // Actions
-  setIntelligence: (marketAddress: string, intelligence: MarketIntelligence) => void;
+  setIntelligence: (
+    marketAddress: string,
+    intelligence: MarketIntelligence,
+  ) => void;
   addAlert: (alert: ProactiveAlert) => void;
   markAlertAsRead: (alertId: string) => void;
   dismissAlert: (alertId: string) => void;
@@ -31,7 +34,10 @@ interface IntelligenceStore {
   setError: (error: string | null) => void;
 
   // Async Actions
-  fetchMarketIntelligence: (marketAddress: string, metrics: MarketMetrics) => Promise<void>;
+  fetchMarketIntelligence: (
+    marketAddress: string,
+    metrics: MarketMetrics,
+  ) => Promise<void>;
 
   // Computed Selectors
   getIntelligence: (marketAddress: string) => MarketIntelligence | undefined;
@@ -104,28 +110,28 @@ export const useIntelligenceStore = create<IntelligenceStore>()(
         try {
           const intelligence = await IntelligenceService.getMarketIntelligence(
             marketAddress,
-            metrics
+            metrics,
           );
           get().setIntelligence(marketAddress, intelligence);
 
           // Generate alerts from insights
           intelligence.insights.forEach((insight) => {
-            if (insight.actionable && insight.severity !== 'INFO') {
+            if (insight.actionable && insight.severity !== "INFO") {
               get().addAlert({
                 id: `${marketAddress}-${Date.now()}-${Math.random()}`,
-                priority: insight.severity === 'CRITICAL' ? 'URGENT' : 'MEDIUM',
-                category: 'OPPORTUNITY',
-                title: insight.type.replace('_', ' '),
+                priority: insight.severity === "CRITICAL" ? "URGENT" : "MEDIUM",
+                category: "OPPORTUNITY",
+                title: insight.type.replace("_", " "),
                 description: insight.message,
                 actions: [
                   {
-                    label: 'View Market',
-                    type: 'NAVIGATE',
+                    label: "View Market",
+                    type: "NAVIGATE",
                     href: `/market/${marketAddress}`,
                   },
                   {
-                    label: 'Dismiss',
-                    type: 'DISMISS',
+                    label: "Dismiss",
+                    type: "DISMISS",
                   },
                 ],
                 createdAt: new Date(),
@@ -137,7 +143,7 @@ export const useIntelligenceStore = create<IntelligenceStore>()(
             state.error =
               error instanceof Error
                 ? error.message
-                : 'Failed to fetch market intelligence';
+                : "Failed to fetch market intelligence";
           });
         } finally {
           set((state) => {
@@ -155,15 +161,15 @@ export const useIntelligenceStore = create<IntelligenceStore>()(
       getHighPriorityAlerts: () => {
         const { alerts } = get();
         return alerts.filter(
-          (a) => a.priority === 'URGENT' || a.priority === 'HIGH'
+          (a) => a.priority === "URGENT" || a.priority === "HIGH",
         );
       },
 
       getOpportunityAlerts: () => {
         const { alerts } = get();
-        return alerts.filter((a) => a.category === 'OPPORTUNITY');
+        return alerts.filter((a) => a.category === "OPPORTUNITY");
       },
     })),
-    { name: 'IntelligenceStore' }
-  )
+    { name: "IntelligenceStore" },
+  ),
 );

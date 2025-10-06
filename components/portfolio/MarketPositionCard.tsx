@@ -18,7 +18,7 @@ import {
   ChevronRight,
   TrendingUp,
   Trophy,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import type { PortfolioPosition } from "@/lib/types/database.types";
@@ -44,7 +44,13 @@ const formatBalance = (balance: number) => {
   return balance.toFixed(4);
 };
 
-function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: PositionGroupProps) {
+function PositionGroup({
+  outcome,
+  positions,
+  isOpen,
+  onToggle,
+  marketStatus,
+}: PositionGroupProps) {
   const totalShares = positions.reduce((sum, p) => sum + p.sharesOwned, 0);
   const totalValue = positions.reduce((sum, p) => sum + p.currentValue, 0);
   const totalInvested = positions.reduce((sum, p) => sum + p.totalInvested, 0);
@@ -55,9 +61,10 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
     (outcome === "YES" && marketStatus === 2) ||
     (outcome === "NO" && marketStatus === 3);
 
-  const bgColor = outcome === "YES"
-    ? "bg-blue-500/10 border-blue-500/20"
-    : "bg-amber-500/10 border-amber-500/20";
+  const bgColor =
+    outcome === "YES"
+      ? "bg-blue-500/10 border-blue-500/20"
+      : "bg-amber-500/10 border-amber-500/20";
 
   return (
     <div className={`border rounded-lg overflow-hidden ${bgColor}`}>
@@ -75,7 +82,13 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
 
           <Badge
             variant={outcome === "YES" ? "default" : "secondary"}
-            className={isWinner ? (outcome === "YES" ? "bg-green-500" : "bg-red-500") : ""}
+            className={
+              isWinner
+                ? outcome === "YES"
+                  ? "bg-green-500"
+                  : "bg-red-500"
+                : ""
+            }
           >
             {outcome}
           </Badge>
@@ -102,8 +115,11 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
           {totalInvested > 0 && (
             <div className="text-right">
               <p className="text-muted-foreground text-xs">P&L</p>
-              <p className={`font-medium ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {totalPnL >= 0 ? "+" : ""}{pnlPct.toFixed(2)}%
+              <p
+                className={`font-medium ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}
+              >
+                {totalPnL >= 0 ? "+" : ""}
+                {pnlPct.toFixed(2)}%
               </p>
             </div>
           )}
@@ -114,9 +130,10 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
       {isOpen && (
         <div className="border-t border-border/50">
           {positions.map((position, idx) => {
-            const poolInfo = position.pools && position.pools.length > 0
-              ? position.pools[0]
-              : null;
+            const poolInfo =
+              position.pools && position.pools.length > 0
+                ? position.pools[0]
+                : null;
 
             return (
               <div
@@ -141,15 +158,25 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
                 <div className="grid grid-cols-4 gap-3 text-sm">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Shares</p>
-                    <p className="font-medium">{formatBalance(position.sharesOwned)}</p>
+                    <p className="font-medium">
+                      {formatBalance(position.sharesOwned)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Avg Entry</p>
-                    <p className="font-medium">${position.avgEntryPrice.toFixed(4)}</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Avg Entry
+                    </p>
+                    <p className="font-medium">
+                      ${position.avgEntryPrice.toFixed(4)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Current</p>
-                    <p className="font-medium">${position.currentPrice.toFixed(4)}</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Current
+                    </p>
+                    <p className="font-medium">
+                      ${position.currentPrice.toFixed(4)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Value</p>
@@ -166,9 +193,16 @@ function PositionGroup({ outcome, positions, isOpen, onToggle, marketStatus }: P
                       <span className="text-muted-foreground">
                         Invested: {position.totalInvested.toFixed(4)} APT
                       </span>
-                      <span className={position.unrealizedPnL >= 0 ? "text-green-500" : "text-red-500"}>
+                      <span
+                        className={
+                          position.unrealizedPnL >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }
+                      >
                         P&L: {position.unrealizedPnL >= 0 ? "+" : ""}
-                        {position.unrealizedPnL.toFixed(4)} APT ({position.unrealizedPnLPct.toFixed(2)}%)
+                        {position.unrealizedPnL.toFixed(4)} APT (
+                        {position.unrealizedPnLPct.toFixed(2)}%)
                       </span>
                     </div>
                   </div>
@@ -186,7 +220,7 @@ export function MarketPositionCard({
   marketAddress,
   marketTitle,
   positions,
-  marketStatus
+  marketStatus,
 }: MarketPositionCardProps) {
   const [isMarketOpen, setIsMarketOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<{ yes: boolean; no: boolean }>({
@@ -195,8 +229,8 @@ export function MarketPositionCard({
   });
 
   // Separate YES and NO positions
-  const yesPositions = positions.filter(p => p.outcome === "YES");
-  const noPositions = positions.filter(p => p.outcome === "NO");
+  const yesPositions = positions.filter((p) => p.outcome === "YES");
+  const noPositions = positions.filter((p) => p.outcome === "NO");
 
   // Calculate totals
   const totalValue = positions.reduce((sum, p) => sum + p.currentValue, 0);
@@ -251,23 +285,20 @@ export function MarketPositionCard({
             {!isMarketOpen && (
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Total Value</p>
-                <p className="text-lg font-bold">
-                  {totalValue.toFixed(2)} APT
-                </p>
+                <p className="text-lg font-bold">{totalValue.toFixed(2)} APT</p>
                 {totalInvested > 0 && (
-                  <p className={`text-xs ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}>
-                    {totalPnL >= 0 ? "+" : ""}{totalPnL.toFixed(2)} APT
+                  <p
+                    className={`text-xs ${totalPnL >= 0 ? "text-green-500" : "text-red-500"}`}
+                  >
+                    {totalPnL >= 0 ? "+" : ""}
+                    {totalPnL.toFixed(2)} APT
                   </p>
                 )}
               </div>
             )}
 
             <Link href={`/market/${marketAddress}`}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2"
-              >
+              <Button variant="ghost" size="sm" className="gap-2">
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </Link>
@@ -282,15 +313,23 @@ export function MarketPositionCard({
             {/* Summary Stats */}
             <div className="grid grid-cols-3 gap-3 p-3 bg-card rounded-lg border">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">Total Positions</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Positions
+                </p>
                 <p className="text-lg font-bold">{positions.length}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">Total Shares</p>
-                <p className="text-lg font-bold">{formatBalance(totalShares)}</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Shares
+                </p>
+                <p className="text-lg font-bold">
+                  {formatBalance(totalShares)}
+                </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">Total Value</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Value
+                </p>
                 <p className="text-lg font-bold">{totalValue.toFixed(2)} APT</p>
               </div>
             </div>
@@ -301,7 +340,9 @@ export function MarketPositionCard({
                 outcome="YES"
                 positions={yesPositions}
                 isOpen={openGroups.yes}
-                onToggle={() => setOpenGroups(prev => ({ ...prev, yes: !prev.yes }))}
+                onToggle={() =>
+                  setOpenGroups((prev) => ({ ...prev, yes: !prev.yes }))
+                }
                 marketStatus={marketStatus}
               />
             )}
@@ -312,7 +353,9 @@ export function MarketPositionCard({
                 outcome="NO"
                 positions={noPositions}
                 isOpen={openGroups.no}
-                onToggle={() => setOpenGroups(prev => ({ ...prev, no: !prev.no }))}
+                onToggle={() =>
+                  setOpenGroups((prev) => ({ ...prev, no: !prev.no }))
+                }
                 marketStatus={marketStatus}
               />
             )}

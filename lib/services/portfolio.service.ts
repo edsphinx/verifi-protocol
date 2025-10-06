@@ -3,7 +3,7 @@
  * @description Business logic for user portfolio and positions
  */
 
-import type { PortfolioData } from '@/lib/types/database.types';
+import type { PortfolioData } from "@/lib/types/database.types";
 
 export class PortfolioService {
   /**
@@ -11,11 +11,11 @@ export class PortfolioService {
    */
   static async getUserPortfolio(address: string): Promise<PortfolioData> {
     const response = await fetch(`/api/portfolio/${address}`, {
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch user portfolio');
+      throw new Error("Failed to fetch user portfolio");
     }
 
     return response.json();
@@ -33,7 +33,7 @@ export class PortfolioService {
    */
   static calculatePnLPercentage(
     currentValue: number,
-    invested: number
+    invested: number,
   ): number {
     if (invested === 0) return 0;
     return ((currentValue - invested) / invested) * 100;
@@ -43,8 +43,7 @@ export class PortfolioService {
    * Calculate ROI (Return on Investment)
    */
   static calculateROI(portfolio: PortfolioData): number {
-    const totalReturns =
-      portfolio.unrealizedPnL + (portfolio.realizedPnL || 0);
+    const totalReturns = portfolio.unrealizedPnL + (portfolio.realizedPnL || 0);
     if (portfolio.totalInvested === 0) return 0;
     return (totalReturns / portfolio.totalInvested) * 100;
   }
@@ -56,9 +55,7 @@ export class PortfolioService {
     if (portfolio.openPositions.length === 0) return null;
 
     return portfolio.openPositions.reduce((best, current) => {
-      return current.unrealizedPnLPct > best.unrealizedPnLPct
-        ? current
-        : best;
+      return current.unrealizedPnLPct > best.unrealizedPnLPct ? current : best;
     });
   }
 
@@ -80,13 +77,13 @@ export class PortfolioService {
    */
   static calculatePositionRisk(
     invested: number,
-    totalPortfolioValue: number
-  ): 'LOW' | 'MEDIUM' | 'HIGH' {
+    totalPortfolioValue: number,
+  ): "LOW" | "MEDIUM" | "HIGH" {
     const percentage = (invested / totalPortfolioValue) * 100;
 
-    if (percentage > 40) return 'HIGH';
-    if (percentage > 20) return 'MEDIUM';
-    return 'LOW';
+    if (percentage > 40) return "HIGH";
+    if (percentage > 20) return "MEDIUM";
+    return "LOW";
   }
 
   /**
@@ -94,27 +91,27 @@ export class PortfolioService {
    */
   static formatPnL(pnl: number): {
     value: string;
-    color: 'green' | 'red' | 'gray';
-    sign: '+' | '-' | '';
+    color: "green" | "red" | "gray";
+    sign: "+" | "-" | "";
   } {
     if (pnl > 0) {
       return {
         value: pnl.toFixed(2),
-        color: 'green',
-        sign: '+',
+        color: "green",
+        sign: "+",
       };
     }
     if (pnl < 0) {
       return {
         value: Math.abs(pnl).toFixed(2),
-        color: 'red',
-        sign: '-',
+        color: "red",
+        sign: "-",
       };
     }
     return {
-      value: '0.00',
-      color: 'gray',
-      sign: '',
+      value: "0.00",
+      color: "gray",
+      sign: "",
     };
   }
 
@@ -127,8 +124,8 @@ export class PortfolioService {
 
     const maxPositionPct = Math.max(
       ...portfolio.openPositions.map(
-        (p) => (p.totalInvested / portfolio.totalInvested) * 100
-      )
+        (p) => (p.totalInvested / portfolio.totalInvested) * 100,
+      ),
     );
 
     return maxPositionPct < 30;

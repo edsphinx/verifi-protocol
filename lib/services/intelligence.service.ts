@@ -3,24 +3,24 @@
  * @description AI-powered market intelligence and insights
  */
 
-import type { MarketMetrics } from '@/lib/types/database.types';
+import type { MarketMetrics } from "@/lib/types/database.types";
 
 export interface MarketIntelligence {
   marketAddress: string;
   sentimentScore: number; // -100 to +100
   confidenceLevel: number; // 0-100
   prediction: {
-    outcome: 'YES' | 'NO' | 'UNCERTAIN';
+    outcome: "YES" | "NO" | "UNCERTAIN";
     confidence: number; // 0-100
   };
   insights: SmartInsight[];
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
   opportunityScore: number; // 0-100
 }
 
 export interface SmartInsight {
-  type: 'ARBITRAGE' | 'PRICE_ANOMALY' | 'VOLUME_SPIKE' | 'CONSENSUS_SHIFT';
-  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  type: "ARBITRAGE" | "PRICE_ANOMALY" | "VOLUME_SPIKE" | "CONSENSUS_SHIFT";
+  severity: "INFO" | "WARNING" | "CRITICAL";
   message: string;
   actionable: boolean;
   suggestedAction?: string;
@@ -32,7 +32,7 @@ export class IntelligenceService {
    */
   static async getMarketIntelligence(
     marketAddress: string,
-    marketMetrics: MarketMetrics
+    marketMetrics: MarketMetrics,
   ): Promise<MarketIntelligence> {
     // Calculate sentiment from supply distribution
     const sentimentScore = this.calculateSentiment(marketMetrics);
@@ -81,12 +81,12 @@ export class IntelligenceService {
    * Predict market outcome using simple ML heuristics
    */
   private static predictOutcome(metrics: MarketMetrics): {
-    outcome: 'YES' | 'NO' | 'UNCERTAIN';
+    outcome: "YES" | "NO" | "UNCERTAIN";
     confidence: number;
   } {
     const totalSupply = metrics.yesSupply + metrics.noSupply;
     if (totalSupply === 0) {
-      return { outcome: 'UNCERTAIN', confidence: 0 };
+      return { outcome: "UNCERTAIN", confidence: 0 };
     }
 
     const yesRatio = metrics.yesSupply / totalSupply;
@@ -94,19 +94,19 @@ export class IntelligenceService {
     // Strong consensus threshold
     if (yesRatio > 0.65) {
       return {
-        outcome: 'YES',
+        outcome: "YES",
         confidence: Math.min((yesRatio - 0.5) * 200, 100),
       };
     }
 
     if (yesRatio < 0.35) {
       return {
-        outcome: 'NO',
+        outcome: "NO",
         confidence: Math.min((0.5 - yesRatio) * 200, 100),
       };
     }
 
-    return { outcome: 'UNCERTAIN', confidence: 0 };
+    return { outcome: "UNCERTAIN", confidence: 0 };
   }
 
   /**
@@ -125,14 +125,14 @@ export class IntelligenceService {
 
       if (discrepancy > 0.1) {
         insights.push({
-          type: 'ARBITRAGE',
-          severity: 'WARNING',
+          type: "ARBITRAGE",
+          severity: "WARNING",
           message: `Price (${(priceRatio * 100).toFixed(1)}%) doesn't match supply ratio (${(yesRatio * 100).toFixed(1)}%) - potential arbitrage opportunity!`,
           actionable: true,
           suggestedAction:
             yesRatio > priceRatio
-              ? 'Consider buying YES shares'
-              : 'Consider buying NO shares',
+              ? "Consider buying YES shares"
+              : "Consider buying NO shares",
         });
       }
     }
@@ -140,8 +140,8 @@ export class IntelligenceService {
     // Detect high volume spike
     if (metrics.trades24h > metrics.totalTrades * 0.3) {
       insights.push({
-        type: 'VOLUME_SPIKE',
-        severity: 'INFO',
+        type: "VOLUME_SPIKE",
+        severity: "INFO",
         message: `High trading activity: ${metrics.trades24h} trades in last 24h (${((metrics.trades24h / metrics.totalTrades) * 100).toFixed(1)}% of total)`,
         actionable: false,
       });
@@ -150,11 +150,11 @@ export class IntelligenceService {
     // Detect low liquidity
     if (totalSupply < 1000) {
       insights.push({
-        type: 'PRICE_ANOMALY',
-        severity: 'WARNING',
-        message: 'Low liquidity - prices may be volatile',
+        type: "PRICE_ANOMALY",
+        severity: "WARNING",
+        message: "Low liquidity - prices may be volatile",
         actionable: true,
-        suggestedAction: 'Use limit orders and trade carefully',
+        suggestedAction: "Use limit orders and trade carefully",
       });
     }
 
@@ -163,11 +163,11 @@ export class IntelligenceService {
       totalSupply > 0 ? metrics.yesSupply / totalSupply : 0;
     if (totalSupplyRatio > 0.8 || totalSupplyRatio < 0.2) {
       insights.push({
-        type: 'CONSENSUS_SHIFT',
-        severity: 'INFO',
-        message: `Strong ${totalSupplyRatio > 0.8 ? 'YES' : 'NO'} consensus (${(totalSupplyRatio * 100).toFixed(1)}%)`,
+        type: "CONSENSUS_SHIFT",
+        severity: "INFO",
+        message: `Strong ${totalSupplyRatio > 0.8 ? "YES" : "NO"} consensus (${(totalSupplyRatio * 100).toFixed(1)}%)`,
         actionable: true,
-        suggestedAction: 'Consider if market is overconfident',
+        suggestedAction: "Consider if market is overconfident",
       });
     }
 
@@ -178,17 +178,17 @@ export class IntelligenceService {
    * Calculate risk level
    */
   private static calculateRiskLevel(
-    metrics: MarketMetrics
-  ): 'LOW' | 'MEDIUM' | 'HIGH' {
+    metrics: MarketMetrics,
+  ): "LOW" | "MEDIUM" | "HIGH" {
     const totalSupply = metrics.yesSupply + metrics.noSupply;
 
     // Low liquidity = high risk
-    if (totalSupply < 1000) return 'HIGH';
+    if (totalSupply < 1000) return "HIGH";
 
     // Low trading activity = medium risk
-    if (metrics.trades24h < 5) return 'MEDIUM';
+    if (metrics.trades24h < 5) return "MEDIUM";
 
-    return 'LOW';
+    return "LOW";
   }
 
   /**
@@ -241,7 +241,7 @@ export class IntelligenceService {
    * Generate proactive alerts for a user's portfolio
    */
   static async generatePortfolioAlerts(
-    userAddress: string
+    userAddress: string,
   ): Promise<ProactiveAlert[]> {
     // TODO: Implement portfolio-based alerts
     // - Position up/down significantly
@@ -253,13 +253,13 @@ export class IntelligenceService {
 
 export interface ProactiveAlert {
   id: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  category: 'OPPORTUNITY' | 'RISK' | 'ACHIEVEMENT' | 'UPDATE';
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  category: "OPPORTUNITY" | "RISK" | "ACHIEVEMENT" | "UPDATE";
   title: string;
   description: string;
   actions: {
     label: string;
-    type: 'NAVIGATE' | 'TRADE' | 'DISMISS';
+    type: "NAVIGATE" | "TRADE" | "DISMISS";
     href?: string;
   }[];
   createdAt: Date;

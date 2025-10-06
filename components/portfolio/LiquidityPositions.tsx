@@ -39,7 +39,7 @@ const formatValue = (value: number) => {
 function LPPositionCard({ lp }: { lp: LiquidityPositionData }) {
   const pnlPct =
     lp.liquidityProvided > 0
-      ? ((lp.unrealizedPnL / lp.liquidityProvided) * 100)
+      ? (lp.unrealizedPnL / lp.liquidityProvided) * 100
       : 0;
 
   return (
@@ -112,9 +112,15 @@ function LPPositionCard({ lp }: { lp: LiquidityPositionData }) {
 function MarketLPGroup({ group }: { group: GroupedLPPosition }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const totalValue = group.positions.reduce((sum, lp) => sum + lp.currentValue, 0);
+  const totalValue = group.positions.reduce(
+    (sum, lp) => sum + lp.currentValue,
+    0,
+  );
   const totalFees = group.positions.reduce((sum, lp) => sum + lp.feesEarned, 0);
-  const totalPnL = group.positions.reduce((sum, lp) => sum + lp.unrealizedPnL, 0);
+  const totalPnL = group.positions.reduce(
+    (sum, lp) => sum + lp.unrealizedPnL,
+    0,
+  );
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -197,9 +203,7 @@ export function LiquidityPositions({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            🌾 LP Farms
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">Loading farms...</p>
@@ -212,9 +216,7 @@ export function LiquidityPositions({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            🌾 LP Farms
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">🌾 LP Farms</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center">
@@ -226,17 +228,20 @@ export function LiquidityPositions({
   }
 
   // Group LP positions by market
-  const groupedPositions = positions.reduce((acc, lp) => {
-    if (!acc[lp.marketAddress]) {
-      acc[lp.marketAddress] = {
-        marketAddress: lp.marketAddress,
-        marketDescription: lp.marketDescription,
-        positions: [],
-      };
-    }
-    acc[lp.marketAddress].positions.push(lp);
-    return acc;
-  }, {} as Record<string, GroupedLPPosition>);
+  const groupedPositions = positions.reduce(
+    (acc, lp) => {
+      if (!acc[lp.marketAddress]) {
+        acc[lp.marketAddress] = {
+          marketAddress: lp.marketAddress,
+          marketDescription: lp.marketDescription,
+          positions: [],
+        };
+      }
+      acc[lp.marketAddress].positions.push(lp);
+      return acc;
+    },
+    {} as Record<string, GroupedLPPosition>,
+  );
 
   const groups = Object.values(groupedPositions);
 
@@ -253,8 +258,8 @@ export function LiquidityPositions({
           <p className="text-sm text-muted-foreground">Total Farm Value</p>
           <p className="text-2xl font-bold">{totalValue.toFixed(2)} APT</p>
           <p className="text-xs text-green-500">
-            <TrendingUp className="h-3 w-3 inline mr-1" />
-            +{totalFees.toFixed(2)} APT farmed
+            <TrendingUp className="h-3 w-3 inline mr-1" />+
+            {totalFees.toFixed(2)} APT farmed
           </p>
         </div>
       </div>

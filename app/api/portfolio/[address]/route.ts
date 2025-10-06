@@ -1,14 +1,20 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import type { PortfolioData, PortfolioPosition } from '@/lib/types/database.types';
-import { aptosClient } from '@/aptos/client';
-import { MODULE_ADDRESS } from '@/aptos/constants';
-import type { InputViewFunctionData } from '@aptos-labs/ts-sdk';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import type {
+  PortfolioData,
+  PortfolioPosition,
+} from "@/lib/types/database.types";
+import { aptosClient } from "@/aptos/client";
+import { MODULE_ADDRESS } from "@/aptos/constants";
+import type { InputViewFunctionData } from "@aptos-labs/ts-sdk";
 
 const prisma = new PrismaClient();
 
 // Helper to fetch positions from blockchain
-async function fetchBlockchainPositions(userAddress: string, marketAddresses: string[]) {
+async function fetchBlockchainPositions(
+  userAddress: string,
+  marketAddresses: string[],
+) {
   try {
     const payload: InputViewFunctionData = {
       function: `${MODULE_ADDRESS}::verifi_protocol::get_user_positions`,
@@ -29,22 +35,22 @@ async function fetchBlockchainPositions(userAddress: string, marketAddresses: st
       totalValue: Number(pos.total_value) / 100_000_000,
     }));
   } catch (error) {
-    console.error('Error fetching blockchain positions:', error);
+    console.error("Error fetching blockchain positions:", error);
     return [];
   }
 }
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ address: string }> }
+  { params }: { params: Promise<{ address: string }> },
 ) {
   try {
     const { address } = await params;
 
     if (!address) {
       return NextResponse.json(
-        { error: 'Address parameter is required' },
-        { status: 400 }
+        { error: "Address parameter is required" },
+        { status: 400 },
       );
     }
 
@@ -52,7 +58,7 @@ export async function GET(
     const dbPositions = await prisma.userPosition.findMany({
       where: {
         userAddress: address,
-        status: { in: ['OPEN', 'RESOLVED'] },
+        status: { in: ["OPEN", "RESOLVED"] },
       },
       include: {
         market: {
@@ -67,7 +73,7 @@ export async function GET(
     const liquidityPositions = await prisma.liquidityPosition.findMany({
       where: {
         userAddress: address,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       include: {
         pool: {
@@ -98,7 +104,9 @@ export async function GET(
       }));
     } else {
       // Fetch positions directly from blockchain
-      console.log('[Portfolio API] No DB positions, fetching from blockchain...');
+      console.log(
+        "[Portfolio API] No DB positions, fetching from blockchain...",
+      );
 
       // Get all active markets
       const allMarkets = await prisma.market.findMany({
@@ -109,16 +117,21 @@ export async function GET(
         const marketAddresses = allMarkets.map((m) => m.marketAddress);
         const blockchainPositions = await fetchBlockchainPositions(
           address,
-          marketAddresses
+          marketAddresses,
         );
 
-        console.log('[Portfolio API] Blockchain positions:', blockchainPositions);
+        console.log(
+          "[Portfolio API] Blockchain positions:",
+          blockchainPositions,
+        );
 
         // Convert blockchain positions to portfolio format
         positions = blockchainPositions
           .filter((bp) => bp.yesBalance > 0 || bp.noBalance > 0)
           .flatMap((bp) => {
-            const market = allMarkets.find((m) => m.marketAddress === bp.marketAddress);
+            const market = allMarkets.find(
+              (m) => m.marketAddress === bp.marketAddress,
+            );
             const results = [];
 
             // Create YES position if user has YES shares
@@ -126,15 +139,16 @@ export async function GET(
               results.push({
                 marketAddress: bp.marketAddress,
                 market,
-                outcome: 'YES',
+                outcome: "YES",
                 sharesOwned: bp.yesBalance,
                 avgEntryPrice: 0, // We don't have historical data
                 totalInvested: 0, // We don't have historical data
-                currentPrice: bp.yesBalance > 0 ? bp.yesValue / bp.yesBalance : 0,
+                currentPrice:
+                  bp.yesBalance > 0 ? bp.yesValue / bp.yesBalance : 0,
                 currentValue: bp.yesValue,
                 unrealizedPnL: 0, // Can't calculate without totalInvested
                 unrealizedPnLPct: 0,
-                status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                status: market?.status === "active" ? "OPEN" : "RESOLVED",
               });
             }
 
@@ -143,7 +157,7 @@ export async function GET(
               results.push({
                 marketAddress: bp.marketAddress,
                 market,
-                outcome: 'NO',
+                outcome: "NO",
                 sharesOwned: bp.noBalance,
                 avgEntryPrice: 0,
                 totalInvested: 0,
@@ -151,7 +165,7 @@ export async function GET(
                 currentValue: bp.noValue,
                 unrealizedPnL: 0,
                 unrealizedPnLPct: 0,
-                status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                status: market?.status === "active" ? "OPEN" : "RESOLVED",
               });
             }
 
@@ -164,7 +178,7 @@ export async function GET(
     const totalValue = positions.reduce((sum, p) => sum + p.currentValue, 0);
     const totalInvested = positions.reduce(
       (sum, p) => sum + p.totalInvested,
-      0
+      0,
     );
     const unrealizedPnL = totalValue - totalInvested;
     const unrealizedPnLPct =
@@ -174,20 +188,20 @@ export async function GET(
     const activities = await prisma.activity.findMany({
       where: {
         userAddress: address,
-        action: { in: ['BUY', 'SELL'] },
+        action: { in: ["BUY", "SELL"] },
       },
     });
 
     const totalTrades = activities.length;
     const totalVolume = activities.reduce(
       (sum, a) => sum + (a.totalValue || 0),
-      0
+      0,
     );
 
     // Convert Prisma positions to PortfolioPosition format
     const formattedPositions: PortfolioPosition[] = positions.map((p) => ({
       marketAddress: p.marketAddress,
-      marketDescription: 'market' in p ? (p as any).market.description : '',
+      marketDescription: "market" in p ? (p as any).market.description : "",
       outcome: p.outcome,
       sharesOwned: p.sharesOwned,
       avgEntryPrice: p.avgEntryPrice,
@@ -197,29 +211,30 @@ export async function GET(
       unrealizedPnL: p.unrealizedPnL,
       unrealizedPnLPct: p.unrealizedPnLPct,
       status: p.status,
-      pools: 'market' in p && (p as any).market?.pools
-        ? (p as any).market.pools.map((pool: any) => ({
-            poolAddress: pool.poolAddress,
-            fee: pool.fee,
-            totalLiquidity: pool.totalLiquidity,
-          }))
-        : [],
+      pools:
+        "market" in p && (p as any).market?.pools
+          ? (p as any).market.pools.map((pool: any) => ({
+              poolAddress: pool.poolAddress,
+              fee: pool.fee,
+              totalLiquidity: pool.totalLiquidity,
+            }))
+          : [],
     }));
 
     // Separate open and closed positions
-    const openPositions = formattedPositions.filter((p) => p.status === 'OPEN');
+    const openPositions = formattedPositions.filter((p) => p.status === "OPEN");
     const closedPositions = formattedPositions.filter(
-      (p) => p.status === 'CLOSED' || p.status === 'RESOLVED'
+      (p) => p.status === "CLOSED" || p.status === "RESOLVED",
     );
 
     // Calculate LP totals
     const lpTotalValue = liquidityPositions.reduce(
       (sum, lp) => sum + lp.currentValue,
-      0
+      0,
     );
     const lpTotalInvested = liquidityPositions.reduce(
       (sum, lp) => sum + lp.liquidityProvided,
-      0
+      0,
     );
 
     const portfolio: PortfolioData = {
@@ -240,7 +255,7 @@ export async function GET(
         id: lp.id,
         poolAddress: lp.poolAddress,
         marketAddress: lp.marketAddress,
-        marketDescription: lp.pool.market?.description || '',
+        marketDescription: lp.pool.market?.description || "",
         lpTokens: lp.lpTokens,
         liquidityProvided: lp.liquidityProvided,
         yesAmount: lp.yesAmount,
@@ -269,10 +284,10 @@ export async function GET(
 
     return NextResponse.json(portfolio);
   } catch (error) {
-    console.error('Error fetching portfolio:', error);
+    console.error("Error fetching portfolio:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch portfolio' },
-      { status: 500 }
+      { error: "Failed to fetch portfolio" },
+      { status: 500 },
     );
   }
 }

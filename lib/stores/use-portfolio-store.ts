@@ -3,11 +3,14 @@
  * @description Zustand store for user portfolio and positions
  */
 
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import type { PortfolioData, PortfolioPosition } from '@/lib/types/database.types';
-import { PortfolioService } from '@/lib/services';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import type {
+  PortfolioData,
+  PortfolioPosition,
+} from "@/lib/types/database.types";
+import { PortfolioService } from "@/lib/services";
 
 interface PortfolioStore {
   // User Address
@@ -98,7 +101,7 @@ export const usePortfolioStore = create<PortfolioStore>()(
               state.error =
                 error instanceof Error
                   ? error.message
-                  : 'Failed to fetch portfolio';
+                  : "Failed to fetch portfolio";
             });
           } finally {
             set((state) => {
@@ -110,7 +113,7 @@ export const usePortfolioStore = create<PortfolioStore>()(
         refreshPortfolio: async () => {
           const { userAddress } = get();
           if (!userAddress) {
-            throw new Error('No user address set');
+            throw new Error("No user address set");
           }
           await get().fetchPortfolio(userAddress);
         },
@@ -161,12 +164,12 @@ export const usePortfolioStore = create<PortfolioStore>()(
         },
       })),
       {
-        name: 'portfolio-storage',
+        name: "portfolio-storage",
         partialize: (state) => ({
           userAddress: state.userAddress,
         }),
-      }
+      },
     ),
-    { name: 'PortfolioStore' }
-  )
+    { name: "PortfolioStore" },
+  ),
 );
