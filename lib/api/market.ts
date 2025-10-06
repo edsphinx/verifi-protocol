@@ -38,7 +38,7 @@ export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
 
     // The API already returns the enriched data, but we still need to format it for the UI component
     const uiMarkets = data
-      .map((market: DbMarket) => {
+      .map((market: DbMarket): UiMarket | null => {
         try {
           const resolutionDate = new Date(market.resolutionTimestamp);
           return {
@@ -46,6 +46,8 @@ export async function getActiveMarketsFromApi(): Promise<UiMarket[]> {
             title: market.description,
             category: "On-Chain",
             totalVolume: market.totalVolume / 10 ** 8, // Convert from Octas
+            volume24h: (market.volume24h ?? 0) / 10 ** 8, // Convert from Octas, default to 0
+            uniqueTraders: market.uniqueTraders,
             resolvesOnDate: resolutionDate,
             resolvesOn: resolutionDate.toLocaleDateString(),
             resolutionTimestamp: Math.floor(resolutionDate.getTime() / 1000), // Unix timestamp in seconds
