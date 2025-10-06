@@ -48,7 +48,44 @@ export async function POST(request: Request) {
     const sender = payload.transaction?.sender;
     const timestamp = payload.transaction?.timestamp;
 
-    // Skip if already processed
+    // Handle MarketCreatedEvent FIRST (before duplicate check)
+    // This ensures notifications are always created for new markets
+    if (eventType?.includes("MarketCreatedEvent")) {
+      // Only create market if it doesn't exist
+      const marketExists = await activityExists(txHash);
+
+      if (!marketExists) {
+        await recordNewMarket({
+          marketAddress: eventData.market_address,
+          creatorAddress: eventData.creator,
+          description: eventData.description || "New prediction market",
+          resolutionTimestamp: new Date(Number(eventData.resolution_timestamp) * 1000),
+          status: "active",
+        });
+      }
+
+      // ALWAYS create notification, even if market was already saved by sync service
+      await createGlobalNotification(
+        "NEW_MARKET",
+        "🎯 New Market Created!",
+        `${eventData.description || "New prediction market"} is now live and accepting trades!`,
+        eventData.market_address,
+        txHash,
+        {
+          creator: eventData.creator,
+          description: eventData.description,
+          resolutionTimestamp: eventData.resolution_timestamp,
+        },
+      );
+
+      return NextResponse.json({
+        status: "success",
+        notification_created: true,
+        market_already_existed: marketExists
+      });
+    }
+
+    // Skip if already processed (for non-market events)
     if (await activityExists(txHash)) {
       return NextResponse.json({ status: "already_processed" });
     }
@@ -77,31 +114,6 @@ export async function POST(request: Request) {
         amount: parseInt(eventData.apt_amount_out) / 10 ** 8,
         timestamp: timestamp ? new Date(timestamp) : undefined,
       });
-    }
-
-    // Handle MarketCreatedEvent
-    else if (eventType?.includes("MarketCreatedEvent")) {
-      await recordNewMarket({
-        marketAddress: eventData.market_address,
-        creatorAddress: eventData.creator,
-        description: eventData.description || "New prediction market",
-        resolutionTimestamp: new Date(Number(eventData.resolution_timestamp) * 1000),
-        status: "active",
-      });
-
-      // Create global notification for new market
-      await createGlobalNotification(
-        "NEW_MARKET",
-        "🎯 New Market Created!",
-        `${eventData.description || "New prediction market"} is now live and accepting trades!`,
-        eventData.market_address,
-        txHash,
-        {
-          creator: eventData.creator,
-          description: eventData.description,
-          resolutionTimestamp: eventData.resolution_timestamp,
-        },
-      );
     }
 
     // Handle Tapp PoolCreated
