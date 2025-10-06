@@ -1,113 +1,134 @@
 /**
  * @file Analytics Dashboard Page
  * @description Comprehensive analytics and metrics for VeriFi Protocol
+ * Optimized layout for maximum data visibility and space efficiency
  */
 
 "use client";
 
 import {
-  DashboardHeader,
   ProtocolOverview,
   TopTradersTable,
   RecentActivityFeed,
   MarketCategoriesCard,
   VolumeChart,
   GlobalStatsTicker,
-  SyncControlPanel,
+  MarketPulseMonitor,
 } from "@/components/analytics";
 import { TopMarketsTable } from "@/components/dashboard/TopMarketsTable";
-import { motion } from "framer-motion";
+import { FeaturedMarketsGrid } from "@/components/analytics/FeaturedMarketsGrid";
+import { CompactSystemStatus } from "@/components/analytics/CompactSystemStatus";
+import { CompactAlertsButton } from "@/components/analytics/CompactAlertsButton";
+import { useTopMarkets } from "@/lib/hooks/use-top-markets";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Bouncy "degen" easing for professional animations
+const bouncy = [0.34, 1.56, 0.64, 1] as const;
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -20, scale: 0.95 },
+};
 
 export default function AnalyticsPage() {
-  // Elastic bounce animation from UX research
-  const containerAnimation = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: {
-      duration: 0.6,
-      ease: "easeOut" as const,
-    },
-  };
-
-  const sectionAnimation = {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 20,
-    },
-  };
+  // Fetch data for intelligence features
+  const { topMarkets } = useTopMarkets();
+  const markets = topMarkets || [];
 
   return (
     <div className="min-h-screen">
       {/* Global Stats Ticker */}
       <GlobalStatsTicker />
 
-      <div className="container mx-auto py-8 space-y-8">
-        {/* Header */}
-        <motion.div {...containerAnimation}>
-          <DashboardHeader />
-        </motion.div>
-
-        {/* Sync Control Panel */}
+      <div className="container mx-auto py-6 space-y-6">
+        {/* Compact Top Bar: System Status + Alerts */}
         <motion.div
-          {...sectionAnimation}
-          transition={{ ...sectionAnimation.transition, delay: 0.05 }}
+          {...fadeInUp}
+          transition={{ duration: 0.5, ease: bouncy }}
+          className="flex items-center justify-between gap-4"
         >
-          <SyncControlPanel />
+          <div className="flex-1">
+            <CompactSystemStatus />
+          </div>
+          <CompactAlertsButton />
         </motion.div>
 
-        {/* Protocol Overview */}
-        <motion.div
-          {...sectionAnimation}
-          transition={{ ...sectionAnimation.transition, delay: 0.1 }}
-        >
-          <ProtocolOverview />
-        </motion.div>
+        {/* Main Dashboard Grid - Optimized for Data Visibility */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left Column: Primary Data (8 cols) */}
+          <div className="col-span-12 lg:col-span-8 space-y-6">
+            {/* Protocol Overview - Compact */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.1, ease: bouncy }}
+            >
+              <ProtocolOverview />
+            </motion.div>
 
-        {/* Volume Chart - Full Width */}
-        <motion.div
-          {...sectionAnimation}
-          transition={{ ...sectionAnimation.transition, delay: 0.15 }}
-        >
-          <VolumeChart />
-        </motion.div>
+            {/* Volume Chart - Prominent */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.2, ease: bouncy }}
+            >
+              <VolumeChart />
+            </motion.div>
 
-        {/* Two Column Layout: Markets & Traders */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <motion.div
-            {...sectionAnimation}
-            transition={{ ...sectionAnimation.transition, delay: 0.2 }}
-          >
-            <TopMarketsTable />
-          </motion.div>
+            {/* Featured Markets - Level 3 Intelligence */}
+            <AnimatePresence mode="wait">
+              {markets.length > 0 && (
+                <motion.div
+                  key="featured-markets"
+                  {...fadeInUp}
+                  transition={{ duration: 0.5, delay: 0.3, ease: bouncy }}
+                >
+                  <FeaturedMarketsGrid markets={markets} count={3} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <motion.div
-            {...sectionAnimation}
-            transition={{ ...sectionAnimation.transition, delay: 0.25 }}
-          >
-            <TopTradersTable />
-          </motion.div>
-        </div>
+            {/* Markets & Traders Tables - Full Width for Better Data Visibility */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.4, ease: bouncy }}
+            >
+              <TopMarketsTable />
+            </motion.div>
 
-        {/* Two Column Layout: Categories & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <motion.div
-            {...sectionAnimation}
-            transition={{ ...sectionAnimation.transition, delay: 0.3 }}
-            className="lg:col-span-2"
-          >
-            <MarketCategoriesCard />
-          </motion.div>
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.5, ease: bouncy }}
+            >
+              <TopTradersTable />
+            </motion.div>
+          </div>
 
-          <motion.div
-            {...sectionAnimation}
-            transition={{ ...sectionAnimation.transition, delay: 0.35 }}
-            className="lg:col-span-3"
-          >
-            <RecentActivityFeed />
-          </motion.div>
+          {/* Right Sidebar: Live Activity (4 cols) - Level 4 Complete */}
+          <div className="col-span-12 lg:col-span-4 space-y-6">
+            {/* Market Categories - Compact */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.2, ease: bouncy }}
+            >
+              <MarketCategoriesCard />
+            </motion.div>
+
+            {/* Recent Activity Feed - Scrollable */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.3, ease: bouncy }}
+            >
+              <RecentActivityFeed />
+            </motion.div>
+
+            {/* Level 4: Market Pulse Monitor */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ duration: 0.5, delay: 0.4, ease: bouncy }}
+            >
+              <MarketPulseMonitor />
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>
