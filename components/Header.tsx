@@ -1,43 +1,13 @@
 "use client";
 
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WalletSelector } from "./WalletSelector";
+import { Logo } from "./branding/Logo";
 import { NotificationBell } from "./notifications/NotificationBell";
-
-const Logo = () => (
-  <svg
-    width="36"
-    height="36"
-    viewBox="0 0 100 100"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-label="VeriFi Protocol Logo"
-    className="transition-transform hover:scale-105"
-  >
-    <title>VeriFi Protocol</title>
-    {/* Checkmark/Verification symbol */}
-    <path
-      d="M20 55 L40 75 L80 25"
-      stroke="hsl(var(--primary))"
-      strokeWidth="8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    {/* Subtle accent line */}
-    <path
-      d="M25 85 L75 85"
-      stroke="hsl(var(--primary))"
-      strokeWidth="3"
-      strokeLinecap="round"
-      opacity="0.4"
-    />
-  </svg>
-);
+import { WalletSelector } from "./WalletSelector";
 
 export function Header() {
   const pathname = usePathname();
@@ -91,8 +61,8 @@ export function Header() {
               <WalletSelector />
             </div>
 
-            {/* Mobile Menu Button */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-md hover:bg-muted/50 transition-colors"
               aria-label="Toggle menu"

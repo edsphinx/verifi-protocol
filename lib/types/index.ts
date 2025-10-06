@@ -5,6 +5,7 @@
 
 export * from "./api";
 export * from "./aptos";
+export * from "./auth";
 // export * from "./database";
 export * from "./database.types";
 export * from "./navigation";
