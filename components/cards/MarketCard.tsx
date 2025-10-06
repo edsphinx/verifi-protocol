@@ -127,7 +127,7 @@ export function MarketCard({ market }: MarketCardProps) {
                           duration: 2,
                           repeat: Number.POSITIVE_INFINITY,
                           repeatDelay: 4,
-                          ease: "linear"
+                          ease: "linear",
                         }}
                       />
                     )}
@@ -156,12 +156,12 @@ export function MarketCard({ market }: MarketCardProps) {
                     <motion.div
                       animate={{
                         scale: [1, 1.1, 1],
-                        rotate: [0, 5, -5, 0]
+                        rotate: [0, 5, -5, 0],
                       }}
                       transition={{
                         duration: 2,
                         repeat: Number.POSITIVE_INFINITY,
-                        repeatDelay: 3
+                        repeatDelay: 3,
                       }}
                     >
                       <TrendingUp className="h-4 w-4 text-primary" />
@@ -224,13 +224,17 @@ export function MarketCard({ market }: MarketCardProps) {
               className="w-full text-sm font-semibold text-primary/80 group-hover:text-primary flex items-center justify-center transition-all duration-300"
               whileHover={{ x: 4 }}
             >
-              {isExpired ? "View Details" : isResolved ? "View Results" : "View Market & Trade"}
+              {isExpired
+                ? "View Details"
+                : isResolved
+                  ? "View Results"
+                  : "View Market & Trade"}
               <motion.div
                 animate={{ x: [0, 4, 0] }}
                 transition={{
                   duration: 1.5,
                   repeat: Number.POSITIVE_INFINITY,
-                  repeatDelay: 2
+                  repeatDelay: 2,
                 }}
               >
                 <ArrowRight className="ml-2 h-4 w-4" />

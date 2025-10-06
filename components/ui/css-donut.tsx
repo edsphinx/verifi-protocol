@@ -77,7 +77,10 @@ export function CSSDonut({
           {segments.map((seg, idx) => {
             const percentage = ((seg.value / total) * 100).toFixed(1);
             return (
-              <div key={idx} className="flex items-center justify-between gap-3">
+              <div
+                key={idx}
+                className="flex items-center justify-between gap-3"
+              >
                 <div className="flex items-center gap-2 flex-1">
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"

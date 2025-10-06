@@ -8,14 +8,14 @@
 import type { Transition, TargetAndTransition } from "framer-motion";
 
 export type AnimationStyle =
-  | "smooth-3d-flip"      // Current: 3D flip with spring bounce
-  | "magnetic-slide"      // Slides with magnetic snap effect
-  | "scale-morph"         // Morphing scale with elastic bounce
-  | "dissolve-zoom"       // Dissolves while zooming
-  | "card-flip"           // Classic playing card flip
-  | "cube-rotate"         // Rotating cube effect
-  | "elastic-bounce"      // Extreme elastic bounce
-  | "ultra-degen";        // MAXIMUM DOPAMINE: Chaos mode with all triggers
+  | "smooth-3d-flip" // Current: 3D flip with spring bounce
+  | "magnetic-slide" // Slides with magnetic snap effect
+  | "scale-morph" // Morphing scale with elastic bounce
+  | "dissolve-zoom" // Dissolves while zooming
+  | "card-flip" // Classic playing card flip
+  | "cube-rotate" // Rotating cube effect
+  | "elastic-bounce" // Extreme elastic bounce
+  | "ultra-degen"; // MAXIMUM DOPAMINE: Chaos mode with all triggers
 
 interface PanelAnimation {
   initial: TargetAndTransition;
@@ -35,19 +35,19 @@ export const smooth3DFlip: PanelAnimation = {
     rotateY: 180,
     scale: 0.8,
     opacity: 0,
-    z: -400
+    z: -400,
   },
   animate: {
     rotateY: 0,
     scale: 1,
     opacity: 1,
-    z: 0
+    z: 0,
   },
   exit: {
     rotateY: -180,
     scale: 0.8,
     opacity: 0,
-    z: -400
+    z: -400,
   },
   transition: {
     duration: 0.6,
@@ -56,10 +56,10 @@ export const smooth3DFlip: PanelAnimation = {
     scale: {
       type: "spring",
       stiffness: 260,
-      damping: 20
-    }
+      damping: 20,
+    },
   },
-  containerStyle: { perspective: "2000px" }
+  containerStyle: { perspective: "2000px" },
 };
 
 /**
@@ -71,25 +71,25 @@ export const magneticSlide: PanelAnimation = {
   initial: {
     x: "120%",
     opacity: 0,
-    scale: 0.95
+    scale: 0.95,
   },
   animate: {
     x: 0,
     opacity: 1,
-    scale: 1
+    scale: 1,
   },
   exit: {
     x: "-120%",
     opacity: 0,
-    scale: 0.95
+    scale: 0.95,
   },
   transition: {
     type: "spring",
     stiffness: 300,
     damping: 30,
     mass: 0.8,
-    opacity: { duration: 0.3 }
-  }
+    opacity: { duration: 0.3 },
+  },
 };
 
 /**
@@ -101,25 +101,25 @@ export const scaleMorph: PanelAnimation = {
   initial: {
     scale: 0.3,
     opacity: 0,
-    rotateZ: -15
+    rotateZ: -15,
   },
   animate: {
     scale: 1,
     opacity: 1,
-    rotateZ: 0
+    rotateZ: 0,
   },
   exit: {
     scale: 0.3,
     opacity: 0,
-    rotateZ: 15
+    rotateZ: 15,
   },
   transition: {
     type: "spring",
     stiffness: 200,
     damping: 15,
     mass: 1.2,
-    opacity: { duration: 0.3 }
-  }
+    opacity: { duration: 0.3 },
+  },
 };
 
 /**
@@ -131,23 +131,23 @@ export const dissolveZoom: PanelAnimation = {
   initial: {
     scale: 1.5,
     opacity: 0,
-    filter: "blur(10px)"
+    filter: "blur(10px)",
   },
   animate: {
     scale: 1,
     opacity: 1,
-    filter: "blur(0px)"
+    filter: "blur(0px)",
   },
   exit: {
     scale: 0.5,
     opacity: 0,
-    filter: "blur(10px)"
+    filter: "blur(10px)",
   },
   transition: {
     duration: 0.5,
     ease: [0.25, 0.46, 0.45, 0.94], // Smooth easeOutQuad
-    filter: { duration: 0.4 }
-  }
+    filter: { duration: 0.4 },
+  },
 };
 
 /**
@@ -159,23 +159,23 @@ export const cardFlip: PanelAnimation = {
   initial: {
     rotateX: 90,
     opacity: 0,
-    y: 50
+    y: 50,
   },
   animate: {
     rotateX: 0,
     opacity: 1,
-    y: 0
+    y: 0,
   },
   exit: {
     rotateX: -90,
     opacity: 0,
-    y: -50
+    y: -50,
   },
   transition: {
     duration: 0.4,
     ease: [0.68, -0.55, 0.265, 1.55], // Back easing for overshoot
   },
-  containerStyle: { perspective: "1500px" }
+  containerStyle: { perspective: "1500px" },
 };
 
 /**
@@ -187,17 +187,17 @@ export const cubeRotate: PanelAnimation = {
   initial: {
     rotateY: 90,
     x: "50%",
-    opacity: 0
+    opacity: 0,
   },
   animate: {
     rotateY: 0,
     x: 0,
-    opacity: 1
+    opacity: 1,
   },
   exit: {
     rotateY: -90,
     x: "-50%",
-    opacity: 0
+    opacity: 0,
   },
   transition: {
     duration: 0.5,
@@ -205,8 +205,8 @@ export const cubeRotate: PanelAnimation = {
   },
   containerStyle: {
     perspective: "2500px",
-    transformStyle: "preserve-3d"
-  }
+    transformStyle: "preserve-3d",
+  },
 };
 
 /**
@@ -218,25 +218,25 @@ export const elasticBounce: PanelAnimation = {
   initial: {
     scale: 0,
     opacity: 0,
-    y: -100
+    y: -100,
   },
   animate: {
     scale: 1,
     opacity: 1,
-    y: 0
+    y: 0,
   },
   exit: {
     scale: 0,
     opacity: 0,
-    y: 100
+    y: 100,
   },
   transition: {
     type: "spring",
     stiffness: 400,
     damping: 10,
     mass: 1.5,
-    opacity: { duration: 0.2 }
-  }
+    opacity: { duration: 0.2 },
+  },
 };
 
 /**
@@ -269,7 +269,7 @@ export const ultraDegen: PanelAnimation = {
     rotateZ: -45,
     y: -150,
     x: 100,
-    filter: "blur(20px) brightness(0.3)"
+    filter: "blur(20px) brightness(0.3)",
   },
   animate: {
     scale: 1,
@@ -279,7 +279,7 @@ export const ultraDegen: PanelAnimation = {
     rotateZ: 0,
     y: 0,
     x: 0,
-    filter: "blur(0px) brightness(1)"
+    filter: "blur(0px) brightness(1)",
   },
   exit: {
     scale: 0,
@@ -289,41 +289,41 @@ export const ultraDegen: PanelAnimation = {
     rotateZ: 45,
     y: 150,
     x: -100,
-    filter: "blur(20px) brightness(0.3)"
+    filter: "blur(20px) brightness(0.3)",
   },
   transition: {
     type: "spring",
-    stiffness: 500,      // MAXIMUM responsiveness
-    damping: 8,          // MINIMUM damping = MAXIMUM bounce
-    mass: 2,             // Heavy = perceived value
+    stiffness: 500, // MAXIMUM responsiveness
+    damping: 8, // MINIMUM damping = MAXIMUM bounce
+    mass: 2, // Heavy = perceived value
     opacity: {
       duration: 0.3,
-      ease: [0.68, -0.55, 0.265, 1.55] // Overshoot opacity too
+      ease: [0.68, -0.55, 0.265, 1.55], // Overshoot opacity too
     },
     filter: {
       duration: 0.5,
-      ease: "easeOut"
+      ease: "easeOut",
     },
     rotateX: {
       type: "spring",
       stiffness: 300,
-      damping: 12
+      damping: 12,
     },
     rotateY: {
       type: "spring",
       stiffness: 350,
-      damping: 10
+      damping: 10,
     },
     rotateZ: {
       type: "spring",
       stiffness: 250,
-      damping: 15
-    }
+      damping: 15,
+    },
   },
   containerStyle: {
     perspective: "3000px",
-    transformStyle: "preserve-3d"
-  }
+    transformStyle: "preserve-3d",
+  },
 };
 
 /**
@@ -338,7 +338,7 @@ export function getAnimationConfig(style: AnimationStyle): PanelAnimation {
     "card-flip": cardFlip,
     "cube-rotate": cubeRotate,
     "elastic-bounce": elasticBounce,
-    "ultra-degen": ultraDegen
+    "ultra-degen": ultraDegen,
   };
 
   return animations[style];
@@ -355,5 +355,5 @@ export const RECOMMENDED_ANIMATIONS = {
   gaming: "card-flip" as AnimationStyle,
   premium: "cube-rotate" as AnimationStyle,
   addictive: "elastic-bounce" as AnimationStyle,
-  degen: "ultra-degen" as AnimationStyle  // 🚀 MAXIMUM APE MODE
+  degen: "ultra-degen" as AnimationStyle, // 🚀 MAXIMUM APE MODE
 } as const;

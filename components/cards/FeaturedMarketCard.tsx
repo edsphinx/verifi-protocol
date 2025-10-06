@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, TrendingUp, CalendarDays, Clock, Flame, Users } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+  CalendarDays,
+  Clock,
+  Flame,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +47,16 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
   // Extract values (with fallbacks)
   const yesPrice = priceResult.success ? priceResult.data.yes : 0.5;
   const noPrice = priceResult.success ? priceResult.data.no : 0.5;
-  const yesProbability = probabilityResult.success ? probabilityResult.data.yes : 50;
-  const noProbability = probabilityResult.success ? probabilityResult.data.no : 50;
+  const yesProbability = probabilityResult.success
+    ? probabilityResult.data.yes
+    : 50;
+  const noProbability = probabilityResult.success
+    ? probabilityResult.data.no
+    : 50;
 
   // Display units for liquidity
-  const totalLiquidityDisplay = DataIntegrityEngine.toDisplayUnits(totalReserve);
+  const totalLiquidityDisplay =
+    DataIntegrityEngine.toDisplayUnits(totalReserve);
 
   return (
     <motion.div
@@ -61,15 +73,16 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
           <div className="relative p-6 space-y-5">
             {/* Header: Badge + Time */}
             <div className="flex items-center justify-between gap-3">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="relative"
-              >
+              <motion.div whileHover={{ scale: 1.05 }} className="relative">
                 <Badge className="text-xs font-bold px-3 py-1.5 bg-gradient-to-r from-primary to-primary/80 relative overflow-hidden">
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                    }}
                   />
                   <Flame className="h-3.5 w-3.5 mr-1.5 inline" />
                   <span className="relative">FEATURED</span>
@@ -98,10 +111,15 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
             <div className="grid grid-cols-3 gap-3">
               {/* Liquidity */}
               <div className="p-3 bg-muted/40 rounded-lg border border-border/40 group-hover:border-primary/20 transition-colors">
-                <div className="text-xs text-muted-foreground mb-1">Liquidity</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  Liquidity
+                </div>
                 <div className="text-sm font-bold font-mono">
                   {hasLiquidity ? (
-                    <>{totalLiquidityDisplay.toFixed(1)}<span className="text-xs ml-1 text-primary">Tokens</span></>
+                    <>
+                      {totalLiquidityDisplay.toFixed(1)}
+                      <span className="text-xs ml-1 text-primary">Tokens</span>
+                    </>
                   ) : (
                     <span className="text-muted-foreground">No pool</span>
                   )}
@@ -110,10 +128,15 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
 
               {/* Volume (Mock for now) */}
               <div className="p-3 bg-muted/40 rounded-lg border border-border/40 group-hover:border-primary/20 transition-colors">
-                <div className="text-xs text-muted-foreground mb-1">24h Volume</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  24h Volume
+                </div>
                 <div className="text-sm font-bold font-mono">
                   {market.totalVolume ? (
-                    <>{market.totalVolume.toFixed(0)}<span className="text-xs ml-1 text-primary">APT</span></>
+                    <>
+                      {market.totalVolume.toFixed(0)}
+                      <span className="text-xs ml-1 text-primary">APT</span>
+                    </>
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
@@ -140,7 +163,9 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
                   className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20 group-hover:border-green-500/30 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-green-400/70">YES</span>
+                    <span className="text-xs font-medium text-green-400/70">
+                      YES
+                    </span>
                     <span className="text-2xl font-bold font-mono text-green-400">
                       {yesProbability}%
                     </span>
@@ -163,7 +188,9 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
                   className="p-4 bg-gradient-to-br from-red-500/10 to-red-500/5 rounded-lg border border-red-500/20 group-hover:border-red-500/30 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-red-400/70">NO</span>
+                    <span className="text-xs font-medium text-red-400/70">
+                      NO
+                    </span>
                     <span className="text-2xl font-bold font-mono text-red-400">
                       {noProbability}%
                     </span>
@@ -198,7 +225,11 @@ export function FeaturedMarketCard({ market }: FeaturedMarketCardProps) {
                 Trade Now
                 <motion.div
                   animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                  }}
                 >
                   <ArrowRight className="h-4 w-4" />
                 </motion.div>

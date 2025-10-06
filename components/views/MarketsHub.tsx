@@ -54,14 +54,15 @@ export function MarketsHub() {
   };
 
   // Prepare markets data for sentiment chart
-  const activeMarketsData = otherMarkets && featuredMarket
-    ? [featuredMarket, ...otherMarkets].map(m => ({
-        id: m.id,
-        description: m.title || '',
-        totalSupplyYes: 0, // TODO: Add supply data from contract
-        totalSupplyNo: 0,
-      }))
-    : [];
+  const activeMarketsData =
+    otherMarkets && featuredMarket
+      ? [featuredMarket, ...otherMarkets].map((m) => ({
+          id: m.id,
+          description: m.title || "",
+          totalSupplyYes: 0, // TODO: Add supply data from contract
+          totalSupplyNo: 0,
+        }))
+      : [];
 
   return (
     <div className="space-y-8 md:space-y-12">
@@ -101,9 +102,7 @@ export function MarketsHub() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="rankings">
-              Rankings
-            </TabsTrigger>
+            <TabsTrigger value="rankings">Rankings</TabsTrigger>
           </TabsList>
         </div>
 
@@ -185,7 +184,8 @@ export function MarketsHub() {
                   {/* MarketRankings chart removed for performance */}
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                      Market rankings coming soon once we have historical volume data
+                      Market rankings coming soon once we have historical volume
+                      data
                     </p>
                   </div>
                 </TabsContent>

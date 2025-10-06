@@ -22,7 +22,7 @@ import {
   LogOut,
   User,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,12 +43,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NETWORK } from "@/aptos/constants";
+import { useSIWAAuth } from "@/lib/hooks/use-siwa-auth";
+import { UnifiedAuthButton } from "@/components/UnifiedAuthButton";
 
 export function WalletSelector() {
   const { account, connected, disconnect, wallet } = useWallet();
+  const { signIn, signOut, isAuthenticating, isAuthenticated } = useSIWAAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [hasTriggeredSignIn, setHasTriggeredSignIn] = useState(false);
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
+
+  // SIWA auto-trigger disabled - users must manually sign in
+  // useEffect(() => {
+  //   if (connected && account?.address && !isAuthenticated && !hasTriggeredSignIn && !isAuthenticating) {
+  //     setHasTriggeredSignIn(true);
+  //     // Small delay to ensure wallet is fully connected
+  //     setTimeout(() => {
+  //       signIn().catch((error) => {
+  //         console.error("Auto sign-in failed:", error);
+  //         setHasTriggeredSignIn(false); // Allow retry
+  //       });
+  //     }, 500);
+  //   }
+
+  //   // Reset trigger when wallet disconnects
+  //   if (!connected) {
+  //     setHasTriggeredSignIn(false);
+  //   }
+  // }, [connected, account?.address, isAuthenticated, hasTriggeredSignIn, isAuthenticating, signIn]);
+
+  // Set timeout if wallet address doesn't load within 5 seconds
+  useEffect(() => {
+    if (connected && !account?.address) {
+      const timer = setTimeout(() => setLoadingTimeout(true), 5000);
+      return () => clearTimeout(timer);
+    }
+    setLoadingTimeout(false);
+  }, [connected, account?.address]);
 
   const copyAddress = useCallback(async () => {
     if (!account?.address) return;
@@ -65,51 +99,89 @@ export function WalletSelector() {
     }
   }, [account?.address]);
 
+  const getNetworkDisplay = () => {
+    const networkName = `Aptos ${NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1).toLowerCase()}`;
+    const networkColor =
+      NETWORK === "mainnet"
+        ? "bg-green-500"
+        : NETWORK === "testnet"
+          ? "bg-yellow-500"
+          : "bg-blue-500";
+
+    return { name: networkName, color: networkColor };
+  };
+
+  const networkInfo = getNetworkDisplay();
+
   return connected ? (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="gap-2 font-mono text-sm border-border/40 hover:border-primary/40"
-        >
-          <div className="h-2 w-2 rounded-full bg-green-400" />
-          {account?.ansName ||
-            (account?.address
-              ? truncateAddress(account.address.toString())
-              : "Unknown")}
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <div className="px-2 py-1.5 text-sm">
-          <p className="text-xs text-muted-foreground mb-1">Connected Wallet</p>
-          <p className="font-mono text-xs truncate">
-            {account?.address?.toString()}
-          </p>
-        </div>
-        <DropdownMenuItem onSelect={copyAddress} className="gap-2">
-          <Copy className="h-4 w-4" /> Copy Address
-        </DropdownMenuItem>
-        {wallet && isAptosConnectWallet(wallet) && (
-          <DropdownMenuItem asChild>
-            <a
-              href={APTOS_CONNECT_ACCOUNT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-2"
-            >
-              <User className="h-4 w-4" /> View Account
-            </a>
+    <div className="flex items-center gap-2">
+      <UnifiedAuthButton />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="gap-2 font-mono text-sm border-border/40 hover:border-primary/40"
+          >
+            <div
+              className={`h-2 w-2 rounded-full ${isAuthenticated ? "bg-green-400" : loadingTimeout ? "bg-red-400" : "bg-yellow-400"}`}
+            />
+            {account?.ansName ||
+              (account?.address
+                ? truncateAddress(account.address.toString())
+                : loadingTimeout
+                  ? "Error"
+                  : "Loading...")}
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <div className="px-2 py-1.5 text-sm space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">
+                Connected Wallet
+              </p>
+              <p className="font-mono text-xs truncate">
+                {account?.address?.toString()}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${networkInfo.color}`}
+              />
+              <p className="text-xs text-muted-foreground">
+                {networkInfo.name}
+              </p>
+            </div>
+          </div>
+          <DropdownMenuItem onSelect={copyAddress} className="gap-2">
+            <Copy className="h-4 w-4" /> Copy Address
           </DropdownMenuItem>
-        )}
-        <DropdownMenuItem
-          onSelect={disconnect}
-          className="gap-2 text-destructive focus:text-destructive"
-        >
-          <LogOut className="h-4 w-4" /> Disconnect
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {wallet && isAptosConnectWallet(wallet) && (
+            <DropdownMenuItem asChild>
+              <a
+                href={APTOS_CONNECT_ACCOUNT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-2"
+              >
+                <User className="h-4 w-4" /> View Account
+              </a>
+            </DropdownMenuItem>
+          )}
+          {isAuthenticated && (
+            <DropdownMenuItem onSelect={signOut} className="gap-2">
+              <LogOut className="h-4 w-4" /> Sign Out
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            onSelect={disconnect}
+            className="gap-2 text-destructive focus:text-destructive"
+          >
+            <LogOut className="h-4 w-4" /> Disconnect Wallet
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   ) : (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>

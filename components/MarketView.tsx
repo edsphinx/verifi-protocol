@@ -32,8 +32,8 @@ export function MarketView({ marketId }: { marketId: string }) {
 
   // Calculate market psychology for header display (must be before conditional returns)
   const psychology = useMemo(
-    () => displayData ? calculateMarketPsychology(displayData) : null,
-    [displayData]
+    () => (displayData ? calculateMarketPsychology(displayData) : null),
+    [displayData],
   );
 
   // Fetch market info from database
@@ -72,7 +72,9 @@ export function MarketView({ marketId }: { marketId: string }) {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center space-y-3">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-sm text-muted-foreground">Loading market data...</p>
+            <p className="text-sm text-muted-foreground">
+              Loading market data...
+            </p>
           </div>
         </div>
       );
@@ -94,7 +96,9 @@ export function MarketView({ marketId }: { marketId: string }) {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-3">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-muted-foreground">Loading market data...</p>
+          <p className="text-sm text-muted-foreground">
+            Loading market data...
+          </p>
         </div>
       </div>
     );
@@ -121,10 +125,15 @@ export function MarketView({ marketId }: { marketId: string }) {
               <span
                 className={cn(
                   "font-mono tracking-tight transition-all",
-                  psychology.primaryOutcome.color === "green" ? "text-green-400" : "text-red-400",
-                  psychology.primaryOutcome.weight === "extrabold" && "font-extrabold text-3xl md:text-4xl lg:text-5xl",
-                  psychology.primaryOutcome.weight === "bold" && "font-bold text-2xl md:text-3xl lg:text-4xl",
-                  psychology.primaryOutcome.weight === "semibold" && "font-semibold text-xl md:text-2xl lg:text-3xl"
+                  psychology.primaryOutcome.color === "green"
+                    ? "text-green-400"
+                    : "text-red-400",
+                  psychology.primaryOutcome.weight === "extrabold" &&
+                    "font-extrabold text-3xl md:text-4xl lg:text-5xl",
+                  psychology.primaryOutcome.weight === "bold" &&
+                    "font-bold text-2xl md:text-3xl lg:text-4xl",
+                  psychology.primaryOutcome.weight === "semibold" &&
+                    "font-semibold text-xl md:text-2xl lg:text-3xl",
                 )}
               >
                 {psychology.primaryOutcome.name}:
@@ -135,7 +144,9 @@ export function MarketView({ marketId }: { marketId: string }) {
               <span
                 className={cn(
                   "ml-auto font-mono font-bold text-lg md:text-xl",
-                  psychology.primaryOutcome.color === "green" ? "text-green-400" : "text-red-400"
+                  psychology.primaryOutcome.color === "green"
+                    ? "text-green-400"
+                    : "text-red-400",
                 )}
               >
                 {psychology.primaryOutcome.percentage.toFixed(1)}%
@@ -147,10 +158,15 @@ export function MarketView({ marketId }: { marketId: string }) {
               <span
                 className={cn(
                   "font-mono tracking-tight transition-all",
-                  psychology.secondaryOutcome.color === "green" ? "text-green-400/70" : "text-red-400/70",
-                  psychology.secondaryOutcome.weight === "semibold" && "font-semibold text-base md:text-lg lg:text-xl",
-                  psychology.secondaryOutcome.weight === "medium" && "font-medium text-sm md:text-base lg:text-lg",
-                  psychology.secondaryOutcome.weight === "normal" && "font-normal text-sm md:text-base"
+                  psychology.secondaryOutcome.color === "green"
+                    ? "text-green-400/70"
+                    : "text-red-400/70",
+                  psychology.secondaryOutcome.weight === "semibold" &&
+                    "font-semibold text-base md:text-lg lg:text-xl",
+                  psychology.secondaryOutcome.weight === "medium" &&
+                    "font-medium text-sm md:text-base lg:text-lg",
+                  psychology.secondaryOutcome.weight === "normal" &&
+                    "font-normal text-sm md:text-base",
                 )}
               >
                 {psychology.secondaryOutcome.name}:
@@ -161,7 +177,9 @@ export function MarketView({ marketId }: { marketId: string }) {
               <span
                 className={cn(
                   "ml-auto font-mono font-semibold text-base md:text-lg",
-                  psychology.secondaryOutcome.color === "green" ? "text-green-400/70" : "text-red-400/70"
+                  psychology.secondaryOutcome.color === "green"
+                    ? "text-green-400/70"
+                    : "text-red-400/70",
                 )}
               >
                 {psychology.secondaryOutcome.percentage.toFixed(1)}%
@@ -200,11 +218,23 @@ export function MarketView({ marketId }: { marketId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Trading Interface */}
         <div className="lg:col-span-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="primary">Trade</TabsTrigger>
-              <TabsTrigger value="swap">AMM Swap</TabsTrigger>
-              <TabsTrigger value="liquidity">Add Liquidity</TabsTrigger>
+              <TabsTrigger value="primary" className="font-semibold">
+                BUY/SELL
+              </TabsTrigger>
+              <TabsTrigger value="swap" className="font-semibold gap-1.5">
+                SWAP
+                <span className="text-[10px] opacity-60">via Tapp</span>
+              </TabsTrigger>
+              <TabsTrigger value="liquidity" className="font-semibold gap-1.5">
+                POOL
+                <span className="text-[10px] opacity-60">via Tapp</span>
+              </TabsTrigger>
             </TabsList>
 
             <div className="transition-all duration-300">

@@ -53,7 +53,7 @@ export function StatCard({
                   "flex items-center gap-1 text-sm font-medium",
                   trend === "up" && "text-green-600 dark:text-green-400",
                   trend === "down" && "text-red-600 dark:text-red-400",
-                  trend === "neutral" && "text-gray-600 dark:text-gray-400"
+                  trend === "neutral" && "text-gray-600 dark:text-gray-400",
                 )}
               >
                 {getTrendIcon()}

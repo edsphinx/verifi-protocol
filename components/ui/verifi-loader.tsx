@@ -116,16 +116,8 @@ export function VeriFiLoader({ message }: { message?: string }) {
               top: "50%",
             }}
             animate={{
-              x: [
-                0,
-                Math.cos((i * Math.PI * 2) / 6) * 60,
-                0,
-              ],
-              y: [
-                0,
-                Math.sin((i * Math.PI * 2) / 6) * 60,
-                0,
-              ],
+              x: [0, Math.cos((i * Math.PI * 2) / 6) * 60, 0],
+              y: [0, Math.sin((i * Math.PI * 2) / 6) * 60, 0],
               opacity: [0, 1, 0],
               scale: [0, 1, 0],
             }}

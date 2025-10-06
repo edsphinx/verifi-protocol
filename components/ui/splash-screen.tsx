@@ -149,16 +149,8 @@ export function SplashScreen() {
                   top: "50%",
                 }}
                 animate={{
-                  x: [
-                    0,
-                    Math.cos((i * Math.PI * 2) / 8) * 80,
-                    0,
-                  ],
-                  y: [
-                    0,
-                    Math.sin((i * Math.PI * 2) / 8) * 80,
-                    0,
-                  ],
+                  x: [0, Math.cos((i * Math.PI * 2) / 8) * 80, 0],
+                  y: [0, Math.sin((i * Math.PI * 2) / 8) * 80, 0],
                   opacity: [0, 1, 0],
                   scale: [0, 1.2, 0],
                 }}

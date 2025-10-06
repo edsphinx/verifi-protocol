@@ -52,7 +52,7 @@ export function ProgressBar({
           className={cn(
             "transition-all duration-500 ease-out rounded-full",
             heightClasses[height],
-            colorClasses[color]
+            colorClasses[color],
           )}
           style={{ width: `${clampedValue}%` }}
         />
