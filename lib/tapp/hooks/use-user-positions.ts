@@ -19,18 +19,24 @@ export interface UserPosition {
  */
 async function fetchUserPositions(
   poolAddress: string,
-  userAddress: string
+  userAddress: string,
 ): Promise<UserPosition[]> {
   try {
-    console.log(`[fetchUserPositions] Querying events for pool: ${poolAddress}, user: ${userAddress}`);
-    console.log(`[fetchUserPositions] Event type: ${TAPP_EVENTS.LIQUIDITY_ADDED}`);
+    console.log(
+      `[fetchUserPositions] Querying events for pool: ${poolAddress}, user: ${userAddress}`,
+    );
+    console.log(
+      `[fetchUserPositions] Event type: ${TAPP_EVENTS.LIQUIDITY_ADDED}`,
+    );
 
     // Filter events for this user and extract position data
     const userPositions: UserPosition[] = [];
 
     // Note: Event querying via SDK is complex and may not work reliably
     // Skip event-based approach and go straight to fallback
-    console.log("[fetchUserPositions] Skipping event query, using fallback method...");
+    console.log(
+      "[fetchUserPositions] Skipping event query, using fallback method...",
+    );
 
     // Load position ownership from localStorage
     let ownedPositions: Set<number> = new Set();
@@ -45,15 +51,23 @@ async function fetchUserPositions(
             ownedPositions.add(Number(idx));
           }
         }
-        console.log(`[fetchUserPositions] Found ${ownedPositions.size} owned positions in localStorage:`, Array.from(ownedPositions));
+        console.log(
+          `[fetchUserPositions] Found ${ownedPositions.size} owned positions in localStorage:`,
+          Array.from(ownedPositions),
+        );
       }
     } catch (error) {
-      console.error("[fetchUserPositions] Failed to load position ownership:", error);
+      console.error(
+        "[fetchUserPositions] Failed to load position ownership:",
+        error,
+      );
     }
 
     // If no positions found via events, try fallback: iterate all positions
     if (userPositions.length === 0) {
-      console.log("[fetchUserPositions] No positions found via events, trying fallback method...");
+      console.log(
+        "[fetchUserPositions] No positions found via events, trying fallback method...",
+      );
 
       try {
         // Get total position count from pool stats
@@ -67,13 +81,17 @@ async function fetchUserPositions(
         });
 
         const positionCount = Number(stats[4]); // positions_count is 5th element
-        console.log(`[fetchUserPositions] Pool has ${positionCount} total positions`);
+        console.log(
+          `[fetchUserPositions] Pool has ${positionCount} total positions`,
+        );
 
         // Iterate through positions
         for (let i = 0; i < positionCount; i++) {
           // If we have localStorage data, only fetch positions owned by this user
           if (ownedPositions.size > 0 && !ownedPositions.has(i)) {
-            console.log(`[fetchUserPositions] Skipping position ${i} (not owned by user)`);
+            console.log(
+              `[fetchUserPositions] Skipping position ${i} (not owned by user)`,
+            );
             continue;
           }
 
@@ -87,12 +105,8 @@ async function fetchUserPositions(
               },
             });
 
-            const [yesAmount, noAmount, liquidityTokens, entryTimestamp] = position as [
-              string,
-              string,
-              string,
-              string
-            ];
+            const [yesAmount, noAmount, liquidityTokens, entryTimestamp] =
+              position as [string, string, string, string];
 
             // Only include positions with liquidity
             if (Number(liquidityTokens) > 0) {
@@ -104,7 +118,9 @@ async function fetchUserPositions(
                 entryTimestamp: Number(entryTimestamp),
                 provider: ownedPositions.has(i) ? userAddress : "unknown",
               });
-              console.log(`[fetchUserPositions] Found position ${i} with ${Number(liquidityTokens) / 1_000_000} LP tokens`);
+              console.log(
+                `[fetchUserPositions] Found position ${i} with ${Number(liquidityTokens) / 1_000_000} LP tokens`,
+              );
             }
           } catch (err) {
             // Position might not exist or be withdrawn
@@ -112,14 +128,19 @@ async function fetchUserPositions(
           }
         }
       } catch (fallbackError) {
-        console.error("[fetchUserPositions] Fallback method also failed:", fallbackError);
+        console.error(
+          "[fetchUserPositions] Fallback method also failed:",
+          fallbackError,
+        );
       }
     }
 
     // Sort by position index
     userPositions.sort((a, b) => a.positionIdx - b.positionIdx);
 
-    console.log(`[fetchUserPositions] Returning ${userPositions.length} positions`);
+    console.log(
+      `[fetchUserPositions] Returning ${userPositions.length} positions`,
+    );
     return userPositions;
   } catch (error) {
     console.error("[fetchUserPositions] Error:", error);

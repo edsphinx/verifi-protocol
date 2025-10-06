@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 export interface TradeValidationConfig {
   minTradeAmount?: number;
@@ -8,7 +8,7 @@ export interface TradeValidationConfig {
 export interface UserBalances {
   aptBalance: number; // in octas
   yesBalance: number; // in smallest units
-  noBalance: number;  // in smallest units
+  noBalance: number; // in smallest units
 }
 
 export interface TradeValidationResult {
@@ -36,13 +36,13 @@ export function useTradeValidation(
   sellYesAmount: string,
   sellNoAmount: string,
   balances: UserBalances,
-  config: TradeValidationConfig = {}
+  config: TradeValidationConfig = {},
 ): TradeValidationResult {
   const MIN_TRADE_AMOUNT = config.minTradeAmount ?? 0.01;
   const MIN_SELL_AMOUNT = config.minSellAmount ?? 0.01;
 
   const isValidAmount = (amount: string): boolean => {
-    if (!amount || amount.trim() === '') return false;
+    if (!amount || amount.trim() === "") return false;
     const num = parseFloat(amount);
     return !isNaN(num) && num > 0 && isFinite(num);
   };
@@ -63,7 +63,7 @@ export function useTradeValidation(
     if (!buyYesAmount) return { canBuy: false, error: null };
 
     if (!isValidAmount(buyYesAmount)) {
-      return { canBuy: false, error: 'Enter a valid number' };
+      return { canBuy: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(buyYesAmount, MIN_TRADE_AMOUNT)) {
@@ -71,7 +71,7 @@ export function useTradeValidation(
     }
 
     if (!hasEnoughBalance(buyYesAmount, balances.aptBalance)) {
-      return { canBuy: false, error: 'Insufficient APT balance' };
+      return { canBuy: false, error: "Insufficient APT balance" };
     }
 
     return { canBuy: true, error: null };
@@ -82,7 +82,7 @@ export function useTradeValidation(
     if (!buyNoAmount) return { canBuy: false, error: null };
 
     if (!isValidAmount(buyNoAmount)) {
-      return { canBuy: false, error: 'Enter a valid number' };
+      return { canBuy: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(buyNoAmount, MIN_TRADE_AMOUNT)) {
@@ -90,7 +90,7 @@ export function useTradeValidation(
     }
 
     if (!hasEnoughBalance(buyNoAmount, balances.aptBalance)) {
-      return { canBuy: false, error: 'Insufficient APT balance' };
+      return { canBuy: false, error: "Insufficient APT balance" };
     }
 
     return { canBuy: true, error: null };
@@ -101,11 +101,11 @@ export function useTradeValidation(
     if (!sellYesAmount) return { canSell: false, error: null };
 
     if (balances.yesBalance === 0) {
-      return { canSell: false, error: 'No YES shares to sell' };
+      return { canSell: false, error: "No YES shares to sell" };
     }
 
     if (!isValidAmount(sellYesAmount)) {
-      return { canSell: false, error: 'Enter a valid number' };
+      return { canSell: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(sellYesAmount, MIN_SELL_AMOUNT)) {
@@ -114,7 +114,7 @@ export function useTradeValidation(
 
     const amountInSmallestUnits = parseFloat(sellYesAmount) * 10 ** 6;
     if (amountInSmallestUnits > balances.yesBalance) {
-      return { canSell: false, error: 'Insufficient YES shares' };
+      return { canSell: false, error: "Insufficient YES shares" };
     }
 
     return { canSell: true, error: null };
@@ -125,11 +125,11 @@ export function useTradeValidation(
     if (!sellNoAmount) return { canSell: false, error: null };
 
     if (balances.noBalance === 0) {
-      return { canSell: false, error: 'No NO shares to sell' };
+      return { canSell: false, error: "No NO shares to sell" };
     }
 
     if (!isValidAmount(sellNoAmount)) {
-      return { canSell: false, error: 'Enter a valid number' };
+      return { canSell: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(sellNoAmount, MIN_SELL_AMOUNT)) {
@@ -138,7 +138,7 @@ export function useTradeValidation(
 
     const amountInSmallestUnits = parseFloat(sellNoAmount) * 10 ** 6;
     if (amountInSmallestUnits > balances.noBalance) {
-      return { canSell: false, error: 'Insufficient NO shares' };
+      return { canSell: false, error: "Insufficient NO shares" };
     }
 
     return { canSell: true, error: null };

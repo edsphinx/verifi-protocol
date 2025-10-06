@@ -34,6 +34,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VeriFiLoader } from "@/components/ui/verifi-loader";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useMarketData } from "@/aptos/queries/use-market-data";
+import { PoweredByBadge } from "@/components/branding/PoweredByBadge";
 
 interface SwapInterfaceProps {
   marketId: string;
@@ -61,7 +62,10 @@ export function SwapInterface({
   const swapMutation = useSwap();
 
   // Fetch live pool data - this will auto-update when refetchQueries is called
-  const { data: poolData, isLoading: isLoadingPool } = usePoolData(marketId, account?.address.toString());
+  const { data: poolData, isLoading: isLoadingPool } = usePoolData(
+    marketId,
+    account?.address.toString(),
+  );
 
   // Fetch user's token balances
   const { data: marketData, isLoading: isLoadingMarket } = useMarketData({
@@ -165,266 +169,278 @@ export function SwapInterface({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowDownUp className="h-5 w-5" />
-              Swap Tokens
-            </CardTitle>
-            <CardDescription>
-              Trade YES/NO tokens through the AMM
-            </CardDescription>
-          </div>
-          {isDemo && <Badge variant="outline">Demo Mode</Badge>}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Pool Liquidity Info */}
-        {(yesReserve > 0 || noReserve > 0) && (
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground mb-2">
-              Pool Liquidity
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">YES:</span>{" "}
-                <span className="font-semibold text-green-600">
-                  {formatNumber(yesReserve, 0)}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">NO:</span>{" "}
-                <span className="font-semibold text-red-600">
-                  {formatNumber(noReserve, 0)}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Trading Status Warning */}
-        {!tradingEnabled && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Trading is currently disabled. This market may be resolved or
-              paused.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Input Token */}
-        <div className="space-y-2">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <Label htmlFor="amount-in">You Pay</Label>
-            <p className="text-xs text-muted-foreground">
-              Balance: {account ? formatNumber(inputBalance, 2) : "0.00"} {inputToken}
-            </p>
-          </div>
-          <div className="relative">
-            <Input
-              id="amount-in"
-              type="number"
-              placeholder="0.00"
-              value={amountIn}
-              onChange={(e) => setAmountIn(e.target.value)}
-              className="text-lg pr-20"
-              disabled={!tradingEnabled || swapMutation.isPending}
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Badge variant={yesToNo ? "default" : "secondary"}>
-                {inputToken}
-              </Badge>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowDownUp className="h-5 w-5" />
+                  Swap Tokens
+                </CardTitle>
+                {isDemo && <Badge variant="outline">Demo Mode</Badge>}
+              </div>
+              <CardDescription>
+                Trade YES/NO tokens through the AMM
+              </CardDescription>
             </div>
+            <PoweredByBadge
+              provider="tapp"
+              variant="minimal"
+              showLink={false}
+            />
           </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Pool Liquidity Info */}
+          {(yesReserve > 0 || noReserve > 0) && (
+            <div className="bg-muted/50 rounded-lg p-3">
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                Pool Liquidity
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">YES:</span>{" "}
+                  <span className="font-semibold text-green-600">
+                    {formatNumber(yesReserve, 0)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">NO:</span>{" "}
+                  <span className="font-semibold text-red-600">
+                    {formatNumber(noReserve, 0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Quick Amount Buttons */}
-          <div className="flex items-center gap-2">
-            {[25, 50, 75].map((percentage) => (
+          {/* Trading Status Warning */}
+          {!tradingEnabled && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Trading is currently disabled. This market may be resolved or
+                paused.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Input Token */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="amount-in">You Pay</Label>
+              <p className="text-xs text-muted-foreground">
+                Balance: {account ? formatNumber(inputBalance, 2) : "0.00"}{" "}
+                {inputToken}
+              </p>
+            </div>
+            <div className="relative">
+              <Input
+                id="amount-in"
+                type="number"
+                placeholder="0.00"
+                value={amountIn}
+                onChange={(e) => setAmountIn(e.target.value)}
+                className="text-lg pr-20"
+                disabled={!tradingEnabled || swapMutation.isPending}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Badge variant={yesToNo ? "default" : "secondary"}>
+                  {inputToken}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Quick Amount Buttons */}
+            <div className="flex items-center gap-2">
+              {[25, 50, 75].map((percentage) => (
+                <Button
+                  key={percentage}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const amount = (inputBalance * percentage) / 100;
+                    setAmountIn(amount.toFixed(2));
+                  }}
+                  disabled={
+                    !tradingEnabled || swapMutation.isPending || !account
+                  }
+                  className="flex-1 text-xs"
+                >
+                  {percentage}%
+                </Button>
+              ))}
               <Button
-                key={percentage}
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  const amount = (inputBalance * percentage) / 100;
-                  setAmountIn(amount.toFixed(2));
-                }}
+                onClick={() => setAmountIn(inputBalance.toFixed(2))}
                 disabled={!tradingEnabled || swapMutation.isPending || !account}
-                className="flex-1 text-xs"
+                className="flex-1 text-xs font-semibold"
               >
-                {percentage}%
+                MAX
               </Button>
-            ))}
+            </div>
+          </div>
+
+          {/* Flip Button */}
+          <div className="flex justify-center">
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => setAmountIn(inputBalance.toFixed(2))}
-              disabled={!tradingEnabled || swapMutation.isPending || !account}
-              className="flex-1 text-xs font-semibold"
+              size="icon"
+              onClick={handleFlipDirection}
+              disabled={!tradingEnabled || swapMutation.isPending}
             >
-              MAX
+              <ArrowDownUp className="h-4 w-4" />
             </Button>
           </div>
-        </div>
 
-        {/* Flip Button */}
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleFlipDirection}
-            disabled={!tradingEnabled || swapMutation.isPending}
-          >
-            <ArrowDownUp className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Output Token */}
-        <div className="space-y-2">
-          <Label htmlFor="amount-out">You Receive</Label>
-          <div className="relative">
-            <Input
-              id="amount-out"
-              type="text"
-              value={preview ? formatNumber(preview.outputAmount, 4) : "0.00"}
-              readOnly
-              className="text-lg pr-20 bg-muted"
-              disabled
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Badge variant={!yesToNo ? "default" : "secondary"}>
-                {outputToken}
-              </Badge>
+          {/* Output Token */}
+          <div className="space-y-2">
+            <Label htmlFor="amount-out">You Receive</Label>
+            <div className="relative">
+              <Input
+                id="amount-out"
+                type="text"
+                value={preview ? formatNumber(preview.outputAmount, 4) : "0.00"}
+                readOnly
+                className="text-lg pr-20 bg-muted"
+                disabled
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Badge variant={!yesToNo ? "default" : "secondary"}>
+                  {outputToken}
+                </Badge>
+              </div>
             </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Reserve: {formatNumber(outputReserve, 0)} {outputToken}
-          </p>
-        </div>
-
-        {/* Slippage Tolerance */}
-        <div className="space-y-2">
-          <Label htmlFor="slippage">Slippage Tolerance</Label>
-          <div className="flex gap-2">
-            {[0.1, 0.5, 1.0].map((value) => (
-              <Button
-                key={value}
-                variant={slippageTolerance === value ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSlippageTolerance(value)}
-                disabled={!tradingEnabled}
-              >
-                {value}%
-              </Button>
-            ))}
-            <Input
-              id="slippage"
-              type="number"
-              step="0.1"
-              value={slippageTolerance}
-              onChange={(e) =>
-                setSlippageTolerance(parseFloat(e.target.value) || 0)
-              }
-              className="w-20"
-              disabled={!tradingEnabled}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Swap Details */}
-        {preview && amountInNum > 0 && (
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Price Impact</span>
-              <span
-                className={
-                  isPriceImpactVeryHigh
-                    ? "text-destructive font-semibold"
-                    : isPriceImpactHigh
-                      ? "text-yellow-500 font-semibold"
-                      : ""
-                }
-              >
-                {formatPercentage(preview.priceImpact, 2)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Effective Price</span>
-              <span>
-                1 {inputToken} = {formatNumber(preview.effectivePrice, 4)}{" "}
-                {outputToken}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Trading Fee (0.3%)</span>
-              <span>
-                {formatNumber(preview.fee, 4)} {inputToken}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Minimum Received</span>
-              <span>
-                {formatNumber(minAmountOut, 4)} {outputToken}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Price Impact Warning */}
-        {isPriceImpactVeryHigh && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Price impact is very high (
-              {formatPercentage(preview!.priceImpact, 2)}). Consider reducing
-              your swap amount.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Swap Button */}
-        <Button
-          onClick={handleSwap}
-          disabled={
-            !tradingEnabled ||
-            !preview ||
-            amountInNum <= 0 ||
-            amountInNum > inputBalance ||
-            swapMutation.isPending ||
-            !account
-          }
-          className="w-full"
-        >
-          {swapMutation.isPending
-            ? "Swapping..."
-            : !account
-              ? "Connect Wallet"
-              : !tradingEnabled
-                ? "Trading Disabled"
-                : amountInNum > inputBalance
-                  ? "Insufficient Balance"
-                  : amountInNum <= 0
-                    ? "Enter Amount"
-                    : `Swap ${inputToken} for ${outputToken}`}
-        </Button>
-
-        {/* Info Box */}
-        <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-          <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
             <p className="text-xs text-muted-foreground">
-              {isDemo
-                ? "Demo mode: Swaps are simulated and won't affect real balances."
-                : "Live mode: Swaps execute on-chain and require wallet signatures."}
+              Reserve: {formatNumber(outputReserve, 0)} {outputToken}
             </p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          {/* Slippage Tolerance */}
+          <div className="space-y-2">
+            <Label htmlFor="slippage">Slippage Tolerance</Label>
+            <div className="flex gap-2">
+              {[0.1, 0.5, 1.0].map((value) => (
+                <Button
+                  key={value}
+                  variant={slippageTolerance === value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSlippageTolerance(value)}
+                  disabled={!tradingEnabled}
+                >
+                  {value}%
+                </Button>
+              ))}
+              <Input
+                id="slippage"
+                type="number"
+                step="0.1"
+                value={slippageTolerance}
+                onChange={(e) =>
+                  setSlippageTolerance(parseFloat(e.target.value) || 0)
+                }
+                className="w-20"
+                disabled={!tradingEnabled}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Swap Details */}
+          {preview && amountInNum > 0 && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Price Impact</span>
+                <span
+                  className={
+                    isPriceImpactVeryHigh
+                      ? "text-destructive font-semibold"
+                      : isPriceImpactHigh
+                        ? "text-yellow-500 font-semibold"
+                        : ""
+                  }
+                >
+                  {formatPercentage(preview.priceImpact, 2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Effective Price</span>
+                <span>
+                  1 {inputToken} = {formatNumber(preview.effectivePrice, 4)}{" "}
+                  {outputToken}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Trading Fee (0.3%)
+                </span>
+                <span>
+                  {formatNumber(preview.fee, 4)} {inputToken}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Minimum Received</span>
+                <span>
+                  {formatNumber(minAmountOut, 4)} {outputToken}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Price Impact Warning */}
+          {isPriceImpactVeryHigh && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Price impact is very high (
+                {formatPercentage(preview!.priceImpact, 2)}). Consider reducing
+                your swap amount.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Swap Button */}
+          <Button
+            onClick={handleSwap}
+            disabled={
+              !tradingEnabled ||
+              !preview ||
+              amountInNum <= 0 ||
+              amountInNum > inputBalance ||
+              swapMutation.isPending ||
+              !account
+            }
+            className="w-full"
+          >
+            {swapMutation.isPending
+              ? "Swapping..."
+              : !account
+                ? "Connect Wallet"
+                : !tradingEnabled
+                  ? "Trading Disabled"
+                  : amountInNum > inputBalance
+                    ? "Insufficient Balance"
+                    : amountInNum <= 0
+                      ? "Enter Amount"
+                      : `Swap ${inputToken} for ${outputToken}`}
+          </Button>
+
+          {/* Info Box */}
+          <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                {isDemo
+                  ? "Demo mode: Swaps are simulated and won't affect real balances."
+                  : "Live mode: Swaps execute on-chain and require wallet signatures."}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }

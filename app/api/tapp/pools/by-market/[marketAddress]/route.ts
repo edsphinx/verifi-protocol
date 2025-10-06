@@ -51,7 +51,7 @@ export async function GET(
       } catch (error) {
         console.log(
           `[API /api/tapp/pools/by-market] ⚠️  Could not fetch on-chain reserves:`,
-          error
+          error,
         );
       }
 

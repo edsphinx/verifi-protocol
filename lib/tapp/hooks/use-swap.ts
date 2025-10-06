@@ -84,7 +84,12 @@ async function executeSwap(
   }
 
   console.log("[useSwap] Executing swap with params:", params);
-  console.log("[useSwap] yesToNo flag:", params.yesToNo, "| Meaning:", params.yesToNo ? "YES → NO" : "NO → YES");
+  console.log(
+    "[useSwap] yesToNo flag:",
+    params.yesToNo,
+    "| Meaning:",
+    params.yesToNo ? "YES → NO" : "NO → YES",
+  );
 
   // Get pool address from API
   const poolResponse = await fetch(

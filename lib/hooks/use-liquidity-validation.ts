@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 export interface LiquidityValidationConfig {
   minAddAmount?: number;
@@ -7,8 +7,8 @@ export interface LiquidityValidationConfig {
 
 export interface UserLiquidityBalances {
   yesBalance: number; // in display units
-  noBalance: number;  // in display units
-  lpSupply: number;   // total LP supply
+  noBalance: number; // in display units
+  lpSupply: number; // total LP supply
 }
 
 export interface LiquidityValidationResult {
@@ -36,13 +36,13 @@ export function useLiquidityValidation(
   balances: UserLiquidityBalances,
   isFirstProvider: boolean,
   tradingEnabled: boolean,
-  config: LiquidityValidationConfig = {}
+  config: LiquidityValidationConfig = {},
 ): LiquidityValidationResult {
   const MIN_ADD_AMOUNT = config.minAddAmount ?? 0.01;
   const MIN_REMOVE_AMOUNT = config.minRemoveAmount ?? 0.01;
 
   const isValidAmount = (amount: string): boolean => {
-    if (!amount || amount.trim() === '') return false;
+    if (!amount || amount.trim() === "") return false;
     const num = parseFloat(amount);
     return !isNaN(num) && num > 0 && isFinite(num);
   };
@@ -61,7 +61,7 @@ export function useLiquidityValidation(
     if (!yesAmount) return { valid: false, error: null };
 
     if (!isValidAmount(yesAmount)) {
-      return { valid: false, error: 'Enter a valid number' };
+      return { valid: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(yesAmount, MIN_ADD_AMOUNT)) {
@@ -70,7 +70,7 @@ export function useLiquidityValidation(
 
     const amount = parseFloat(yesAmount);
     if (!hasEnoughBalance(amount, balances.yesBalance)) {
-      return { valid: false, error: 'Insufficient YES balance' };
+      return { valid: false, error: "Insufficient YES balance" };
     }
 
     return { valid: true, error: null };
@@ -81,7 +81,7 @@ export function useLiquidityValidation(
     if (!noAmount) return { valid: false, error: null };
 
     if (!isValidAmount(noAmount)) {
-      return { valid: false, error: 'Enter a valid number' };
+      return { valid: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(noAmount, MIN_ADD_AMOUNT)) {
@@ -90,7 +90,7 @@ export function useLiquidityValidation(
 
     const amount = parseFloat(noAmount);
     if (!hasEnoughBalance(amount, balances.noBalance)) {
-      return { valid: false, error: 'Insufficient NO balance' };
+      return { valid: false, error: "Insufficient NO balance" };
     }
 
     return { valid: true, error: null };
@@ -107,7 +107,7 @@ export function useLiquidityValidation(
     if (!lpTokens) return { valid: false, error: null };
 
     if (!isValidAmount(lpTokens)) {
-      return { valid: false, error: 'Enter a valid number' };
+      return { valid: false, error: "Enter a valid number" };
     }
 
     if (!meetsMinimum(lpTokens, MIN_REMOVE_AMOUNT)) {
@@ -116,7 +116,7 @@ export function useLiquidityValidation(
 
     const amount = parseFloat(lpTokens);
     if (!hasEnoughBalance(amount, balances.lpSupply)) {
-      return { valid: false, error: 'Exceeds available LP tokens' };
+      return { valid: false, error: "Exceeds available LP tokens" };
     }
 
     return { valid: true, error: null };
@@ -124,11 +124,11 @@ export function useLiquidityValidation(
 
   // Position index validation
   const { valid: positionValid, error: removePositionError } = useMemo(() => {
-    if (!positionIdx) return { valid: false, error: 'Position ID required' };
+    if (!positionIdx) return { valid: false, error: "Position ID required" };
 
     const idx = parseInt(positionIdx);
     if (isNaN(idx) || idx < 0) {
-      return { valid: false, error: 'Invalid position ID' };
+      return { valid: false, error: "Invalid position ID" };
     }
 
     return { valid: true, error: null };

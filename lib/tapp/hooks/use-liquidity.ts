@@ -7,7 +7,11 @@ import { calculateAddLiquidity, calculateRemoveLiquidity } from "../cpmm";
 import { toast } from "sonner";
 import { Serializer } from "@aptos-labs/ts-sdk";
 import { aptosClient } from "@/aptos/client";
-import { TAPP_PROTOCOL_ADDRESS, TAPP_HOOK_MODULE, TAPP_FUNCTIONS } from "../constants";
+import {
+  TAPP_PROTOCOL_ADDRESS,
+  TAPP_HOOK_MODULE,
+  TAPP_FUNCTIONS,
+} from "../constants";
 import { NETWORK } from "@/aptos/constants";
 import { getTxExplorerLink, truncateHash } from "@/aptos/helpers";
 import { recordActivity } from "@/lib/services/activity-client.service";
@@ -176,13 +180,15 @@ async function executeAddLiquidity(
   const txData = txResponse as any;
 
   if (txData.events) {
-    const liquidityAddedEvent = txData.events.find(
-      (event: any) => event.type.includes("LiquidityAdded")
+    const liquidityAddedEvent = txData.events.find((event: any) =>
+      event.type.includes("LiquidityAdded"),
     );
 
     if (liquidityAddedEvent?.data) {
       positionIdx = Number(liquidityAddedEvent.data.position_idx);
-      console.log(`[useAddLiquidity] Position created with index: ${positionIdx}`);
+      console.log(
+        `[useAddLiquidity] Position created with index: ${positionIdx}`,
+      );
 
       // Store position ownership in localStorage
       try {
@@ -194,9 +200,14 @@ async function executeAddLiquidity(
         positions[positionIdx] = account.address.toString();
 
         localStorage.setItem(storageKey, JSON.stringify(positions));
-        console.log(`[useAddLiquidity] Stored position ${positionIdx} ownership for ${account.address}`);
+        console.log(
+          `[useAddLiquidity] Stored position ${positionIdx} ownership for ${account.address}`,
+        );
       } catch (error) {
-        console.error("[useAddLiquidity] Failed to store position ownership:", error);
+        console.error(
+          "[useAddLiquidity] Failed to store position ownership:",
+          error,
+        );
       }
     }
   }
@@ -255,7 +266,8 @@ async function executeRemoveLiquidity(
 
   // Build transaction payload - using Tapp hook function
   const payload = {
-    function: `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.REMOVE_LIQUIDITY}` as `${string}::${string}::${string}`,
+    function:
+      `${TAPP_HOOK_MODULE}::${TAPP_FUNCTIONS.REMOVE_LIQUIDITY}` as `${string}::${string}::${string}`,
     typeArguments: [],
     functionArguments: [poolAddress, params.positionIdx, lpTokensAmount],
   };

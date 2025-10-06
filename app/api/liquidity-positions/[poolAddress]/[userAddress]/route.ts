@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ poolAddress: string; userAddress: string }> }
+  { params }: { params: Promise<{ poolAddress: string; userAddress: string }> },
 ) {
   try {
     const { poolAddress, userAddress } = await params;
 
     if (!poolAddress || !userAddress) {
       return NextResponse.json(
-        { error: 'Pool address and user address are required' },
-        { status: 400 }
+        { error: "Pool address and user address are required" },
+        { status: 400 },
       );
     }
 
@@ -22,19 +22,19 @@ export async function GET(
       where: {
         poolAddress,
         userAddress,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json(positions);
   } catch (error) {
-    console.error('Error fetching LP positions:', error);
+    console.error("Error fetching LP positions:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch LP positions' },
-      { status: 500 }
+      { error: "Failed to fetch LP positions" },
+      { status: 500 },
     );
   }
 }
