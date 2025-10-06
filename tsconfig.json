@@ -23,5 +23,23 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "scripts/move/test-wallet-adapter-siwa.ts",
+    "scripts/move/test-auth-flow.ts",
+    "scripts/move/cleanup-session.ts",
+    "services/auth.service.ts",
+    "app/api/auth/**/*",
+    "app/auth-test/**/*",
+    "app/approval-test/**/*",
+    "lib/auth/**/*",
+    "lib/hooks/use-auth.ts",
+    "lib/hooks/use-siwa-auth.ts",
+    "lib/hooks/use-session-auth.ts",
+    "lib/hooks/use-session-transaction.ts",
+    "lib/hooks/use-ephemeral-keypair.ts",
+    "components/UnifiedAuthButton.tsx",
+    "components/ApprovalMockupTest.tsx",
+    "components/SessionKeyMockupTest.tsx"
+  ]
 }

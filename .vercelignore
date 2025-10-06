@@ -1,0 +1,24 @@
+# Exclude auth-related files (not ready for production)
+app/api/auth/
+app/auth-test/
+app/approval-test/
+lib/auth/
+services/auth.service.ts
+
+# Exclude auth-related hooks
+lib/hooks/use-auth.ts
+lib/hooks/use-siwa-auth.ts
+lib/hooks/use-session-auth.ts
+lib/hooks/use-session-transaction.ts
+lib/hooks/use-ephemeral-keypair.ts
+
+# Exclude auth-related components
+components/UnifiedAuthButton.tsx
+components/ApprovalMockupTest.tsx
+components/SessionKeyMockupTest.tsx
+
+# Exclude test scripts
+scripts/move/test-wallet-adapter-siwa.ts
+scripts/move/test-auth-flow.ts
+scripts/move/cleanup-session.ts
+scripts/test-*.ts
