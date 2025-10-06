@@ -84,8 +84,8 @@ export async function POST(request: Request) {
       await recordNewMarket({
         marketAddress: eventData.market_address,
         creatorAddress: eventData.creator,
-        description: `Oracle: ${eventData.oracle_id}`,
-        resolutionTimestamp: new Date(Number(eventData.expiration_time) * 1000),
+        description: eventData.description || "New prediction market",
+        resolutionTimestamp: new Date(Number(eventData.resolution_timestamp) * 1000),
         status: "active",
       });
 
@@ -93,14 +93,13 @@ export async function POST(request: Request) {
       await createGlobalNotification(
         "NEW_MARKET",
         "🎯 New Market Created!",
-        `${eventData.title || "New prediction market"} is now live and accepting trades!`,
+        `${eventData.description || "New prediction market"} is now live and accepting trades!`,
         eventData.market_address,
         txHash,
         {
           creator: eventData.creator,
-          title: eventData.title,
-          oracleId: eventData.oracle_id,
-          expirationTime: eventData.expiration_time,
+          description: eventData.description,
+          resolutionTimestamp: eventData.resolution_timestamp,
         },
       );
     }
