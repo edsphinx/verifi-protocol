@@ -1,22 +1,20 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import type { TraderMetrics } from '@/lib/types/database.types';
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import type { TraderMetrics } from "@/lib/types/database.types";
 
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get("limit") || "10");
 
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // Get all user stats or calculate from activities
     const userStats = await prisma.userStats.findMany({
-      orderBy: [
-        { totalVolume: 'desc' },
-      ],
+      orderBy: [{ totalVolume: "desc" }],
       take: limit,
     });
 
@@ -25,13 +23,13 @@ export async function GET(request: Request) {
       // Get all activities grouped by user
       const allActivities = await prisma.activity.findMany({
         where: {
-          action: { in: ['BUY', 'SELL'] },
+          action: { in: ["BUY", "SELL"] },
         },
       });
 
       const activities24h = await prisma.activity.findMany({
         where: {
-          action: { in: ['BUY', 'SELL'] },
+          action: { in: ["BUY", "SELL"] },
           timestamp: { gte: yesterday },
         },
       });
@@ -107,10 +105,10 @@ export async function GET(request: Request) {
       limit,
     });
   } catch (error) {
-    console.error('Error fetching top traders:', error);
+    console.error("Error fetching top traders:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch top traders' },
-      { status: 500 }
+      { error: "Failed to fetch top traders" },
+      { status: 500 },
     );
   }
 }

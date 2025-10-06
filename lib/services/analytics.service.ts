@@ -7,19 +7,19 @@ import type {
   ProtocolMetrics,
   MarketMetrics,
   TraderMetrics,
-} from '@/lib/types/database.types';
+} from "@/lib/types/database.types";
 
 export class AnalyticsService {
   /**
    * Fetch protocol-wide metrics
    */
   static async getProtocolMetrics(): Promise<ProtocolMetrics> {
-    const response = await fetch('/api/analytics/protocol', {
-      cache: 'no-store',
+    const response = await fetch("/api/analytics/protocol", {
+      cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch protocol metrics');
+      throw new Error("Failed to fetch protocol metrics");
     }
 
     return response.json();
@@ -33,15 +33,12 @@ export class AnalyticsService {
     total: number;
     limit: number;
   }> {
-    const response = await fetch(
-      `/api/analytics/top-markets?limit=${limit}`,
-      {
-        cache: 'no-store',
-      }
-    );
+    const response = await fetch(`/api/analytics/top-markets?limit=${limit}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch top markets');
+      throw new Error("Failed to fetch top markets");
     }
 
     return response.json();
@@ -55,15 +52,12 @@ export class AnalyticsService {
     total: number;
     limit: number;
   }> {
-    const response = await fetch(
-      `/api/analytics/top-traders?limit=${limit}`,
-      {
-        cache: 'no-store',
-      }
-    );
+    const response = await fetch(`/api/analytics/top-traders?limit=${limit}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch top traders');
+      throw new Error("Failed to fetch top traders");
     }
 
     return response.json();

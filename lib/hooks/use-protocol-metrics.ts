@@ -3,8 +3,8 @@
  * @description Custom hook for accessing protocol-wide analytics
  */
 
-import { useEffect } from 'react';
-import { useAnalyticsStore } from '@/lib/stores';
+import { useEffect } from "react";
+import { useAnalyticsStore } from "@/lib/stores";
 
 export function useProtocolMetrics() {
   const protocol = useAnalyticsStore((state) => state.protocol);
@@ -12,10 +12,10 @@ export function useProtocolMetrics() {
   const error = useAnalyticsStore((state) => state.error);
   const lastUpdated = useAnalyticsStore((state) => state.lastUpdated);
   const fetchProtocolMetrics = useAnalyticsStore(
-    (state) => state.fetchProtocolMetrics
+    (state) => state.fetchProtocolMetrics,
   );
   const getVolumeChange24h = useAnalyticsStore(
-    (state) => state.getVolumeChange24h
+    (state) => state.getVolumeChange24h,
   );
   const getTVLChange24h = useAnalyticsStore((state) => state.getTVLChange24h);
 

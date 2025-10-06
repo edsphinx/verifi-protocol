@@ -3,8 +3,8 @@
  * @description Custom hook for accessing top-performing traders
  */
 
-import { useEffect } from 'react';
-import { useAnalyticsStore } from '@/lib/stores';
+import { useEffect } from "react";
+import { useAnalyticsStore } from "@/lib/stores";
 
 export function useTopTraders(limit = 10) {
   const topTraders = useAnalyticsStore((state) => state.topTraders);

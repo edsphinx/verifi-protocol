@@ -3,8 +3,8 @@
  * @description Custom hook for accessing top-performing markets
  */
 
-import { useEffect } from 'react';
-import { useAnalyticsStore } from '@/lib/stores';
+import { useEffect } from "react";
+import { useAnalyticsStore } from "@/lib/stores";
 
 export function useTopMarkets(limit = 10) {
   const topMarkets = useAnalyticsStore((state) => state.topMarkets);

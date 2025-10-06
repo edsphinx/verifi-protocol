@@ -121,7 +121,7 @@ export function PoolsView() {
                       <div className="flex items-center gap-1">
                         <TrendingUp className="h-3 w-3 text-primary" />
                         <span className="font-semibold">
-                          {pool.totalLiquidity.toFixed(2)} APT
+                          {(pool.totalLiquidity / 100_000_000).toFixed(2)} APT
                         </span>
                       </div>
                     </div>
@@ -130,7 +130,7 @@ export function PoolsView() {
                         24h Volume
                       </span>
                       <span className="font-semibold">
-                        {pool.volume24h.toFixed(2)} APT
+                        {(pool.volume24h / 100_000_000).toFixed(2)} APT
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

@@ -3,10 +3,10 @@
  * @description Advanced table with sorting using TanStack Table
  */
 
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import Link from 'next/link';
+import { useMemo } from "react";
+import Link from "next/link";
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,60 +14,58 @@ import {
   flexRender,
   createColumnHelper,
   type SortingState,
-} from '@tanstack/react-table';
-import { Card, Badge } from '@tremor/react';
-import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
-import { useTopMarkets } from '@/lib/hooks';
-import type { MarketMetrics } from '@/lib/types/database.types';
-import { useState } from 'react';
+} from "@tanstack/react-table";
+import { Card, Badge } from "@tremor/react";
+import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
+import { useTopMarkets } from "@/lib/hooks";
+import type { MarketMetrics } from "@/lib/types/database.types";
+import { useState } from "react";
 
 const columnHelper = createColumnHelper<MarketMetrics>();
 
 export function TopMarketsTable() {
   const { topMarkets, isLoading } = useTopMarkets(10);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'totalVolume', desc: true },
+    { id: "totalVolume", desc: true },
   ]);
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor('description', {
-        header: 'Market',
+      columnHelper.accessor("description", {
+        header: "Market",
         cell: (info) => (
-          <div className="max-w-xs truncate font-medium">
-            {info.getValue()}
-          </div>
+          <div className="max-w-xs truncate font-medium">{info.getValue()}</div>
         ),
       }),
-      columnHelper.accessor('status', {
-        header: 'Status',
+      columnHelper.accessor("status", {
+        header: "Status",
         cell: (info) => {
           const status = info.getValue();
           const variant =
-            status === 'OPEN'
-              ? 'emerald'
-              : status === 'CLOSED'
-                ? 'amber'
-                : status === 'RESOLVED_YES'
-                  ? 'blue'
-                  : 'red';
+            status === "OPEN"
+              ? "emerald"
+              : status === "CLOSED"
+                ? "amber"
+                : status === "RESOLVED_YES"
+                  ? "blue"
+                  : "red";
           return (
             <Badge color={variant} size="sm">
-              {status.replace('_', ' ')}
+              {status.replace("_", " ")}
             </Badge>
           );
         },
       }),
-      columnHelper.accessor('volume24h', {
+      columnHelper.accessor("volume24h", {
         header: ({ column }) => (
           <button
             onClick={() => column.toggleSorting()}
             className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100"
           >
             24h Volume
-            {column.getIsSorted() === 'asc' ? (
+            {column.getIsSorted() === "asc" ? (
               <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
+            ) : column.getIsSorted() === "desc" ? (
               <ArrowDown className="h-3 w-3" />
             ) : (
               <ArrowUpDown className="h-3 w-3" />
@@ -76,20 +74,20 @@ export function TopMarketsTable() {
         ),
         cell: (info) => (
           <span className="text-right block">
-            {(info.getValue() / 100_000_000).toFixed(2)} APT
+            {info.getValue().toFixed(2)} APT
           </span>
         ),
       }),
-      columnHelper.accessor('totalVolume', {
+      columnHelper.accessor("totalVolume", {
         header: ({ column }) => (
           <button
             onClick={() => column.toggleSorting()}
             className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-slate-100"
           >
             Total Volume
-            {column.getIsSorted() === 'asc' ? (
+            {column.getIsSorted() === "asc" ? (
               <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
+            ) : column.getIsSorted() === "desc" ? (
               <ArrowDown className="h-3 w-3" />
             ) : (
               <ArrowUpDown className="h-3 w-3" />
@@ -98,24 +96,26 @@ export function TopMarketsTable() {
         ),
         cell: (info) => (
           <span className="text-right block">
-            {(info.getValue() / 100_000_000).toFixed(2)} APT
+            {info.getValue().toFixed(2)} APT
           </span>
         ),
       }),
-      columnHelper.accessor('yesPrice', {
-        header: 'YES Price',
+      columnHelper.accessor("yesPrice", {
+        header: "YES Price",
         cell: (info) => (
           <span className="text-right block">
             {(info.getValue() * 100).toFixed(1)}%
           </span>
         ),
       }),
-      columnHelper.accessor('uniqueTraders', {
-        header: 'Traders',
-        cell: (info) => <span className="text-right block">{info.getValue()}</span>,
+      columnHelper.accessor("uniqueTraders", {
+        header: "Traders",
+        cell: (info) => (
+          <span className="text-right block">{info.getValue()}</span>
+        ),
       }),
-      columnHelper.accessor('marketAddress', {
-        header: '',
+      columnHelper.accessor("marketAddress", {
+        header: "",
         cell: (info) => (
           <Link
             href={`/market/${info.getValue()}`}
@@ -128,7 +128,7 @@ export function TopMarketsTable() {
         enableSorting: false,
       }),
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -171,7 +171,10 @@ export function TopMarketsTable() {
         <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-slate-700">
+              <tr
+                key={headerGroup.id}
+                className="border-b border-slate-200 dark:border-slate-700"
+              >
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
@@ -181,7 +184,7 @@ export function TopMarketsTable() {
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </th>
                 ))}
