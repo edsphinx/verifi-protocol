@@ -3,9 +3,9 @@
  * @description Zustand store for wallet persistence and reconnection
  */
 
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 interface WalletStore {
   // Persisted State
@@ -83,21 +83,18 @@ export const useWalletStore = create<WalletStore>()(
 
         // Helpers
         shouldAttemptReconnect: () => {
-          const {
-            lastConnectedAddress,
-            autoReconnectAttempted,
-          } = get();
+          const { lastConnectedAddress, autoReconnectAttempted } = get();
           return !!lastConnectedAddress && !autoReconnectAttempted;
         },
       })),
       {
-        name: 'wallet-storage',
+        name: "wallet-storage",
         partialize: (state) => ({
           lastConnectedAddress: state.lastConnectedAddress,
           lastConnectedWalletName: state.lastConnectedWalletName,
         }),
-      }
+      },
     ),
-    { name: 'WalletStore' }
-  )
+    { name: "WalletStore" },
+  ),
 );

@@ -15,9 +15,7 @@ export function WalletLayer({ children }: PropsWithChildren) {
   return (
     <WalletProvider>
       <WalletSync />
-      <WalletConnectionGuard>
-        {children}
-      </WalletConnectionGuard>
+      <WalletConnectionGuard>{children}</WalletConnectionGuard>
     </WalletProvider>
   );
 }
