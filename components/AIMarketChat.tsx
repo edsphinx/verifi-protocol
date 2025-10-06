@@ -347,21 +347,130 @@ export function AIMarketChat({ onMarketReady }: AIMarketChatProps) {
     createMarket(payload);
   };
 
-  const handleRegenerate = () => {
+  const handleRegenerate = async () => {
     setGeneratedMarket(null);
-    const regenerateMessage: Message = {
-      role: "assistant",
-      content:
-        "No problem! Please describe what you'd like to change or create a different market.",
+    setIsGenerating(true);
+
+    const regenerateRequestMessage: Message = {
+      role: "user",
+      content: "Please regenerate the market with a different variation.",
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, regenerateMessage]);
+    setMessages((prev) => [...prev, regenerateRequestMessage]);
+
+    try {
+      // Send conversation history for context
+      const conversationHistory = messages.map((msg) => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.content,
+      }));
+
+      const response = await fetch("/api/ai/generate-market", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: "Please regenerate the market with a different variation.",
+          history: conversationHistory,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to regenerate market");
+      }
+
+      if (result.success && result.data) {
+        // Market successfully generated
+        setGeneratedMarket(result.data);
+
+        // Validate and format the resolution date
+        let resolutionDateStr = "Invalid Date";
+        let resolutionUTC = "";
+        try {
+          // Ensure the date string is interpreted as UTC
+          let dateStr = result.data.resolutionDate;
+          if (!dateStr.endsWith("Z") && !dateStr.includes("+")) {
+            dateStr += "Z"; // Force UTC interpretation
+          }
+
+          const resDate = new Date(dateStr);
+          if (!isNaN(resDate.getTime())) {
+            // Show in user's local timezone
+            resolutionDateStr = resDate.toLocaleString(undefined, {
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            // Also show UTC for reference
+            resolutionUTC = resDate.toLocaleString("en-US", {
+              timeZone: "UTC",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+          }
+        } catch (e) {
+          console.error("Error parsing resolution date:", e);
+        }
+
+        // Format oracle name nicely
+        const oracleName =
+          result.data.oracleId === "usdc-total-supply"
+            ? "USDC Total Supply"
+            : "APT Balance";
+
+        // Format target value nicely
+        const formattedTarget =
+          result.data.oracleId === "usdc-total-supply"
+            ? `${Number(result.data.targetValue).toLocaleString()} USDC (base units)`
+            : `${(Number(result.data.targetValue) / 100000000).toLocaleString()} APT`;
+
+        const confirmationMessage: Message = {
+          role: "assistant",
+          content: `Here's a new variation:\n\n**${result.data.title}**\n\n${result.data.description}\n\n**Details:**\n• Oracle: ${oracleName}\n• Target: ${formattedTarget}\n• Condition: ${result.data.operator === 0 ? "Greater than" : "Less than"}\n• Resolution: ${resolutionDateStr}\n  (${resolutionUTC} UTC)\n\nDoes this look good? Click "Create This Market" below to proceed!`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, confirmationMessage]);
+      } else if (result.message) {
+        // AI provided explanation
+        const explanationMessage: Message = {
+          role: "assistant",
+          content: result.message,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, explanationMessage]);
+      }
+    } catch (error) {
+      console.error("Error regenerating:", error);
+      const errorMessage: Message = {
+        role: "assistant",
+        content:
+          "Sorry, I encountered an error regenerating. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      toast.error("Failed to regenerate market");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleReviewAndEdit = () => {
-    if (generatedMarket && onMarketReady) {
-      onMarketReady(generatedMarket);
-    }
+    // Clear generated market to allow user to continue chatting and refining
+    setGeneratedMarket(null);
+    const reviewMessage: Message = {
+      role: "assistant",
+      content:
+        "Sure! Tell me what you'd like to adjust. For example:\n\n• Change the target value\n• Modify the resolution date\n• Update the market description\n• Change the condition (greater/less than)\n\nWhat would you like to change?",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, reviewMessage]);
   };
 
   const handleReset = () => {

@@ -76,13 +76,21 @@ interface CreateMarketFormProps {
 }
 
 export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
-  const [description, setDescription] = useState(initialData?.description || "");
-  const [resolutionDate, setResolutionDate] = useState(initialData?.resolutionDate || "");
+  const [description, setDescription] = useState(
+    initialData?.description || "",
+  );
+  const [resolutionDate, setResolutionDate] = useState(
+    initialData?.resolutionDate || "",
+  );
   const [selectedOracleId, setSelectedOracleId] = useState<string>(
     initialData?.oracleId || ORACLE_OPTIONS[0].id,
   );
-  const [targetAddress, setTargetAddress] = useState(initialData?.targetAddress || "");
-  const [targetValue, setTargetValue] = useState(initialData?.targetValue || "");
+  const [targetAddress, setTargetAddress] = useState(
+    initialData?.targetAddress || "",
+  );
+  const [targetValue, setTargetValue] = useState(
+    initialData?.targetValue || "",
+  );
   const [operator, setOperator] = useState<number>(initialData?.operator ?? 0);
   const [activeOracles, setActiveOracles] = useState<string[]>([]);
   const [checkingOracles, setCheckingOracles] = useState(true);
@@ -99,7 +107,25 @@ export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
   useEffect(() => {
     if (initialData) {
       setDescription(initialData.description);
-      setResolutionDate(initialData.resolutionDate);
+
+      // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+      let formattedDate = initialData.resolutionDate;
+      try {
+        const date = new Date(initialData.resolutionDate);
+        if (!isNaN(date.getTime())) {
+          // Format to YYYY-MM-DDTHH:mm for datetime-local input
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+      } catch (e) {
+        console.error('Error formatting date:', e);
+      }
+      setResolutionDate(formattedDate);
+
       setSelectedOracleId(initialData.oracleId);
       setTargetAddress(initialData.targetAddress);
       setTargetValue(initialData.targetValue);
@@ -187,7 +213,10 @@ export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
         }
       } catch (e: any) {
         console.error("[CreateMarketForm] Transaction error:", e);
-        console.error("[CreateMarketForm] Full error object:", JSON.stringify(e, null, 2));
+        console.error(
+          "[CreateMarketForm] Full error object:",
+          JSON.stringify(e, null, 2),
+        );
         console.error("[CreateMarketForm] Error details:", {
           message: e.message,
           stack: e.stack,
@@ -332,7 +361,7 @@ export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
               <Label htmlFor="oracle-type">On-Chain Data Source (Oracle)</Label>
               <Select
                 onValueChange={setSelectedOracleId}
-                defaultValue={selectedOracle.id}
+                value={selectedOracleId}
                 disabled={isPending}
               >
                 <SelectTrigger id="oracle-type">
@@ -353,7 +382,7 @@ export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
                 <Label htmlFor="operator">Condition</Label>
                 <Select
                   onValueChange={(val) => setOperator(Number(val))}
-                  defaultValue="0"
+                  value={operator.toString()}
                   disabled={isPending}
                 >
                   <SelectTrigger id="operator">
@@ -370,7 +399,7 @@ export function CreateMarketForm({ initialData }: CreateMarketFormProps) {
                   "col-span-8 space-y-2 transition-all duration-300 ease-in-out",
                   selectedOracle.requiresTargetAddress
                     ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
+                    : "opacity-0 pointer-events-none",
                 )}
               >
                 <Label htmlFor="target-address">Target Account Address</Label>

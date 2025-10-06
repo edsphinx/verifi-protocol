@@ -24,7 +24,8 @@ interface GeneratedMarket {
 
 export function CreateMarketSelector() {
   const [mode, setMode] = useState<Mode>("ai");
-  const [generatedMarket, setGeneratedMarket] = useState<GeneratedMarket | null>(null);
+  const [generatedMarket, setGeneratedMarket] =
+    useState<GeneratedMarket | null>(null);
 
   const handleMarketReady = (market: GeneratedMarket) => {
     setGeneratedMarket(market);
@@ -79,10 +80,23 @@ export function CreateMarketSelector() {
                   fill="none"
                   className="mr-1.5 h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity"
                 >
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                  />
                   <circle cx="9" cy="9" r="1.5" fill="currentColor" />
                   <circle cx="15" cy="9" r="1.5" fill="currentColor" />
-                  <path d="M8 15 Q12 13, 16 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  <path
+                    d="M8 15 Q12 13, 16 15"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
                 </svg>
                 <span className="opacity-60 group-hover:opacity-100 transition-opacity">
                   Oops, boring human manual mode
@@ -94,7 +108,7 @@ export function CreateMarketSelector() {
                 size="sm"
                 onClick={() => setMode("ai")}
                 className={cn(
-                  "h-8 px-3 text-xs relative overflow-hidden group border-primary/30 hover:border-primary/50 w-full sm:w-auto"
+                  "h-8 px-3 text-xs relative overflow-hidden group border-primary/30 hover:border-primary/50 w-full sm:w-auto",
                 )}
               >
                 <motion.div
