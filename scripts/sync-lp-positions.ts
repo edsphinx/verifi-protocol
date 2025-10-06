@@ -7,9 +7,9 @@
  *   npx ts-node --project tsconfig.scripts.json scripts/sync-lp-positions.ts <USER_ADDRESS>
  */
 
-import { PrismaClient } from '@prisma/client';
-import { Aptos, AptosConfig, type Network } from '@aptos-labs/ts-sdk';
-import { networkName } from './move/_config';
+import { PrismaClient } from "@prisma/client";
+import { Aptos, AptosConfig, type Network } from "@aptos-labs/ts-sdk";
+import { networkName } from "./move/_config";
 
 const prisma = new PrismaClient();
 
@@ -35,7 +35,7 @@ async function syncUserLPPositions(userAddress: string) {
     console.log(`📊 Found ${pools.length} pools in database\n`);
 
     if (pools.length === 0) {
-      console.log('No pools found in database. Run blockchain:sync first.');
+      console.log("No pools found in database. Run blockchain:sync first.");
       return;
     }
 
@@ -44,7 +44,9 @@ async function syncUserLPPositions(userAddress: string) {
     // For each pool, try to get positions
     for (const pool of pools) {
       console.log(`\n🏊 Pool: ${pool.poolAddress.substring(0, 10)}...`);
-      console.log(`   Market: ${pool.market?.description?.substring(0, 50) || 'Unknown'}...`);
+      console.log(
+        `   Market: ${pool.market?.description?.substring(0, 50) || "Unknown"}...`,
+      );
 
       try {
         // Try to get all positions in this pool
@@ -56,20 +58,23 @@ async function syncUserLPPositions(userAddress: string) {
           },
         });
 
-        console.log(`   Found ${(positions as any[]).length} total positions in pool`);
+        console.log(
+          `   Found ${(positions as any[]).length} total positions in pool`,
+        );
 
         // TODO: Filter for user's positions and sync to database
         // For now, just log what we found
-
       } catch (error) {
-        console.log(`   ⚠️  Could not query positions:`, (error as Error).message);
+        console.log(
+          `   ⚠️  Could not query positions:`,
+          (error as Error).message,
+        );
       }
     }
 
     console.log(`\n✅ Complete! Check output above for details.`);
-
   } catch (error) {
-    console.error('\n❌ Error syncing LP positions:', error);
+    console.error("\n❌ Error syncing LP positions:", error);
     throw error;
   }
 }
@@ -78,17 +83,17 @@ async function syncUserLPPositions(userAddress: string) {
 const userAddress = process.argv[2];
 
 if (!userAddress) {
-  console.error('Usage: pnpm tsx scripts/sync-lp-positions.ts <USER_ADDRESS>');
+  console.error("Usage: pnpm tsx scripts/sync-lp-positions.ts <USER_ADDRESS>");
   process.exit(1);
 }
 
 syncUserLPPositions(userAddress)
   .then(() => {
-    console.log('\n✅ Sync complete!');
+    console.log("\n✅ Sync complete!");
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ Error:', error);
+    console.error("\n❌ Error:", error);
     process.exit(1);
   })
   .finally(() => {

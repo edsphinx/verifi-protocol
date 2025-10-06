@@ -7,16 +7,17 @@
  *   npx ts-node --project tsconfig.scripts.json scripts/sync-pool-stats.ts
  */
 
-import { PrismaClient } from '@prisma/client';
-import { aptosClient } from '../aptos/client';
+import { PrismaClient } from "@prisma/client";
+import { aptosClient } from "../aptos/client";
 
 const prisma = new PrismaClient();
 
 // Tapp AMM module address (from check-pool.ts)
-const TAPP_HOOK_MODULE = '0x93bc73410f9345c6ff9c399c43913e7a7701a7331e375a70b0ba81ccca036674::tapp_prediction_hook';
+const TAPP_HOOK_MODULE =
+  "0x93bc73410f9345c6ff9c399c43913e7a7701a7331e375a70b0ba81ccca036674::tapp_prediction_hook";
 
 async function syncPoolStats() {
-  console.log('\n🔄 Syncing Tapp Pool Statistics...\n');
+  console.log("\n🔄 Syncing Tapp Pool Statistics...\n");
 
   try {
     // Get all pools from database
@@ -34,7 +35,9 @@ async function syncPoolStats() {
     for (const pool of pools) {
       try {
         console.log(`🏊 Pool: ${pool.poolAddress.substring(0, 10)}...`);
-        console.log(`   Market: ${pool.market?.description?.substring(0, 50) || 'Unknown'}...`);
+        console.log(
+          `   Market: ${pool.market?.description?.substring(0, 50) || "Unknown"}...`,
+        );
 
         // Fetch pool stats from blockchain
         const stats = await aptosClient().view({
@@ -45,14 +48,8 @@ async function syncPoolStats() {
           },
         });
 
-        const [reserveYes, reserveNo, feeYes, feeNo, positionCount, isTrading] = stats as [
-          string,
-          string,
-          string,
-          string,
-          string,
-          boolean,
-        ];
+        const [reserveYes, reserveNo, feeYes, feeNo, positionCount, isTrading] =
+          stats as [string, string, string, string, string, boolean];
 
         // Convert from smallest units (8 decimals for APT)
         const DECIMALS = 100_000_000; // 1e8
@@ -66,7 +63,7 @@ async function syncPoolStats() {
         console.log(`   NO Reserve:  ${noReserveAPT.toFixed(4)} APT`);
         console.log(`   Total Liquidity: ${totalLiquidityAPT.toFixed(4)} APT`);
         console.log(`   Positions: ${positionCount}`);
-        console.log(`   Trading: ${isTrading ? 'Enabled' : 'Disabled'}`);
+        console.log(`   Trading: ${isTrading ? "Enabled" : "Disabled"}`);
 
         // Update database
         await prisma.tappPool.update({
@@ -94,18 +91,18 @@ async function syncPoolStats() {
     console.log(`   Updated: ${updated}`);
     console.log(`   Errors:  ${errors}`);
   } catch (error) {
-    console.error('\n❌ Fatal error:', error);
+    console.error("\n❌ Fatal error:", error);
     throw error;
   }
 }
 
 syncPoolStats()
   .then(() => {
-    console.log('\n✅ Done!');
+    console.log("\n✅ Done!");
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ Error:', error);
+    console.error("\n❌ Error:", error);
     process.exit(1);
   })
   .finally(() => {

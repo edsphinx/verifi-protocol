@@ -19,10 +19,10 @@
  *   pnpm blockchain:sync --dry-run   # Preview without writing
  */
 
-import { PrismaClient } from '@prisma/client';
-import { Aptos, AptosConfig, type Network } from '@aptos-labs/ts-sdk';
-import type { InputViewFunctionData } from '@aptos-labs/ts-sdk';
-import { networkName, nodeUrl } from './move/_config';
+import { PrismaClient } from "@prisma/client";
+import { Aptos, AptosConfig, type Network } from "@aptos-labs/ts-sdk";
+import type { InputViewFunctionData } from "@aptos-labs/ts-sdk";
+import { networkName, nodeUrl } from "./move/_config";
 
 const prisma = new PrismaClient();
 
@@ -40,8 +40,14 @@ console.log(`📍 Module Address: ${MODULE_ADDRESS}\n`);
 // Sync configuration
 interface SyncOptions {
   dryRun?: boolean;
-  priority?: 'p0' | 'p1' | 'p2' | 'all';
-  entities?: ('markets' | 'pools' | 'activities' | 'positions' | 'lp-positions')[];
+  priority?: "p0" | "p1" | "p2" | "all";
+  entities?: (
+    | "markets"
+    | "pools"
+    | "activities"
+    | "positions"
+    | "lp-positions"
+  )[];
   verbose?: boolean;
 }
 
@@ -61,7 +67,7 @@ interface SyncStats {
 async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
   const startTime = Date.now();
   const stats: SyncStats = {
-    entity: 'Markets',
+    entity: "Markets",
     found: 0,
     added: 0,
     updated: 0,
@@ -70,7 +76,7 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
   };
 
   try {
-    console.log('🔍 Fetching markets from blockchain...');
+    console.log("🔍 Fetching markets from blockchain...");
 
     // Get all market creation events from blockchain
     // Note: This is a simplified version - in production you'd paginate through events
@@ -84,7 +90,9 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
       const result = await aptos.view({ payload });
       onChainMarkets = result[0] as any[];
     } catch (error) {
-      console.warn('⚠️  get_all_markets view function not available, will use alternative method');
+      console.warn(
+        "⚠️  get_all_markets view function not available, will use alternative method",
+      );
       // Alternative: Could fetch from events or use a different approach
       return stats;
     }
@@ -103,13 +111,20 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
       try {
         // Debug: log market structure on first iteration
         if (opts.verbose && onChainMarkets.indexOf(market) === 0) {
-          console.log('  📝 Sample market structure:', JSON.stringify(market, null, 2).slice(0, 500));
+          console.log(
+            "  📝 Sample market structure:",
+            JSON.stringify(market, null, 2).slice(0, 500),
+          );
         }
 
         // get_all_markets returns Object<Market> addresses wrapped in { inner: "0x..." }
-        const marketAddress = market.inner || market.market_address || market.marketAddress || market.address;
+        const marketAddress =
+          market.inner ||
+          market.market_address ||
+          market.marketAddress ||
+          market.address;
         if (!marketAddress) {
-          console.warn('  ⚠️  Market missing address field, skipping');
+          console.warn("  ⚠️  Market missing address field, skipping");
           stats.errors++;
           continue;
         }
@@ -118,7 +133,9 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
         // For now, we'll skip the create/update since we don't have market details
         // This would require calling get_market_details for each address
         if (opts.verbose) {
-          console.log(`  ℹ️  Found market: ${marketAddress.slice(0, 10)}... (address only - full sync not implemented)`);
+          console.log(
+            `  ℹ️  Found market: ${marketAddress.slice(0, 10)}... (address only - full sync not implemented)`,
+          );
         }
         stats.found++;
         continue;
@@ -127,7 +144,9 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
 
         if (!exists) {
           if (opts.verbose) {
-            console.log(`  ✨ New market found: ${marketAddress.slice(0, 10)}...`);
+            console.log(
+              `  ✨ New market found: ${marketAddress.slice(0, 10)}...`,
+            );
           }
 
           if (!opts.dryRun) {
@@ -135,9 +154,11 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
               data: {
                 marketAddress,
                 creatorAddress: market.creator,
-                description: market.description || 'Unknown market',
-                resolutionTimestamp: new Date(Number(market.resolution_timestamp) * 1000),
-                status: market.status === 0 ? 'active' : 'resolved',
+                description: market.description || "Unknown market",
+                resolutionTimestamp: new Date(
+                  Number(market.resolution_timestamp) * 1000,
+                ),
+                status: market.status === 0 ? "active" : "resolved",
                 yesSupply: Number(market.yes_supply || 0) / 1_000_000,
                 noSupply: Number(market.no_supply || 0) / 1_000_000,
               },
@@ -150,7 +171,7 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
             await prisma.market.update({
               where: { marketAddress },
               data: {
-                status: market.status === 0 ? 'active' : 'resolved',
+                status: market.status === 0 ? "active" : "resolved",
                 yesSupply: Number(market.yes_supply || 0) / 1_000_000,
                 noSupply: Number(market.no_supply || 0) / 1_000_000,
               },
@@ -164,7 +185,7 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
       }
     }
   } catch (error) {
-    console.error('❌ Market sync failed:', error);
+    console.error("❌ Market sync failed:", error);
     stats.errors++;
   }
 
@@ -179,7 +200,7 @@ async function syncMarkets(opts: SyncOptions): Promise<SyncStats> {
 async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
   const startTime = Date.now();
   const stats: SyncStats = {
-    entity: 'TappPools',
+    entity: "TappPools",
     found: 0,
     added: 0,
     updated: 0,
@@ -188,7 +209,7 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
   };
 
   try {
-    console.log('🔍 Fetching Tapp pools from blockchain...');
+    console.log("🔍 Fetching Tapp pools from blockchain...");
 
     // Get all markets first
     const markets = await prisma.market.findMany({
@@ -207,14 +228,14 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
 
         try {
           const result = await aptos.view({ payload: poolPayload });
-          const [yesReserve, noReserve, feeYes, feeNo, positionCount, isTrading] = result as [
-            string,
-            string,
-            string,
-            string,
-            string,
-            boolean,
-          ];
+          const [
+            yesReserve,
+            noReserve,
+            feeYes,
+            feeNo,
+            positionCount,
+            isTrading,
+          ] = result as [string, string, string, string, string, boolean];
 
           stats.found++;
 
@@ -225,7 +246,9 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
 
           if (!existingPool) {
             if (opts.verbose) {
-              console.log(`  ✨ New pool found for market: ${market.marketAddress.slice(0, 10)}...`);
+              console.log(
+                `  ✨ New pool found for market: ${market.marketAddress.slice(0, 10)}...`,
+              );
             }
 
             if (!opts.dryRun) {
@@ -251,7 +274,9 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
         } catch (poolError) {
           // Pool doesn't exist for this market - that's OK
           if (opts.verbose) {
-            console.log(`  ℹ️  No pool for market: ${market.marketAddress.slice(0, 10)}...`);
+            console.log(
+              `  ℹ️  No pool for market: ${market.marketAddress.slice(0, 10)}...`,
+            );
           }
         }
       } catch (error) {
@@ -260,7 +285,7 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
       }
     }
   } catch (error) {
-    console.error('❌ Pool sync failed:', error);
+    console.error("❌ Pool sync failed:", error);
     stats.errors++;
   }
 
@@ -275,7 +300,7 @@ async function syncTappPools(opts: SyncOptions): Promise<SyncStats> {
 async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
   const startTime = Date.now();
   const stats: SyncStats = {
-    entity: 'UserPositions',
+    entity: "UserPositions",
     found: 0,
     added: 0,
     updated: 0,
@@ -284,11 +309,11 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
   };
 
   try {
-    console.log('🔍 Syncing user positions from blockchain...');
+    console.log("🔍 Syncing user positions from blockchain...");
 
     // Get all unique user addresses from activities
     const uniqueUsers = await prisma.activity.groupBy({
-      by: ['userAddress'],
+      by: ["userAddress"],
       _count: true,
     });
 
@@ -324,7 +349,9 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
 
           // Create/update YES position
           if (yesBalance > 0) {
-            const market = markets.find((m) => m.marketAddress === pos.market_address);
+            const market = markets.find(
+              (m) => m.marketAddress === pos.market_address,
+            );
 
             if (!opts.dryRun) {
               await prisma.userPosition.upsert({
@@ -332,26 +359,31 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
                   userAddress_marketAddress_outcome: {
                     userAddress: user.userAddress,
                     marketAddress: pos.market_address,
-                    outcome: 'YES',
+                    outcome: "YES",
                   },
                 },
                 create: {
                   userAddress: user.userAddress,
                   marketAddress: pos.market_address,
-                  outcome: 'YES',
+                  outcome: "YES",
                   sharesOwned: yesBalance,
                   avgEntryPrice: 0, // Can't determine from blockchain alone
                   totalInvested: 0,
-                  currentPrice: yesBalance > 0 ? Number(pos.yes_value) / Number(pos.yes_balance) / 100_000_000 : 0,
+                  currentPrice:
+                    yesBalance > 0
+                      ? Number(pos.yes_value) /
+                        Number(pos.yes_balance) /
+                        100_000_000
+                      : 0,
                   currentValue: Number(pos.yes_value) / 100_000_000,
                   unrealizedPnL: 0,
                   unrealizedPnLPct: 0,
-                  status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                  status: market?.status === "active" ? "OPEN" : "RESOLVED",
                 },
                 update: {
                   sharesOwned: yesBalance,
                   currentValue: Number(pos.yes_value) / 100_000_000,
-                  status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                  status: market?.status === "active" ? "OPEN" : "RESOLVED",
                 },
               });
               stats.updated++;
@@ -360,7 +392,9 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
 
           // Create/update NO position
           if (noBalance > 0) {
-            const market = markets.find((m) => m.marketAddress === pos.market_address);
+            const market = markets.find(
+              (m) => m.marketAddress === pos.market_address,
+            );
 
             if (!opts.dryRun) {
               await prisma.userPosition.upsert({
@@ -368,26 +402,31 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
                   userAddress_marketAddress_outcome: {
                     userAddress: user.userAddress,
                     marketAddress: pos.market_address,
-                    outcome: 'NO',
+                    outcome: "NO",
                   },
                 },
                 create: {
                   userAddress: user.userAddress,
                   marketAddress: pos.market_address,
-                  outcome: 'NO',
+                  outcome: "NO",
                   sharesOwned: noBalance,
                   avgEntryPrice: 0,
                   totalInvested: 0,
-                  currentPrice: noBalance > 0 ? Number(pos.no_value) / Number(pos.no_balance) / 100_000_000 : 0,
+                  currentPrice:
+                    noBalance > 0
+                      ? Number(pos.no_value) /
+                        Number(pos.no_balance) /
+                        100_000_000
+                      : 0,
                   currentValue: Number(pos.no_value) / 100_000_000,
                   unrealizedPnL: 0,
                   unrealizedPnLPct: 0,
-                  status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                  status: market?.status === "active" ? "OPEN" : "RESOLVED",
                 },
                 update: {
                   sharesOwned: noBalance,
                   currentValue: Number(pos.no_value) / 100_000_000,
-                  status: market?.status === 'active' ? 'OPEN' : 'RESOLVED',
+                  status: market?.status === "active" ? "OPEN" : "RESOLVED",
                 },
               });
               stats.updated++;
@@ -395,12 +434,15 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
           }
         }
       } catch (error) {
-        console.error(`❌ Error syncing positions for user ${user.userAddress}:`, error);
+        console.error(
+          `❌ Error syncing positions for user ${user.userAddress}:`,
+          error,
+        );
         stats.errors++;
       }
     }
   } catch (error) {
-    console.error('❌ Position sync failed:', error);
+    console.error("❌ Position sync failed:", error);
     stats.errors++;
   }
 
@@ -413,10 +455,10 @@ async function syncUserPositions(opts: SyncOptions): Promise<SyncStats> {
 // ============================================================================
 
 async function runSync(opts: SyncOptions) {
-  console.log('🚀 Starting blockchain → database sync...\n');
+  console.log("🚀 Starting blockchain → database sync...\n");
 
   if (opts.dryRun) {
-    console.log('⚠️  DRY RUN MODE - No changes will be written to database\n');
+    console.log("⚠️  DRY RUN MODE - No changes will be written to database\n");
   }
 
   const allStats: SyncStats[] = [];
@@ -424,45 +466,45 @@ async function runSync(opts: SyncOptions) {
   // Determine what to sync based on priority/entities
   const shouldSyncMarkets =
     !opts.entities ||
-    opts.entities.includes('markets') ||
-    ['p0', 'all'].includes(opts.priority || 'all');
+    opts.entities.includes("markets") ||
+    ["p0", "all"].includes(opts.priority || "all");
 
   const shouldSyncPools =
     !opts.entities ||
-    opts.entities.includes('pools') ||
-    ['p0', 'all'].includes(opts.priority || 'all');
+    opts.entities.includes("pools") ||
+    ["p0", "all"].includes(opts.priority || "all");
 
   const shouldSyncPositions =
     !opts.entities ||
-    opts.entities.includes('positions') ||
-    ['p1', 'all'].includes(opts.priority || 'all');
+    opts.entities.includes("positions") ||
+    ["p1", "all"].includes(opts.priority || "all");
 
   // Execute syncs in priority order
   if (shouldSyncMarkets) {
-    console.log('\n📍 [P0] Syncing Markets...');
+    console.log("\n📍 [P0] Syncing Markets...");
     const marketStats = await syncMarkets(opts);
     allStats.push(marketStats);
     printStats(marketStats);
   }
 
   if (shouldSyncPools) {
-    console.log('\n🏊 [P0] Syncing Tapp Pools...');
+    console.log("\n🏊 [P0] Syncing Tapp Pools...");
     const poolStats = await syncTappPools(opts);
     allStats.push(poolStats);
     printStats(poolStats);
   }
 
   if (shouldSyncPositions) {
-    console.log('\n👤 [P1] Syncing User Positions...');
+    console.log("\n👤 [P1] Syncing User Positions...");
     const positionStats = await syncUserPositions(opts);
     allStats.push(positionStats);
     printStats(positionStats);
   }
 
   // Print summary
-  console.log('\n' + '='.repeat(60));
-  console.log('📊 SYNC SUMMARY');
-  console.log('='.repeat(60));
+  console.log("\n" + "=".repeat(60));
+  console.log("📊 SYNC SUMMARY");
+  console.log("=".repeat(60));
 
   const totals = allStats.reduce(
     (acc, stat) => ({
@@ -472,20 +514,24 @@ async function runSync(opts: SyncOptions) {
       errors: acc.errors + stat.errors,
       duration: acc.duration + stat.duration,
     }),
-    { found: 0, added: 0, updated: 0, errors: 0, duration: 0 }
+    { found: 0, added: 0, updated: 0, errors: 0, duration: 0 },
   );
 
   console.log(`Total entities found:    ${totals.found}`);
   console.log(`Total added:             ${totals.added}`);
   console.log(`Total updated:           ${totals.updated}`);
   console.log(`Total errors:            ${totals.errors}`);
-  console.log(`Total duration:          ${(totals.duration / 1000).toFixed(2)}s`);
-  console.log('='.repeat(60));
+  console.log(
+    `Total duration:          ${(totals.duration / 1000).toFixed(2)}s`,
+  );
+  console.log("=".repeat(60));
 
   if (opts.dryRun) {
-    console.log('\n⚠️  This was a DRY RUN - no changes were made to the database');
+    console.log(
+      "\n⚠️  This was a DRY RUN - no changes were made to the database",
+    );
   } else {
-    console.log('\n✅ Sync completed successfully!');
+    console.log("\n✅ Sync completed successfully!");
   }
 }
 
@@ -505,31 +551,37 @@ async function main() {
   const args = process.argv.slice(2);
 
   const opts: SyncOptions = {
-    dryRun: args.includes('--dry-run'),
-    verbose: args.includes('--verbose') || args.includes('-v'),
+    dryRun: args.includes("--dry-run"),
+    verbose: args.includes("--verbose") || args.includes("-v"),
   };
 
   // Parse priority
-  if (args.includes('--p0')) opts.priority = 'p0';
-  else if (args.includes('--p1')) opts.priority = 'p1';
-  else if (args.includes('--p2')) opts.priority = 'p2';
-  else opts.priority = 'all';
+  if (args.includes("--p0")) opts.priority = "p0";
+  else if (args.includes("--p1")) opts.priority = "p1";
+  else if (args.includes("--p2")) opts.priority = "p2";
+  else opts.priority = "all";
 
   // Parse specific entities
   const entityArgs = args.filter((arg) =>
-    ['--markets', '--pools', '--activities', '--positions', '--lp-positions'].includes(arg)
+    [
+      "--markets",
+      "--pools",
+      "--activities",
+      "--positions",
+      "--lp-positions",
+    ].includes(arg),
   );
 
   if (entityArgs.length > 0) {
     opts.entities = entityArgs.map((arg) =>
-      arg.replace('--', '').replace('-', '-')
+      arg.replace("--", "").replace("-", "-"),
     ) as any;
   }
 
   try {
     await runSync(opts);
   } catch (error) {
-    console.error('\n❌ Sync failed with error:', error);
+    console.error("\n❌ Sync failed with error:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

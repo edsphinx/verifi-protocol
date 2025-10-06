@@ -7,12 +7,12 @@
  * - Deletes markets that can't be fixed
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function fixMarketAddresses() {
-  console.log('🔍 Checking market addresses...\n');
+  console.log("🔍 Checking market addresses...\n");
 
   const markets = await prisma.market.findMany();
   console.log(`📊 Total markets in database: ${markets.length}\n`);
@@ -39,15 +39,16 @@ async function fixMarketAddresses() {
     let fixedAddr = addr;
 
     // Remove any non-hex characters
-    fixedAddr = fixedAddr.replace(/[^0-9a-fA-Fx]/g, '');
+    fixedAddr = fixedAddr.replace(/[^0-9a-fA-Fx]/g, "");
 
     // Ensure it starts with 0x
-    if (!fixedAddr.startsWith('0x')) {
-      fixedAddr = '0x' + fixedAddr;
+    if (!fixedAddr.startsWith("0x")) {
+      fixedAddr = "0x" + fixedAddr;
     }
 
     // Check if fixed version is valid
-    const isFixedValid = /^0x[0-9a-fA-F]+$/.test(fixedAddr) && fixedAddr.length >= 10;
+    const isFixedValid =
+      /^0x[0-9a-fA-F]+$/.test(fixedAddr) && fixedAddr.length >= 10;
 
     if (isFixedValid && fixedAddr !== addr) {
       console.log(`   ✅ Fixed to: ${fixedAddr}`);
@@ -70,26 +71,26 @@ async function fixMarketAddresses() {
       deleted++;
     }
 
-    console.log('');
+    console.log("");
   }
 
-  console.log('='.repeat(60));
-  console.log('📊 SUMMARY');
-  console.log('='.repeat(60));
+  console.log("=".repeat(60));
+  console.log("📊 SUMMARY");
+  console.log("=".repeat(60));
   console.log(`✅ Valid markets:   ${valid}`);
   console.log(`🔧 Fixed markets:   ${fixed}`);
   console.log(`🗑️  Deleted markets: ${deleted}`);
   console.log(`📦 Total processed: ${valid + fixed + deleted}`);
-  console.log('='.repeat(60));
+  console.log("=".repeat(60));
 }
 
 fixMarketAddresses()
   .then(() => {
-    console.log('\n✅ Cleanup complete!');
+    console.log("\n✅ Cleanup complete!");
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ Error:', error);
+    console.error("\n❌ Error:", error);
     process.exit(1);
   })
   .finally(() => {
